@@ -1,0 +1,12 @@
+syntax: glob
+
+.externals
+*.swp
+dev/target
+dev/zbuild
+dev/rapidjson
+dev/rapidjson_mxxru
+dev/lib/.*
+dev/catch
+*.sublime-project
+*.sublime-workspace
