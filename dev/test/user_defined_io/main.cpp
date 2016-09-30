@@ -204,13 +204,12 @@ json_io( JSON_IO & io, data_t & value )
 TEST_CASE( "user defined io read" , "read" )
 {
 	const std::string json_data{
-		R"JSON({
+		R"JSON(
+		{
 			"duration": 3661420899,
 			"time_point": 1471509776042,
 			"dt": "2016.08.18 10:44:35"
 		})JSON" };
-
-	std::cout << json_data << std::endl;
 
 	auto obj = json_dto::from_json< data_t > ( json_data );
 
@@ -248,8 +247,6 @@ TEST_CASE( "user defined io write" , "write" )
 	const data_t source_obj{ now_dur, now_time_point, dt };
 	const std::string json_data = json_dto::to_json( source_obj );
 
-	std::cout << json_data << std::endl;
-
 	auto obj = json_dto::from_json< data_t > ( json_data );
 
 	REQUIRE( obj.m_duration == source_obj.m_duration );
@@ -265,4 +262,3 @@ TEST_CASE( "user defined io write" , "write" )
 	REQUIRE( dt_results.tm_min == source_dt.tm_min );
 	REQUIRE( dt_results.tm_sec == source_dt.tm_sec );
 }
-

@@ -77,8 +77,6 @@ TEST_CASE( "all-defined" , "[all-defined]" )
 				"d4": {"num_int32": 42, "num_double": 3.14, "string": "xyz"}
 			})JSON" };
 
-		std::cout << json_data << std::endl;
-
 		auto obj = json_dto::from_json< complex_data_t >( json_data );
 
 		REQUIRE( obj.m_d1.m_num_int32 == 42 );
@@ -111,7 +109,6 @@ TEST_CASE( "all-defined" , "[all-defined]" )
 		source_obj.m_d4 = data;
 
 		const std::string json_data = json_dto::to_json( source_obj );
-		std::cout << json_data << std::endl;
 
 		auto obj = json_dto::from_json< complex_data_t >( json_data );
 
@@ -144,8 +141,6 @@ TEST_CASE( "mand-defined" , "[mand-defined]" )
 				"d4": {"num_int32": 42, "num_double": 3.14, "string": "xyz"}
 			})JSON" };
 
-	std::cout << json_data << std::endl;
-
 	auto obj = json_dto::from_json< complex_data_t >( json_data );
 
 	REQUIRE( obj.m_d1.m_num_int32 == 0 );
@@ -176,7 +171,6 @@ TEST_CASE( "non-nullable-defined" , "[non-nullble-defined]" )
 				"d3": null,
 				"d4": null
 			})JSON" };
-		std::cout << json_data << std::endl;
 
 		auto obj = json_dto::from_json< complex_data_t >( json_data );
 
@@ -201,7 +195,6 @@ TEST_CASE( "non-nullable-defined" , "[non-nullble-defined]" )
 		source_obj.m_d2 = data;
 
 		const std::string json_data = json_dto::to_json( source_obj );
-		std::cout << json_data << std::endl;
 
 		auto obj = json_dto::from_json< complex_data_t >( json_data );
 
