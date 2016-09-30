@@ -17,6 +17,8 @@
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
+#include <rapidjson/ostreamwrapper.h>
+#include <rapidjson/istreamwrapper.h>
 
 namespace json_dto
 {
@@ -972,14 +974,47 @@ to_json( const DTO & dto )
 //
 
 //! Helper function to read DTO from json-string.
-template < typename TYPE >
+template < typename TYPE, unsigned RAPIDJSON_PARSEFLAGS = rapidjson::kParseDefaultFlags >
 TYPE
 from_json( const std::string & json )
 {
 	rapidjson::Document document;
 	json_input_t jin{ document };
 
-	document.Parse( json.c_str() );
+	document.Parse< RAPIDJSON_PARSEFLAGS >( json.c_str() );
+
+	TYPE result;
+
+	jin >> result;
+
+	return result;
+}
+
+template< typename TYPE >
+void
+to_stream( std::ostream & to, const TYPE & type )
+{
+	rapidjson::Document output_doc;
+	json_dto::json_output_t jout{
+		output_doc, output_doc.GetAllocator() };
+
+	jout << type;
+
+	rapidjson::OStreamWrapper wrapper{ to };
+	rapidjson::Writer< rapidjson::OStreamWrapper > writer{ wrapper };
+	output_doc.Accept( writer );
+}
+
+template< typename TYPE, unsigned RAPIDJSON_PARSEFLAGS = rapidjson::kParseDefaultFlags >
+TYPE
+from_stream( std::istream & from )
+{
+	rapidjson::IStreamWrapper wrapper{ from };
+
+	rapidjson::Document document;
+	json_dto::json_input_t jin{ document };
+
+	document.ParseStream< RAPIDJSON_PARSEFLAGS >( wrapper );
 
 	TYPE result;
 
