@@ -49,7 +49,7 @@ For *json_dto* itself:
 ~~~~~
 ::ruby
 MxxRu::arch_externals :json_dto do |e|
-  e.url 'https://bitbucket.org/sobjectizerteam/json_dto-0.1/get/v.0.1.0.tar.bz2'
+  e.url 'https://bitbucket.org/sobjectizerteam/json_dto-0.1/get/v.0.1.1.tar.bz2'
 
   e.map_dir 'dev/json_dto' => 'dev'
 end
