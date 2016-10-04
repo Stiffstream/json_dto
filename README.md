@@ -49,7 +49,7 @@ For *json_dto* itself:
 ~~~~~
 ::ruby
 MxxRu::arch_externals :json_dto do |e|
-  e.url 'https://bitbucket.org/sobjectizerteam/json_dto-0.1/get/v.0.1.1.tar.bz2'
+  e.url 'https://bitbucket.org/sobjectizerteam/json_dto-0.1/get/v.0.1.2.tar.bz2'
 
   e.map_dir 'dev/json_dto' => 'dev'
 end
@@ -58,9 +58,9 @@ end
 For *rapidjson* and *rapidjson_mxxru* dependencies:
 ~~~~~
 ::ruby
-MxxRu::git_externals :rapidjson do |e|
-  e.url 'https://github.com/miloyip/rapidjson.git'
-  e.commit 'ab791ae' # Latest at 2016.08.09
+MxxRu::arch_externals :rapidjson do |e|
+  e.url 'https://github.com/miloyip/rapidjson/archive/v1.1.0.zip'
+
   e.map_dir 'include/rapidjson' => 'dev/rapidjson/include'
 end
 
