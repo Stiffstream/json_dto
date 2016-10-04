@@ -1,6 +1,6 @@
-MxxRu::git_externals :rapidjson do |e|
-  e.url 'https://github.com/miloyip/rapidjson.git'
-  e.commit 'ab791ae' # Latest at 9 aug 13:15
+MxxRu::arch_externals :rapidjson do |e|
+  e.url 'https://github.com/miloyip/rapidjson/archive/v1.1.0.zip'
+
   e.map_dir 'include/rapidjson' => 'dev/rapidjson/include'
 end
 
