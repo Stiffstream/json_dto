@@ -15,6 +15,8 @@
 #include <type_traits>
 
 #include <rapidjson/document.h>
+#include <rapidjson/error/error.h>
+#include <rapidjson/error/en.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/ostreamwrapper.h>
@@ -969,6 +971,19 @@ to_json( const DTO & dto )
 	return buffer.GetString();
 }
 
+inline void
+check_document_parse_status(
+	const rapidjson::Document & document )
+{
+	if( document.HasParseError() )
+	{
+		throw ex_t{
+			std::string{ "JSON parse error: '" } +
+			rapidjson::GetParseError_En( document.GetParseError() ) +
+			"' (offset: " + std::to_string( document.GetErrorOffset() ) + ")" };
+	}
+}
+
 //
 // from_json
 //
@@ -982,6 +997,8 @@ from_json( const std::string & json )
 	json_input_t jin{ document };
 
 	document.Parse< RAPIDJSON_PARSEFLAGS >( json.c_str() );
+
+	check_document_parse_status( document );
 
 	TYPE result;
 
@@ -1015,6 +1032,8 @@ from_stream( std::istream & from )
 	json_dto::json_input_t jin{ document };
 
 	document.ParseStream< RAPIDJSON_PARSEFLAGS >( wrapper );
+
+	check_document_parse_status( document );
 
 	TYPE result;
 
