@@ -158,7 +158,7 @@ operator << ( json_output_t & o, const DTO & v );
 But they are only helpful for top level read/write operations.
 
 In general *json_dto* gets data from `rapidjson::Value` and puts
-the data into `rapidjson::Value`. So read/write operations looks like this:
+the data into `rapidjson::Value`. So read/write operations look like this:
 ~~~~~
 ::c++
 // Read
