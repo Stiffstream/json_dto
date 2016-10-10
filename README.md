@@ -171,7 +171,7 @@ json_dto::json_input_t jin{ document };
 message_t msg;
 jin >> msg;
 
-// If no exceptions were thrown medalist contains data received from JSON.
+// If no exceptions were thrown DTO contains data received from JSON.
 ~~~~~
 
 ~~~~~
@@ -184,7 +184,7 @@ rapidjson::Document document;
 json_dto::json_output_t jout{ document, document.GetAllocator() };
 
 const message_t msg = get_message();
-jout << medalist;
+jout << msg;
 
 // If no exceptions were thrown document contains data received from DTO.
 ~~~~~
