@@ -1023,8 +1023,8 @@ to_stream( std::ostream & to, const TYPE & type )
 }
 
 template< typename TYPE, unsigned RAPIDJSON_PARSEFLAGS = rapidjson::kParseDefaultFlags >
-TYPE
-from_stream( std::istream & from )
+void
+from_stream( std::istream & from, TYPE & o )
 {
 	rapidjson::IStreamWrapper wrapper{ from };
 
@@ -1035,9 +1035,15 @@ from_stream( std::istream & from )
 
 	check_document_parse_status( document );
 
-	TYPE result;
+	jin >> o;
+}
 
-	jin >> result;
+template< typename TYPE, unsigned RAPIDJSON_PARSEFLAGS = rapidjson::kParseDefaultFlags >
+TYPE
+from_stream( std::istream & from )
+{
+	TYPE result;
+	from_stream< TYPE, RAPIDJSON_PARSEFLAGS >( from, result );
 
 	return result;
 }
