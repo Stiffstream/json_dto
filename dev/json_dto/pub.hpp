@@ -131,6 +131,7 @@ RW_JSON_VALUES( std::int32_t, IsInt, GetInt, SetInt )
 RW_JSON_VALUES( std::uint64_t, IsUint64, GetUint64, SetUint64 )
 RW_JSON_VALUES( std::int64_t, IsInt64, GetInt64, SetInt64 )
 
+RW_JSON_VALUES( float, IsNumber, GetFloat, SetFloat )
 RW_JSON_VALUES( double, IsNumber, GetDouble, SetDouble )
 
 //
