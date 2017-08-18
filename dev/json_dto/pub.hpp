@@ -1008,6 +1008,21 @@ from_json( const std::string & json )
 	return result;
 }
 
+//! Helper function to read an already instantiated DTO.
+template < typename TYPE, unsigned RAPIDJSON_PARSEFLAGS = rapidjson::kParseDefaultFlags >
+void
+from_json( const std::string & json, TYPE & o )
+{
+	rapidjson::Document document;
+	json_input_t jin{ document };
+
+	document.Parse< RAPIDJSON_PARSEFLAGS >( json.c_str() );
+
+	check_document_parse_status( document );
+
+	jin >> o;
+}
+
 template< typename TYPE >
 void
 to_stream( std::ostream & to, const TYPE & type )
