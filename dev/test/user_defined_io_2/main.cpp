@@ -56,7 +56,7 @@ read_json_value(
 	const rapidjson::Value & from,
 	bounded_value_t< T, min, max, default_value > & value )
 {
-	T v;
+	T v{ default_value };
 	read_json_value( from, v );
 
 	value.set( v );
@@ -84,7 +84,7 @@ TEST_CASE( "user defined io read" , "read" )
 	const std::string json_data{
 		R"JSON(
 		{
-			"yday": 365,
+			"yday": 365
 		})JSON" };
 	auto obj = json_dto::from_json< data_t >( json_data );
 
