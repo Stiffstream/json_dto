@@ -44,13 +44,13 @@ namespace json_dto
 template <>
 void
 read_json_value(
-	const rapidjson::Value & object,
-	std::chrono::system_clock::duration & v )
+	std::chrono::system_clock::duration & v,
+	const rapidjson::Value & object )
 {
 	try
 	{
 		std::int64_t representation;
-		read_json_value( object, representation );
+		read_json_value( representation, object );
 
 		v = std::chrono::microseconds{ representation };
 	}
@@ -84,13 +84,13 @@ write_json_value(
 template <>
 void
 read_json_value(
-	const rapidjson::Value & object,
-	std::chrono::system_clock::time_point & v )
+	std::chrono::system_clock::time_point & v,
+	const rapidjson::Value & object )
 {
 	try
 	{
 		std::int64_t representation;
-		read_json_value( object, representation );
+		read_json_value( representation, object );
 
 		v =
 			std::chrono::system_clock::time_point{
@@ -127,13 +127,13 @@ write_json_value(
 template <>
 void
 read_json_value(
-	const rapidjson::Value & object,
-	std::tm & v )
+	std::tm & v,
+	const rapidjson::Value & object )
 {
 	try
 	{
 		std::string representation;
-		read_json_value( object, representation );
+		read_json_value( representation, object );
 
 		const std::regex dt_regex{
 			R"regex(^(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2}):(\d{2})$)regex" };

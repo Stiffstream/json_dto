@@ -9,6 +9,8 @@
 
 #include <rapidjson/document.h>
 
+#include <json_dto/pub.hpp>
+
 template< typename T, T min, T max, T default_value = T{} >
 class bounded_value_t
 {
@@ -34,35 +36,19 @@ public :
 	void set( T v ) { m_value = ensure_valid( v ); }
 };
 
-namespace json_dto
-{
-
 template< typename T, T min, T max, T default_value >
 void
 read_json_value(
-	const rapidjson::Value & from,
-	bounded_value_t< T, min, max, default_value > & value );
-
-} /* namespace json_dto */
-
-#include <json_dto/pub.hpp>
-
-namespace json_dto
+	bounded_value_t< T, min, max, default_value > & value,
+	const rapidjson::Value & from )
 {
+	using namespace json_dto;
 
-template< typename T, T min, T max, T default_value >
-void
-read_json_value(
-	const rapidjson::Value & from,
-	bounded_value_t< T, min, max, default_value > & value )
-{
 	T v{ default_value };
-	read_json_value( from, v );
+	read_json_value( v, from );
 
 	value.set( v );
 }
-
-} /* namespace json_dto */
 
 using year_day_t = bounded_value_t< int, 1, 366, 1 >;
 

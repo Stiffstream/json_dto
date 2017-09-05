@@ -102,7 +102,7 @@ class json_output_t
 
 #define RW_JSON_VALUES( type, checker, getter, setter ) \
 inline void \
-read_json_value( const rapidjson::Value & object, type & v ) \
+read_json_value( type & v, const rapidjson::Value & object ) \
 { \
 	if( object. checker () ) \
 		v = object. getter (); \
@@ -140,11 +140,11 @@ RW_JSON_VALUES( double, IsNumber, GetDouble, SetDouble )
 
 inline void
 read_json_value(
-	const rapidjson::Value & object,
-	std::uint16_t & v )
+	std::uint16_t & v,
+	const rapidjson::Value & object )
 {
 	std::uint32_t value;
-	read_json_value( object, value );
+	read_json_value( value, object );
 
 	if( value <= std::numeric_limits< std::uint16_t >::max() )
 		v = std::uint16_t( value );
@@ -167,10 +167,10 @@ write_json_value(
 //
 
 inline void
-read_json_value( const rapidjson::Value & object, std::int16_t & v )
+read_json_value( std::int16_t & v, const rapidjson::Value & object )
 {
 	std::int32_t value;
-	read_json_value( object, value );
+	read_json_value( value, object );
 
 	if( value <= std::numeric_limits< std::int16_t >::max() &&
 		value >= std::numeric_limits< std::int16_t >::min() )
@@ -194,7 +194,7 @@ write_json_value(
 //
 
 inline void
-read_json_value( const rapidjson::Value & object, std::string & s )
+read_json_value( std::string & s, const rapidjson::Value & object )
 {
 	if( object.IsString() )
 		s = object.GetString();
@@ -216,7 +216,7 @@ write_json_value(
 //
 
 inline void
-read_json_value( const rapidjson::Value & object, rapidjson::Document & d )
+read_json_value( rapidjson::Document & d, const rapidjson::Value & object )
 {
 	d.CopyFrom( object, d.GetAllocator() );
 }
@@ -237,8 +237,8 @@ write_json_value(
 template < typename T, typename A >
 void
 read_json_value(
-	const rapidjson::Value & object,
-	std::vector< T, A > & vec );
+	std::vector< T, A > & vec,
+	const rapidjson::Value & object );
 
 template < typename T, typename A >
 void
@@ -476,8 +476,8 @@ json_io( IO & io, DTO & dto )
 template < typename DTO >
 void
 read_json_value(
-	const rapidjson::Value & object,
-	DTO & v )
+	DTO & v,
+	const rapidjson::Value & object )
 {
 	json_input_t input( object );
 	json_io( input, v );
@@ -501,11 +501,11 @@ write_json_value(
 template < typename FIELD_TYPE >
 void
 read_json_value(
-	const rapidjson::Value & object,
-	nullable_t< FIELD_TYPE > & f )
+	nullable_t< FIELD_TYPE > & f,
+	const rapidjson::Value & object )
 {
 	FIELD_TYPE value;
-	read_json_value( object, value );
+	read_json_value( value, object );
 	f = std::move( value );
 }
 
@@ -529,8 +529,8 @@ write_json_value(
 template < typename T, typename A  >
 void
 read_json_value(
-	const rapidjson::Value & object,
-	std::vector< T, A > & vec )
+	std::vector< T, A > & vec,
+	const rapidjson::Value & object )
 {
 	if( object.IsArray() )
 	{
@@ -539,7 +539,7 @@ read_json_value(
 		for( rapidjson::SizeType i = 0; i < object.Size(); ++i )
 		{
 			T v;
-			read_json_value( object[ i ], v );
+			read_json_value( v, object[ i ] );
 			vec.push_back( v );
 		}
 	}
@@ -786,7 +786,7 @@ class binder_t
 
 				if( !value.IsNull() )
 				{
-					json_dto::read_json_value( value, m_field );
+					read_json_value( m_field, value );
 				}
 				else
 				{
