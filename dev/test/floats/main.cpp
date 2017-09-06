@@ -21,7 +21,7 @@ struct floats_t
 	json_io( JSON_IO & io )
 	{
 		io
-			& optional( "num_float", m_num_float, 0.0 )
+			& optional( "num_float", m_num_float, 0.0f )
 			& optional( "num_double", m_num_double, 0.0 );
 	}
 };
@@ -33,8 +33,8 @@ TEST_CASE( "default init" , "[init]" )
 
 		auto dto = json_dto::from_json< floats_t >( json_str );
 
-		REQUIRE( 0.0 == dto.m_num_float );
-		REQUIRE( 0.0 == dto.m_num_double );
+		REQUIRE( Approx(0.0) == dto.m_num_float );
+		REQUIRE( Approx(0.0) == dto.m_num_double );
 	}
 }
 
