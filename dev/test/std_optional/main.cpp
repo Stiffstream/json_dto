@@ -85,7 +85,7 @@ TEST_CASE( "write to json" , "write" )
 	{
 		data_t obj;
 		obj.m_i = 25;
-		obj.m_s = "Bye";
+		obj.m_s = std::string{"Bye"};
 		const auto r = json_dto::to_json( obj );
 
 		REQUIRE( R"({"int":25,"str":"Bye"})" == r );
