@@ -16,13 +16,13 @@ namespace json_dto
 template <>
 void
 read_json_value(
-	const rapidjson::Value & object,
-	std::tm & v )
+	std::tm & v,
+	const rapidjson::Value & object )
 {
 	try
 	{
 		std::string representation;
-		read_json_value( object, representation );
+		read_json_value( representation, object );
 
 		const std::regex dt_regex{
 			R"regex(^(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2}):(\d{2})$)regex" };
