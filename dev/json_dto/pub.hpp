@@ -8,12 +8,6 @@
 
 #pragma once
 
-#include <cstdint>
-#include <vector>
-#include <memory>
-#include <limits>
-#include <type_traits>
-
 #include <rapidjson/document.h>
 #include <rapidjson/error/error.h>
 #include <rapidjson/error/en.h>
@@ -22,8 +16,46 @@
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/istreamwrapper.h>
 
+#include <cstdint>
+#include <vector>
+#include <memory>
+#include <limits>
+#include <type_traits>
+
+#if defined( __has_include )
+	//
+	// Check for std::optional or std::experimental::optional
+	//
+	#if __has_include(<optional>)
+		#include <optional>
+		#define JSON_DTO_HAS_STD_OPTIONAL
+	#elif __has_include(<experimental/optional>)
+		#include <experimental/optional>
+		#define JSON_DTO_HAS_EXPERIMENTAL_OPTIONAL
+	#endif
+	#if defined(JSON_DTO_HAS_STD_OPTIONAL) || \
+			defined(JSON_DTO_HAS_EXPERIMENTAL_OPTIONAL)
+		#define JSON_DTO_SUPPORTS_STD_OPTIONAL
+	#endif
+#endif
+
 namespace json_dto
 {
+
+namespace cpp17
+{
+#if defined(JSON_DTO_SUPPORTS_STD_OPTIONAL)
+	#if defined(JSON_DTO_HAS_STD_OPTIONAL)
+		template<typename T>
+		using optional = std::optional<T>;
+		inline constexpr auto nullopt() { return std::nullopt; }
+	#elif defined(JSON_DTO_HAS_EXPERIMENTAL_OPTIONAL)
+		template<typename T>
+		using optional = std::experimental::optional<T>;
+		inline constexpr auto nullopt() { return std::experimental::nullopt; }
+	#endif
+#endif
+} /* namespace cpp17 */
 
 //
 // ex_t
@@ -229,6 +261,33 @@ write_json_value(
 {
 	object.CopyFrom( d, allocator );
 }
+
+#if defined( JSON_DTO_SUPPORTS_STD_OPTIONAL )
+//
+// std::optional
+//
+template< typename T >
+inline void
+read_json_value(
+	cpp17::optional<T> & v,
+	const rapidjson::Value & object )
+{
+	T value_from_stream;
+	read_json_value( value_from_stream, object );
+	v = std::move(value_from_stream);
+}
+
+template< typename T >
+inline void
+write_json_value(
+	const cpp17::optional<T> & v,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	if( v )
+		write_json_value( *v, object, allocator );
+}
+#endif
 
 //
 // ARRAY
