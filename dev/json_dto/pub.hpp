@@ -26,12 +26,12 @@
 	//
 	// Check for std::optional or std::experimental::optional
 	//
-	#if __has_include(<optional>)
-		#include <optional>
-		#define JSON_DTO_HAS_STD_OPTIONAL
-	#elif __has_include(<experimental/optional>)
+	#if __has_include(<experimental/optional>)
 		#include <experimental/optional>
 		#define JSON_DTO_HAS_EXPERIMENTAL_OPTIONAL
+	#elif __has_include(<optional>)
+		#include <optional>
+		#define JSON_DTO_HAS_STD_OPTIONAL
 	#endif
 	#if defined(JSON_DTO_HAS_STD_OPTIONAL) || \
 			defined(JSON_DTO_HAS_EXPERIMENTAL_OPTIONAL)
