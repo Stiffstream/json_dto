@@ -8,5 +8,6 @@ dev/rapidjson
 dev/rapidjson_mxxru
 dev/lib/.*
 dev/catch
+dev/local-build.rb
 *.sublime-project
 *.sublime-workspace
