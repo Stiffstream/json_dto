@@ -50,6 +50,18 @@ read_json_value(
 	value.set( v );
 }
 
+template< typename T, T min, T max, T default_value >
+void
+write_json_value(
+	const bounded_value_t< T, min, max, default_value > & value,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	using namespace json_dto;
+
+	write_json_value( value.get(), object, allocator );
+}
+
 using year_day_t = bounded_value_t< int, 1, 366, 1 >;
 
 struct data_t
@@ -63,8 +75,6 @@ struct data_t
 	}
 };
 
-
-
 TEST_CASE( "user defined io read" , "read" )
 {
 	const std::string json_data{
@@ -75,20 +85,13 @@ TEST_CASE( "user defined io read" , "read" )
 	auto obj = json_dto::from_json< data_t >( json_data );
 
 	REQUIRE( 365 == obj.m_day.get() );
-#if 0
-	REQUIRE( obj.m_time_point.time_since_epoch() ==
-		std::chrono::milliseconds{ 1471509776042 } );
-
-	const auto dt = obj.m_dt;
-	REQUIRE( dt.tm_year + 1900 == 2016 );
-	REQUIRE( dt.tm_mon + 1 == 8 );
-	REQUIRE( dt.tm_mday == 18 );
-	REQUIRE( dt.tm_hour == 10 );
-	REQUIRE( dt.tm_min == 44 );
-	REQUIRE( dt.tm_sec == 35 );
-#endif
 }
 
 TEST_CASE( "user defined io write" , "write" )
 {
+	const data_t src{ year_day_t{ 255 } };
+
+	const auto r = json_dto::to_json( src );
+	REQUIRE( R"({"yday":255})" == r );
 }
+
