@@ -14,7 +14,7 @@ And since Fall 2016 is ready for public.
 
 To use *json_dto* it is necessary to have:
 
-* C++14 compiler (VC++14.0, GCC 5.1 or above, clang 3.6 or above)
+* C++14 compiler (VC++14.0, GCC 5.2 or above, clang 3.6 or above)
 * [rapidjson](https://github.com/miloyip/rapidjson)
 
 And for building with mxxru:
@@ -25,7 +25,7 @@ And for building with mxxru:
 
 And for running test:
 
-* [CATCH](https://github.com/philsquared/Catch) 1.5.4
+* [CATCH](https://github.com/philsquared/Catch) 1.10.0
 
 ## Obtaining
 
@@ -34,11 +34,11 @@ Assuming that *Mercurial*, *Git* and *Mxx_ru* are already installed.
 ### Cloning of Hg Repository
 
 ```
-hg clone https://bitbucket.org/sobjectizerteam/json_dto-0.1
+hg clone https://bitbucket.org/sobjectizerteam/json_dto-0.2
 ```
 And then:
 ```
-cd json_dto-0.1
+cd json_dto-0.2
 mxxruexternals
 ```
 to download and extract *json_dto*'s dependencies.
@@ -49,7 +49,7 @@ For *json_dto* itself:
 ~~~~~
 ::ruby
 MxxRu::arch_externals :json_dto do |e|
-  e.url 'https://bitbucket.org/sobjectizerteam/json_dto-0.1/get/v.0.1.2.tar.bz2'
+  e.url 'https://bitbucket.org/sobjectizerteam/json_dto-0.2/get/v.0.2.0.tar.bz2'
 
   e.map_dir 'dev/json_dto' => 'dev'
 end
@@ -77,7 +77,7 @@ While *json_dto* is header-only library test and samples require a build.
 
 Compiling with Mxx_ru:
 ```
-hg clone https://bitbucket.org/sobjectizerteam/json_dto-0.1
+hg clone https://bitbucket.org/sobjectizerteam/json_dto-0.2
 cd json_dto
 mxxruexternals
 cd dev
@@ -250,7 +250,8 @@ Out of the box *json_dto* lib supports following types:
 	std::int32_t, std::uint32_t,
 	std::int64_t, std::uint64_t,
 	double;
-* Strings: std::string.
+* Strings: std::string
+* C++17 specific: std::optional (or std::experimental::optional)
 
 Example:
 ~~~~~
@@ -409,6 +410,34 @@ json_io( JSON_IO & io, message_t & msg )
 } /* namespace json_dto */
 ~~~~~
 [See full example](./dev/sample/tutorial4/main.cpp)
+
+#### Optional fiels and std::optional
+
+Since v.0.2 it is possible to use C++17's `std::optional` template as a type
+for field. In this case `std::nullopt` can be passed as third argument to
+`json_dto::optional()` function:
+
+~~~~~{.cpp}
+struct email_data_t
+{
+	std::string m_from;
+	std::string m_to;
+	std::string m_subject;
+	std::optional<std::vector<std::string>> m_cc;
+	std::optional<std::vector<std::string>> m_bcc;
+	...
+	template<typename JSON_IO>
+	void json_io( JSON_IO & io )
+	{
+		io & json_dto::mandatory( "from", m_from )
+			& json_dto::mandatory( "to", m_to )
+			& json_dto::mandatory( "subject", m_subject )
+			& json_dto::optional( "cc", m_cc, std::nullopt )
+			& json_dto::optional( "bcc", m_bcc, std::nullopt )
+			...
+	}
+};
+~~~~~
 
 ## Array support
 
