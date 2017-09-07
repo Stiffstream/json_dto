@@ -885,11 +885,90 @@ It is possible to define custom IO logic for a specific type.
 It might be useful for types when using object is an overkill,
 for example time point that can be stored in format of 'YYYY.MM.DD hh:mm:ss'
 or some token composed of several small items like '<item1>-<item1>-<item3>'.
-
 But introducing custom IO logic for some type
 requires to work with *rapidjson* API directly.
-To introduce custom IO logic
-one needs to define explicit template specialization for 2 functons:
+
+There are two way to introduce custom IO logic.
+
+The first way uses C++'s Argument Dependent Lookup feature:
+an user should define `read_json_value` and `write_json_value` in the same
+namespace where its types are defined. The right implementations of
+`read_json_value` and `write_json_value` will be found by C++ compiler automatically.
+For example:
+~~~~~{.cpp}
+namespace importance_levels
+{
+
+enum class level_t
+	{
+		low,
+		normal,
+		high
+	};
+
+// read_json_value and write_json_value for level_t are
+// defined in importance_levels namespace.
+// They will be found by argument dependent lookup.
+void
+read_json_value(
+	level_t & value,
+	const rapidjson::Value & from )
+{...}
+
+void
+write_json_value(
+	const level_t & value,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{...}
+
+} /* namespace importance_levels */
+~~~~~
+
+This approach also allows to define `read_json_value` and `write_json_value`
+for user's template type. For example:
+~~~~~{.cpp}
+namespace demo
+{
+
+template<typename T>
+class some_template
+{...}
+
+template<typename T>
+void
+read_json_value(
+	some_template<T> & value,
+	const rapidjson::Value & from )
+{...}
+
+template<typename T>
+void
+write_json_value(
+	const some_template<T> & value,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{...}
+
+} /* namespace demo */
+
+struct my_data_t
+{
+	demo::some_template<int> m_first;
+	demo::some_template<double> m_second;
+	...
+	template<typename JSON_IO>
+	void json_io( JSON_IO & io )
+	{
+		io & json_dto::mandatory( "first", m_first )
+			& json_dto::mandatory( "second", m_second )
+			...
+	}
+};
+~~~~~
+[See full example with custom IO and ADL](./dev/sample/tutorial15/main.cpp)
+
+The second way uses explicit template specialization for 2 functons:
 ~~~~~
 ::c++
 namespace json_dto
@@ -898,8 +977,8 @@ namespace json_dto
 template <>
 void
 read_json_value(
-	const rapidjson::Value & object,
-	CUSTOM_TYPE & v )
+	CUSTOM_TYPE & v,
+	const rapidjson::Value & object )
 {
 	// ...
 }
@@ -918,9 +997,12 @@ write_json_value(
 ~~~~~
 
 *json_dto* will consider these specializations for using with
-specified `CUSTOM_TYPE`.
+specified `CUSTOM_TYPE`. This way can be used when it is impossible
+to place `read_json_value` and `write_json_value` into the namespace where
+the type if defined (for example if it is standard type like `std::filesystem::path`).
 
 [See full example with custom IO](./dev/sample/tutorial14/main.cpp)
+
 
 # License
 
