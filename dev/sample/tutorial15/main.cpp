@@ -120,8 +120,10 @@ read_json_value(
 	bounded_value_t< T, min, max, default_value > & value,
 	const rapidjson::Value & from )
 {
+	using json_dto::read_json_value;
+
 	T v{ default_value };
-	json_dto::read_json_value( v, from );
+	read_json_value( v, from );
 
 	value.set( v );
 }
@@ -133,7 +135,8 @@ write_json_value(
 	rapidjson::Value & object,
 	rapidjson::MemoryPoolAllocator<> & allocator )
 {
-	json_dto::write_json_value( value.get(), object, allocator );
+	using json_dto::write_json_value;
+	write_json_value( value.get(), object, allocator );
 }
 
 } /* namespace bounded_types */
@@ -166,8 +169,10 @@ read_json_value(
 	level_t & value,
 	const rapidjson::Value & from )
 {
+	using json_dto::read_json_value;
+
 	std::string representation;
-	json_dto::read_json_value( representation, from );
+	read_json_value( representation, from );
 
 	if( "low" == representation )
 		value = low;
@@ -186,10 +191,12 @@ write_json_value(
 	rapidjson::Value & object,
 	rapidjson::MemoryPoolAllocator<> & allocator )
 {
+	using json_dto::write_json_value;
+
 	std::string representation{ low == value ? "low" :
 			normal == value ? "normal" : "high" };
 
-	json_dto::write_json_value( representation, object, allocator );
+	write_json_value( representation, object, allocator );
 }
 
 } /* namespace importance_levels */
