@@ -8,6 +8,16 @@ and c++ structs. DTO here stands for data transfer object.
 It was made and used as a part of a larger project.
 And since Fall 2016 is ready for public.
 
+# What's new?
+
+## v.0.2
+
+New format of `read_json_value` function. **NOTE: this is a breaking change!**
+
+Support for `std::optional` (and `std::experimental::optional`) added. Note: this
+may require to specify C++17 standard in compiler params (like `/std:c++17` for MSVC or
+`-std=c++17` for GCC).
+
 # Obtain and build
 
 ## Prerequisites
