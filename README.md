@@ -97,7 +97,7 @@ ruby build.rb
 ```
 
 *NOTE.* It might be necessary to set up `MXX_RU_CPP_TOOLSET` environment variable,
-see Mxxx_ru documentation for further details.
+see Mxx_ru documentation for further details.
 
 # How to use it?
 
