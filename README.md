@@ -421,7 +421,7 @@ json_io( JSON_IO & io, message_t & msg )
 ~~~~~
 [See full example](./dev/sample/tutorial4/main.cpp)
 
-#### Optional fiels and std::optional
+#### Optional fields and std::optional
 
 Since v.0.2 it is possible to use C++17's `std::optional` template as a type
 for field. In this case `std::nullopt` can be passed as third argument to
@@ -448,6 +448,11 @@ struct email_data_t
 	}
 };
 ~~~~~
+
+*Note.* If a compiler doesn't have `std::optional` but have
+`std::experimental::optional` then `std::experimental::optional` and
+`std::experimental::nullopt` can be used.
+
 
 ## Array support
 
@@ -672,7 +677,7 @@ However there are some constraints:
 * nested type must be itself integrated with *json_dto*;
 * type must be default-constructible (for input);
 * for optional fields with default value equality operator must be defined
-(more precisely an equality operator between nested type and type of p[assed default value).
+(more precisely an equality operator between nested type and type of passed default value).
 
 Suppose there is a type which is already integrated with *json_dto*:
 ~~~~~
@@ -902,7 +907,7 @@ There are two way to introduce custom IO logic.
 
 The first way uses C++'s Argument Dependent Lookup feature:
 an user should define `read_json_value` and `write_json_value` in the same
-namespace where its types are defined. The right implementations of
+namespace where types are defined. The right implementations of
 `read_json_value` and `write_json_value` will be found by C++ compiler automatically.
 For example:
 ~~~~~{.cpp}
@@ -978,7 +983,8 @@ struct my_data_t
 ~~~~~
 [See full example with custom IO and ADL](./dev/sample/tutorial15/main.cpp)
 
-The second way uses explicit template specialization for 2 functons:
+The second way uses explicit template specialization for 2 functons
+inside `json_dto` namespace:
 ~~~~~
 ::c++
 namespace json_dto
