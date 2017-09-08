@@ -39,7 +39,7 @@ And for running test:
 
 ## Obtaining
 
-Assuming that *Mercurial*, *Git* and *Mxx_ru* are already installed.
+Assuming that *Mercurial* and *Mxx_ru* are already installed.
 
 ### Cloning of Hg Repository
 
