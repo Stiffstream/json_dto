@@ -5,8 +5,10 @@
 *json_dto* library is a small header-only helper
 for converting data between json representation
 and c++ structs. DTO here stands for data transfer object.
-It was made and used as a part of a larger project.
-And since Fall 2016 is ready for public.
+It was made and used as a part of a larger project
+inside [StiffStream](http://stiffstream.com).
+And since Fall 2016 is ready for public. We are still using it for
+working with JSON in various projects.
 
 # What's new?
 
