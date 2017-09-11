@@ -236,12 +236,10 @@ struct message_t
 	// Importance of message.
 	importance_levels::level_t m_importance;
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
 	{
-		io
-			& json_dto::mandatory( "from", m_from )
+		io & json_dto::mandatory( "from", m_from )
 			& json_dto::mandatory( "when", m_when )
 			& json_dto::mandatory( "text", m_text )
 			& json_dto::mandatory( "priority", m_priority )

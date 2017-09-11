@@ -156,11 +156,11 @@ override `operator&` for splitting io functionality.
 There are also iostream-like overrides for `operator<<` and `operator>>`:
 ~~~~~
 ::c++
-template < typename Dto >
+template< typename Dto >
 json_input_t &
 operator >> ( json_input_t & i, Dto & v );
 
-template < typename Dto >
+template< typename Dto >
 inline json_output_t &
 operator << ( json_output_t & o, const Dto & v );
 ~~~~~
@@ -203,11 +203,11 @@ But usually it is enough to work with `std::string` objects, so *json_dto*
 comes with handy to/from string helpers:
 ~~~~~
 ::c++
-template < typename Dto >
+template< typename Dto >
 std::string
 to_json( const Dto & dto );
 
-template < typename TYPE >
+template< typename TYPE >
 TYPE
 from_json( const std::string & json );
 ~~~~~
@@ -965,7 +965,7 @@ inside `json_dto` namespace:
 namespace json_dto
 {
 
-template <>
+template<>
 void
 read_json_value(
 	Custom_Type & v,
@@ -974,7 +974,7 @@ read_json_value(
 	// ...
 }
 
-template <>
+template<>
 void
 write_json_value(
 	const Custom_Type & v,

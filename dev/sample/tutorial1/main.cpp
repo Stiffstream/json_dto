@@ -29,12 +29,10 @@ struct message_t
 	// Message text.
 	std::string m_text;
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
 	{
-		io
-			& json_dto::mandatory( "from", m_from )
+		io & json_dto::mandatory( "from", m_from )
 			& json_dto::mandatory( "when", m_when )
 			& json_dto::mandatory( "text", m_text );
 	}

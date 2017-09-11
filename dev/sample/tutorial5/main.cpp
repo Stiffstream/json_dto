@@ -23,12 +23,10 @@ struct vector_types_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
-void
-json_io( JSON_IO & io, vector_types_t & obj )
+template< typename Json_Io >
+void json_io( Json_Io & io, vector_types_t & obj )
 {
-	io
-		& json_dto::mandatory( "bool", obj.m_bool )
+	io & json_dto::mandatory( "bool", obj.m_bool )
 		& json_dto::mandatory( "int16", obj.m_int16 )
 		& json_dto::mandatory( "uint16", obj.m_uint16 )
 		& json_dto::mandatory( "int32", obj.m_int32 )

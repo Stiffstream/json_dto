@@ -28,12 +28,10 @@ struct message_source_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
-void
-json_io( JSON_IO & io, message_source_t & m )
+template< typename Json_Io >
+void json_io( Json_Io & io, message_source_t & m )
 {
-	io
-		& json_dto::optional( "thread_id", m.m_thread_id, 0 )
+	io & json_dto::optional( "thread_id", m.m_thread_id, 0 )
 		& json_dto::mandatory( "subsystem", m.m_subsystem );
 }
 
@@ -60,14 +58,12 @@ struct message_t
 	// Message text.
 	std::string m_text;
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
 	{
 		json_dto::json_io( io, static_cast< message_source_t & >( *this ) );
 
-		io
-			& json_dto::mandatory( "when", m_when )
+		io & json_dto::mandatory( "when", m_when )
 			& json_dto::mandatory( "text", m_text );
 	}
 };

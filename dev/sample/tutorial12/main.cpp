@@ -54,12 +54,10 @@ struct message_t
 	// By default is constructed with null value.
 	json_dto::nullable_t< std::string > m_log_level{};
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
 	{
-		io
-			& json_dto::mandatory( "from", m_from )
+		io & json_dto::mandatory( "from", m_from )
 			& json_dto::mandatory(
 				"when",
 				m_when,

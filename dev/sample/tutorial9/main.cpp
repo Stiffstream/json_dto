@@ -24,12 +24,10 @@ struct message_source_t
 	std::int32_t m_thread_id{ 0 };
 	std::string m_subsystem{};
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
 	{
-		io
-			& json_dto::optional( "thread_id", m_thread_id, 0 )
+		io & json_dto::optional( "thread_id", m_thread_id, 0 )
 			& json_dto::mandatory( "subsystem", m_subsystem );
 	}
 };
@@ -64,12 +62,10 @@ struct message_t
 	// Message text.
 	std::string m_text{};
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
 	{
-		io
-			& json_dto::optional( "from", m_from, nullptr )
+		io & json_dto::optional( "from", m_from, nullptr )
 			& json_dto::mandatory( "when", m_when )
 			& json_dto::mandatory( "text", m_text );
 	}
@@ -90,12 +86,10 @@ struct message_pack_t
 
 	std::vector< message_t > m_messages;
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
 	{
-		io
-			& json_dto::mandatory( "from", m_from )
+		io & json_dto::mandatory( "from", m_from )
 			& json_dto::mandatory( "messages", m_messages );
 	}
 };

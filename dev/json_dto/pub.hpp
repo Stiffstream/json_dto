@@ -94,7 +94,7 @@ class json_input_t
 			:	m_object{ object }
 		{}
 
-		template < typename Binder >
+		template< typename Binder >
 		json_input_t &
 		operator & ( const Binder & b )
 		{
@@ -123,7 +123,7 @@ class json_output_t
 			m_object.SetObject();
 		}
 
-		template < typename Binder >
+		template< typename Binder >
 		json_output_t &
 		operator & ( const Binder & b )
 		{
@@ -301,13 +301,13 @@ write_json_value(
 // ARRAY
 //
 
-template < typename T, typename A >
+template< typename T, typename A >
 void
 read_json_value(
 	std::vector< T, A > & vec,
 	const rapidjson::Value & object );
 
-template < typename T, typename A >
+template< typename T, typename A >
 void
 write_json_value(
 	const std::vector< T, A > & vec,
@@ -319,7 +319,7 @@ write_json_value(
 //
 
 //! A wrapper for nullable fields.
-template < typename Field_Type >
+template< typename Field_Type >
 struct nullable_t
 {
 	nullable_t()
@@ -350,7 +350,7 @@ struct nullable_t
 			new( m_image_space ) Field_Type{ std::move( other.field_ref() ) };
 	}
 
-	template < typename... Args >
+	template< typename... Args >
 	explicit nullable_t( Args &&... args )
 		:	m_has_value{ true }
 	{
@@ -529,7 +529,7 @@ struct nullable_t
 	It is possible to implement specifications for a concrete DTO type.
 	For example it allows to write non intrusive json_io adapters.
 */
-template < typename Io, typename Dto >
+template< typename Io, typename Dto >
 void
 json_io( Io & io, Dto & dto )
 {
@@ -540,7 +540,7 @@ json_io( Io & io, Dto & dto )
 // Nested DTO helpers.
 //
 
-template < typename Dto >
+template< typename Dto >
 void
 read_json_value(
 	Dto & v,
@@ -550,7 +550,7 @@ read_json_value(
 	json_io( input, v );
 }
 
-template < typename Dto >
+template< typename Dto >
 void
 write_json_value(
 	const Dto & v,
@@ -565,7 +565,7 @@ write_json_value(
 // RW specializations for nullable_t< T >
 //
 
-template < typename Field_Type >
+template< typename Field_Type >
 void
 read_json_value(
 	nullable_t< Field_Type > & f,
@@ -576,7 +576,7 @@ read_json_value(
 	f = std::move( value );
 }
 
-template < typename Field_Type >
+template< typename Field_Type >
 void
 write_json_value(
 	nullable_t< Field_Type > & f,
@@ -593,7 +593,7 @@ write_json_value(
 // ARRAY
 //
 
-template < typename T, typename A  >
+template< typename T, typename A  >
 void
 read_json_value(
 	std::vector< T, A > & vec,
@@ -614,7 +614,7 @@ read_json_value(
 		throw ex_t{ "value is not an array" };
 }
 
-template < typename T, typename A  >
+template< typename T, typename A  >
 void
 write_json_value(
 	const std::vector< T, A > & vec,
@@ -634,28 +634,28 @@ write_json_value(
 // Funcs for handling nullable property.
 //
 
-template < typename Field_Type >
+template< typename Field_Type >
 void
 set_value_null_attr( Field_Type & )
 {
 	throw ex_t{ "non nullable field is null" };
 }
 
-template < typename Field_Type >
+template< typename Field_Type >
 void
 set_value_null_attr( nullable_t< Field_Type > & f )
 {
 	f.reset();
 }
 
-template < typename Field_Type, typename Field_Default_Value_Type >
+template< typename Field_Type, typename Field_Default_Value_Type >
 void
 set_default_value( Field_Type & f, Field_Default_Value_Type && default_value )
 {
 	f = std::move( default_value );
 }
 
-template < typename Field_Type, typename Field_Default_Value_Type >
+template< typename Field_Type, typename Field_Default_Value_Type >
 void
 set_default_value(
 	nullable_t< Field_Type > & f,
@@ -671,14 +671,14 @@ set_default_value(
 //! Field set/notset attribute ckecker for mandatory case.
 struct mandatory_attr_t
 {
-	template < typename Field_Type >
+	template< typename Field_Type >
 	void
 	on_field_not_defined( Field_Type & ) const
 	{
 		throw ex_t{ "mandatory field doesn't exist" };
 	}
 
-	template < typename Field_Type >
+	template< typename Field_Type >
 	constexpr bool
 	is_default_value( Field_Type & ) const
 	{
@@ -691,28 +691,28 @@ struct mandatory_attr_t
 //
 
 //! Field set/notset attribute ckecker for optional case with default value.
-template < typename Field_Default_Value_Type >
+template< typename Field_Default_Value_Type >
 struct optional_attr_t
 {
 	optional_attr_t( Field_Default_Value_Type default_value )
 		:	m_default_value{ std::move( default_value ) }
 	{}
 
-	template < typename Field_Type >
+	template< typename Field_Type >
 	void
 	on_field_not_defined( Field_Type & f ) const
 	{
 		set_default_value( f, std::move( m_default_value ) );
 	}
 
-	template < typename Field_Type >
+	template< typename Field_Type >
 	bool
 	is_default_value( nullable_t< Field_Type > & f ) const
 	{
 		return f && *f == m_default_value;
 	}
 
-	template < typename Field_Type >
+	template< typename Field_Type >
 	bool
 	is_default_value( Field_Type & f ) const
 	{
@@ -729,14 +729,14 @@ struct optional_attr_t
 //! Field set/notset attribute ckecker for optional case with default value.
 struct optional_attr_null_t
 {
-	template < typename Field_Type >
+	template< typename Field_Type >
 	void
 	on_field_not_defined( nullable_t< Field_Type > & f ) const
 	{
 		f.reset();
 	}
 
-	template < typename Field_Type >
+	template< typename Field_Type >
 	bool
 	is_default_value( nullable_t< Field_Type > & f ) const
 	{
@@ -751,12 +751,12 @@ struct optional_attr_null_t
 //! Field set/notset attribute ckecker for optional case without default value.
 struct optional_nodefault_attr_t
 {
-	template < typename Field_Type >
+	template< typename Field_Type >
 	constexpr void
 	on_field_not_defined( Field_Type & ) const
 	{}
 
-	template < typename Field_Type >
+	template< typename Field_Type >
 	constexpr bool
 	is_default_value( Field_Type & ) const
 	{
@@ -772,7 +772,7 @@ using string_ref_t = rapidjson::Value::StringRefType;
 
 struct empty_validator_t
 {
-	template < typename Field_Type >
+	template< typename Field_Type >
 	constexpr void
 	operator () ( const Field_Type & ) const
 	{}
@@ -783,7 +783,7 @@ struct empty_validator_t
 //
 
 //! JSON IO binder_t for a field.
-template <
+template<
 		typename Field_Type,
 		typename Manopt_Policy,
 		typename Validator >
@@ -896,7 +896,7 @@ class binder_t
 //
 
 //! Create bind for a mandatory JSON field with validator.
-template <
+template<
 		typename Field_Type,
 		typename Validator = empty_validator_t >
 auto
@@ -919,7 +919,7 @@ mandatory(
 //
 
 //! Create bind for an optional JSON field with default value and validator.
-template <
+template<
 		typename Field_Type,
 		typename Field_Default_Value_Type,
 		typename Validator = empty_validator_t >
@@ -946,7 +946,7 @@ optional(
 //
 
 //! Create bind for an optional JSON field with null default value .
-template <
+template<
 		typename Field_Type,
 		typename Validator = empty_validator_t >
 auto
@@ -966,7 +966,7 @@ optional_null(
 //
 
 //! Create bind for an optional JSON field with null default value.
-template <
+template<
 		typename Field_Type,
 		typename Validator = empty_validator_t >
 auto
@@ -984,7 +984,7 @@ optional(
 //
 
 //! Create bind for an optional JSON field without default value.
-template <
+template<
 		typename Field_Type,
 		typename Validator = empty_validator_t >
 auto
@@ -998,7 +998,7 @@ optional_no_default(
 			field_name, field, optional_nodefault_attr_t{}, std::move( validator ) };
 }
 
-template < typename Dto >
+template< typename Dto >
 json_input_t &
 operator >> ( json_input_t & i, Dto & v )
 {
@@ -1006,7 +1006,7 @@ operator >> ( json_input_t & i, Dto & v )
 	return i;
 }
 
-template < typename Dto >
+template< typename Dto >
 inline json_output_t &
 operator << ( json_output_t & o, const Dto & v )
 {
@@ -1018,7 +1018,7 @@ operator << ( json_output_t & o, const Dto & v )
 // to_json
 //
 
-template < typename Dto >
+template< typename Dto >
 std::string
 to_json( const Dto & dto )
 {
@@ -1053,7 +1053,7 @@ check_document_parse_status(
 //
 
 //! Helper function to read DTO from json-string.
-template < typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
 Type
 from_json( const std::string & json )
 {
@@ -1072,7 +1072,7 @@ from_json( const std::string & json )
 }
 
 //! Helper function to read an already instantiated DTO.
-template < typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
 void
 from_json( const std::string & json, Type & o )
 {

@@ -44,12 +44,10 @@ struct message_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
-void
-json_io( JSON_IO & io, message_t & msg )
+template< typename Json_Io >
+void json_io( Json_Io & io, message_t & msg )
 {
-	io
-		& json_dto::mandatory( "from", msg.m_from )
+	io & json_dto::mandatory( "from", msg.m_from )
 		& json_dto::mandatory( "when", msg.m_when )
 		& json_dto::mandatory( "text", msg.m_text )
 		& json_dto::optional( "text_format", msg.m_text_format, "text/plain" )
