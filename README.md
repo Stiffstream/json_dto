@@ -12,7 +12,11 @@ working with JSON in various projects.
 
 # What's new?
 
-## v.0.2
+## v.0.2.1
+
+Some code style changes to meet expectations of some users.
+
+## v.0.2.0
 
 New format of `read_json_value` function. **NOTE: this is a breaking change!**
 
@@ -810,7 +814,7 @@ check_all_7bit(
 	const std::string & text)
 {
 	const auto it = std::find_if(std::begin(text), std::end(text),
-			[]( char c ){ return c & 0x80; });
+			[](char c){ return c & 0x80; });
 
 	if( std::end(text) != it )
 	{
