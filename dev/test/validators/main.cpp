@@ -37,9 +37,9 @@ struct nums_t
 		,	m_num_int64{ num_int64 }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& mandatory(
@@ -219,9 +219,9 @@ struct strings_t
 		,	m_s2{ std::move( s2 ) }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& mandatory(
@@ -378,9 +378,9 @@ struct nums_t
 		,	m_num_int64{ num_int64 }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional_no_default(
@@ -605,9 +605,9 @@ struct strings_t
 		,	m_s2{ std::move( s2 ) }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional_no_default(
@@ -783,9 +783,9 @@ struct nums_t
 		,	m_num_int64{ num_int64 }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional(
@@ -1021,9 +1021,9 @@ struct strings_t
 		,	m_s2{ std::move( s2 ) }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional(
@@ -1201,9 +1201,9 @@ struct nums_t
 		,	m_num_int64{ num_int64 }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& mandatory(
@@ -1430,9 +1430,9 @@ struct strings_t
 		,	m_s2{ std::move( s2 ) }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& mandatory(
@@ -1618,9 +1618,9 @@ struct nums_t
 		,	m_num_int64{ num_int64 }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional_no_default(
@@ -1849,9 +1849,9 @@ struct strings_t
 		,	m_s2{ std::move( s2 ) }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional_no_default(
@@ -2057,9 +2057,9 @@ struct nums_t
 		,	m_num_int64{ num_int64 }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional(
@@ -2314,9 +2314,9 @@ struct strings_t
 		,	m_s2{ std::move( s2 ) }
 	{}
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional(
@@ -2541,9 +2541,9 @@ struct vector_fields_t
 	nullable_t< std::vector< std::int32_t > > m_nums_mandatory_nullable;
 	nullable_t< std::vector< std::int32_t > > m_nums_optional_nullable;
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		static auto on_of_validator =
 			one_of_constraint< std::int32_t >( { -10, -5, 0, 5, 10 } );

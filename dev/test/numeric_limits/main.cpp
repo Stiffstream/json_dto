@@ -33,9 +33,9 @@ struct nums_t
 	std::uint32_t m_num_uint32;
 	std::uint64_t m_num_uint64;
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional( "num_int16", m_num_int16, std::int16_t{ 0 } )

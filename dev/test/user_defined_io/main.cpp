@@ -188,9 +188,9 @@ write_json_value(
 
 // -------------------------------------------------------------------
 
-template < typename JSON_IO >
+template < typename Json_Io >
 void
-json_io( JSON_IO & io, data_t & value )
+json_io( Json_Io & io, data_t & value )
 {
 	io
 		& mandatory( "duration", value.m_duration )

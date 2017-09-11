@@ -41,9 +41,9 @@ struct complex_data_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
+template < typename Json_Io >
 void
-json_io( JSON_IO & io, data_t & value )
+json_io( Json_Io & io, data_t & value )
 {
 	io
 		& optional( "num_int32", value.m_num_int32, 0 )
@@ -51,9 +51,9 @@ json_io( JSON_IO & io, data_t & value )
 		& mandatory( "string", value.m_string );
 }
 
-template < typename JSON_IO >
+template < typename Json_Io >
 void
-json_io( JSON_IO & io, complex_data_t & value )
+json_io( Json_Io & io, complex_data_t & value )
 {
 	io
 		& optional_no_default( "d1", value.m_d1 )

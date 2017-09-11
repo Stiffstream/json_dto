@@ -54,9 +54,9 @@ struct supported_types_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
+template < typename Json_Io >
 void
-json_io( JSON_IO & io, supported_types_t & obj )
+json_io( Json_Io & io, supported_types_t & obj )
 {
 	io
 		& mandatory( "bool", obj.m_bool )

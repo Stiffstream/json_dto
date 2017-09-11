@@ -16,9 +16,9 @@ struct floats_t
 	float m_num_float;
 	double m_num_double;
 
-	template < typename JSON_IO >
+	template< typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional( "num_float", m_num_float, 0.0f )

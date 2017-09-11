@@ -64,9 +64,9 @@ struct simple_types_dto_t
 	nullable_t< std::int32_t > m_num_opt_nullable{};
 	nullable_t< std::int32_t > m_num_opt_no_default_nullable{};
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional( "num_opt", m_num_opt, 0 )
@@ -171,9 +171,9 @@ struct vector_simple_types_dto_t
 	std::vector< std::string > m_str_vec_opt;
 	nullable_t< std::vector< std::string > > m_str_vec_opt_nullable;
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional_no_default( "str_vec_opt", m_str_vec_opt )
@@ -316,9 +316,9 @@ simple_types_dto_sample_str()
 namespace json_dto
 {
 
-template < typename JSON_IO >
+template < typename Json_Io >
 void
-json_io( JSON_IO & io, complex_type_t & dto )
+json_io( Json_Io & io, complex_type_t & dto )
 {
 	io
 		& optional( "opt", dto.m_opt, simple_types_dto_default() )
@@ -431,9 +431,9 @@ struct vector_complex_types_dto_t
 	std::vector< vector_simple_types_dto_t > m_vec_opt;
 	nullable_t< std::vector< vector_simple_types_dto_t > > m_vec_opt_nullable;
 
-	template < typename JSON_IO >
+	template < typename Json_Io >
 	void
-	json_io( JSON_IO & io )
+	json_io( Json_Io & io )
 	{
 		io
 			& optional_no_default( "vec_opt", m_vec_opt )
