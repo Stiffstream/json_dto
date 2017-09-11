@@ -132,12 +132,10 @@ struct message_t
 	std::string m_text;
 
 	// Entry point for json_dto.
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template<typename Json_Io>
+	void json_io( Json_Io & io )
 	{
-		io
-			& json_dto::mandatory( "from", m_from )
+		io & json_dto::mandatory( "from", m_from )
 			& json_dto::mandatory( "when", m_when )
 			& json_dto::mandatory( "text", m_text );
 	}
@@ -150,21 +148,21 @@ It describes how to read the data from *rapidjson::Value*
 in *rapidjson::Value*.
 `json_io()` is a template function. It allows to have a single
 description for read and write operations.
-The template is instantiated with `JSON_IO=json_dto::json_input_t`
-for reading dto from JSON-value and `JSON_IO=json_dto::json_output_t` for writing
+The template is instantiated with `Json_Io=json_dto::json_input_t`
+for reading dto from JSON-value and `Json_Io=json_dto::json_output_t` for writing
 dto to JSON-value. Both `json_dto::json_input_t` and `json_dto::json_output_t`
 override `operator&` for splitting io functionality.
 
 There are also iostream-like overrides for `operator<<` and `operator>>`:
 ~~~~~
 ::c++
-template < typename DTO >
+template < typename Dto >
 json_input_t &
-operator >> ( json_input_t & i, DTO & v );
+operator >> ( json_input_t & i, Dto & v );
 
-template < typename DTO >
+template < typename Dto >
 inline json_output_t &
-operator << ( json_output_t & o, const DTO & v );
+operator << ( json_output_t & o, const Dto & v );
 ~~~~~
 
 But they are only helpful for top level read/write operations.
@@ -205,9 +203,9 @@ But usually it is enough to work with `std::string` objects, so *json_dto*
 comes with handy to/from string helpers:
 ~~~~~
 ::c++
-template < typename DTO >
+template < typename Dto >
 std::string
-to_json( const DTO & dto );
+to_json( const Dto & dto );
 
 template < typename TYPE >
 TYPE
@@ -235,12 +233,10 @@ struct message_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
-void
-json_io( JSON_IO & io, message_t & msg )
+template<typename Json_Io>
+void json_io( Json_Io & io, message_t & msg )
 {
-	io
-		& json_dto::mandatory( "from", msg.m_from )
+	io & json_dto::mandatory( "from", msg.m_from )
 		& json_dto::mandatory( "when", msg.m_when )
 		& json_dto::mandatory( "text", msg.m_text );
 }
@@ -288,12 +284,10 @@ struct supported_types_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
-void
-json_io( JSON_IO & io, supported_types_t & obj )
+template<typename Json_Io>
+void json_io( Json_Io & io, supported_types_t & obj )
 {
-	io
-		& json_dto::mandatory( "bool", obj.m_bool )
+	io & json_dto::mandatory( "bool", obj.m_bool )
 		& json_dto::mandatory( "int16", obj.m_int16 )
 		& json_dto::mandatory( "uint16", obj.m_uint16 )
 		& json_dto::mandatory( "int32", obj.m_int32 )
@@ -322,7 +316,7 @@ Binds are created by `mandatory()`, `optional()` and
 *Binder* is an instantiation of `binder_t` template class
 which carries a part of internal logic
 capable for handling field input/output operations.
-With the help of *binders* `JSON_IO` object understands how read, write and validate
+With the help of *binders* `Json_Io` object understands how read, write and validate
 the underlying field.
 
 ### Mandatory fields
@@ -330,14 +324,14 @@ the underlying field.
 Binders for mandatory fields are created via `mandatory()` function:
 ~~~~~
 ::c++
-template <
-		typename FIELD_TYPE,
-		typename VALIDATOR = empty_validator_t >
+template<
+		typename Field_Type,
+		typename Validator = empty_validator_t >
 auto
 mandatory(
 	string_ref_t field_name,
-	FIELD_TYPE & field,
-	VALIDATOR validator = VALIDATOR{} );
+	Field_Type & field,
+	Validator validator = Validator{} );
 ~~~~~
 
 First parameter *field_name* is of type `string_ref_t`
@@ -356,25 +350,25 @@ is used, and as it says it does nothing.
 Binders for optional fields are created via `optional()` and
 `optional_no_default()` functions:
 ~~~~~
-template <
-		typename FIELD_TYPE,
-		typename FIELD_DEFAULT_VALUE_TYPE,
-		typename VALIDATOR = empty_validator_t >
+template<
+		typename Field_Type,
+		typename Field_Default_Value_Type,
+		typename Validator = empty_validator_t >
 auto
 optional(
 	string_ref_t field_name,
-	FIELD_TYPE & field,
-	FIELD_DEFAULT_VALUE_TYPE default_value,
-	VALIDATOR validator = VALIDATOR{} );
+	Field_Type & field,
+	Field_Default_Value_Type default_value,
+	Validator validator = Validator{} );
 
-template <
-		typename FIELD_TYPE,
-		typename VALIDATOR = empty_validator_t >
+template<
+		typename Field_Type,
+		typename Validator = empty_validator_t >
 auto
 optional_no_default(
 	string_ref_t field_name,
-	FIELD_TYPE & field,
-	VALIDATOR validator = VALIDATOR{} );
+	Field_Type & field,
+	Validator validator = Validator{} );
 ~~~~~
 
 Parameters for functions are pretty much the same as for
@@ -407,12 +401,10 @@ struct message_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
-void
-json_io( JSON_IO & io, message_t & msg )
+template<typename Json_Io>
+void json_io(Json_Io & io, message_t & msg)
 {
-	io
-		& json_dto::mandatory( "from", msg.m_from )
+	io & json_dto::mandatory( "from", msg.m_from )
 		& json_dto::mandatory( "when", msg.m_when )
 		& json_dto::mandatory( "text", msg.m_text )
 		& json_dto::optional( "text_format", msg.m_text_format, "text/plain" )
@@ -438,8 +430,8 @@ struct email_data_t
 	std::optional<std::vector<std::string>> m_cc;
 	std::optional<std::vector<std::string>> m_bcc;
 	...
-	template<typename JSON_IO>
-	void json_io( JSON_IO & io )
+	template<typename Json_Io>
+	void json_io( Json_Io & io )
 	{
 		io & json_dto::mandatory( "from", m_from )
 			& json_dto::mandatory( "to", m_to )
@@ -490,12 +482,10 @@ struct vector_types_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
-void
-json_io( JSON_IO & io, vector_types_t & obj )
+template<typename Json_Io>
+void json_io( Json_Io & io, vector_types_t & obj )
 {
-	io
-		& json_dto::mandatory( "bool", obj.m_bool )
+	io & json_dto::mandatory( "bool", obj.m_bool )
 		& json_dto::mandatory( "int16", obj.m_int16 )
 		& json_dto::mandatory( "uint16", obj.m_uint16 )
 		& json_dto::mandatory( "int32", obj.m_int32 )
@@ -546,12 +536,10 @@ struct message_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
-void
-json_io( JSON_IO & io, message_t & msg )
+template<typename Json_Io>
+void json_io( Json_Io & io, message_t & msg )
 {
-	io
-		& json_dto::mandatory( "from", msg.m_from )
+	io & json_dto::mandatory( "from", msg.m_from )
 		& json_dto::mandatory( "when", msg.m_when )
 		& json_dto::mandatory( "text", msg.m_text )
 		& json_dto::optional( "log_level", msg.m_log_level, nullptr );
@@ -625,12 +613,10 @@ struct message_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
-void
-json_io( JSON_IO & io, message_t & msg )
+template<typename Json_Io>
+void json_io( Json_Io & io, message_t & msg )
 {
-	io
-		& json_dto::mandatory( "from", msg.m_from )
+	io & json_dto::mandatory( "from", msg.m_from )
 		& json_dto::mandatory( "when", msg.m_when )
 		& json_dto::mandatory( "text", msg.m_text )
 		& json_dto::optional( "log_level", msg.m_log_level, nullptr )
@@ -689,12 +675,10 @@ struct message_source_t
 	std::int32_t m_thread_id{ 0 };
 	std::string m_subsystem{};
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template<typename Json_Io>
+	void json_io( Json_Io & io )
 	{
-		io
-			& json_dto::optional( "thread_id", m_thread_id, 0 )
+		io & json_dto::optional( "thread_id", m_thread_id, 0 )
 			& json_dto::mandatory( "subsystem", m_subsystem );
 	}
 };
@@ -709,12 +693,10 @@ struct message_t
 	std::int64_t m_when;
 	std::string m_text;
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
 	{
-		io
-			& json_dto::mandatory( "from", m_from ) // Exactly as with simple types.
+		io & json_dto::mandatory( "from", m_from ) // Exactly as with simple types.
 			& json_dto::mandatory( "when", m_when )
 			& json_dto::mandatory( "text", m_text );
 	}
@@ -737,15 +719,13 @@ struct derived_t : public base_t
 {
 	//...
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template<typename Json_Io>
+	void json_io( Json_Io & io )
 	{
 		base_t::json_io( io ); // Run io on base class.
 
 		// Run io on extra data:
-		io
-			& json_dto::mandatory( "some_field", m_some_field )
+		io & json_dto::mandatory( "some_field", m_some_field )
 			// ...
 			;
 	}
@@ -757,9 +737,8 @@ However for easier maintenance it is recommended to use non intrusive
 in non intrusive manner, then the following wouldn't work:
 ~~~~~
 ::c++
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template<typename Json_Io>
+	void json_io( Json_Io & io )
 	{
 		// Base class doesn't provide such member function.
 		base_t::json_io( io ); // Run io on base class.
@@ -779,12 +758,10 @@ struct message_source_t
 namespace json_dto
 {
 
-template < typename JSON_IO >
-void
-json_io( JSON_IO & io, message_source_t & m )
+template<typename Json_Io>
+void json_io( Json_Io & io, message_source_t & m )
 {
-	io
-		& json_dto::optional( "thread_id", m.m_thread_id, 0 )
+	io & json_dto::optional( "thread_id", m.m_thread_id, 0 )
 		& json_dto::mandatory( "subsystem", m.m_subsystem );
 }
 
@@ -795,14 +772,12 @@ struct message_t : public message_source_t
 	std::int64_t m_when;
 	std::string m_text;
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template<typename Json_Io>
+	void json_io( Json_Io & io )
 	{
 		json_dto::json_io( io, static_cast< message_source_t & >( *this ) );
 
-		io
-			& json_dto::mandatory( "when", m_when )
+		io & json_dto::mandatory( "when", m_when )
 			& json_dto::mandatory( "text", m_text );
 	}
 };
@@ -856,12 +831,10 @@ struct message_t
 	// Message text. Must be 7bit ascii.
 	std::string m_text;
 
-	template < typename JSON_IO >
-	void
-	json_io( JSON_IO & io )
+	template<typename Json_Io>
+	void json_io( Json_Io & io )
 	{
-		io
-			& json_dto::mandatory( "from", m_from )
+		io & json_dto::mandatory( "from", m_from )
 			& json_dto::mandatory( "when", m_when )
 			& json_dto::mandatory( "text", m_text, check_all_7bit );
 	}
@@ -876,7 +849,7 @@ They are defined in `<json_dto/pub.hpp>` header.
 
 Standard validators curently available:
 
-* `min_max_constraint_t< NUM >` - range validator, targeted for numeric types;
+* `min_max_constraint_t< Num >` - range validator, targeted for numeric types;
 * `one_of_validator_t< T >` - validator for set of values.
 
 Standard validators are template classes with overloaded `operator()`.
@@ -885,13 +858,13 @@ for each validator there is an auxiliary function that helps deduce
 type of template instance from arguments:
 ~~~~~
 ::c++
-template < typename NUMBER >
+template< typename Number >
 auto
-min_max_constraint( NUMBER min_value, NUMBER max_value );
+min_max_constraint( Number min_value, Number max_value );
 
-template < typename FIELD_TYPE >
+template< typename Field_Type >
 auto
-one_of_constraint( std::initializer_list< FIELD_TYPE > values );
+one_of_constraint( std::initializer_list< Field_Type > values );
 ~~~~~
 
 [See full example with standard validators](./dev/sample/tutorial12/main.cpp)
@@ -974,8 +947,8 @@ struct my_data_t
 	demo::some_template<int> m_first;
 	demo::some_template<double> m_second;
 	...
-	template<typename JSON_IO>
-	void json_io( JSON_IO & io )
+	template<typename Json_Io>
+	void json_io( Json_Io & io )
 	{
 		io & json_dto::mandatory( "first", m_first )
 			& json_dto::mandatory( "second", m_second )
@@ -995,7 +968,7 @@ namespace json_dto
 template <>
 void
 read_json_value(
-	CUSTOM_TYPE & v,
+	Custom_Type & v,
 	const rapidjson::Value & object )
 {
 	// ...
@@ -1004,7 +977,7 @@ read_json_value(
 template <>
 void
 write_json_value(
-	const CUSTOM_TYPE & v,
+	const Custom_Type & v,
 	rapidjson::Value & object,
 	rapidjson::MemoryPoolAllocator<> & allocator )
 {
@@ -1015,7 +988,7 @@ write_json_value(
 ~~~~~
 
 *json_dto* will consider these specializations for using with
-specified `CUSTOM_TYPE`. This way can be used when it is impossible
+specified `Custom_Type`. This way can be used when it is impossible
 to place `read_json_value` and `write_json_value` into the namespace where
 the type if defined (for example if it is standard type like `std::filesystem::path`).
 
