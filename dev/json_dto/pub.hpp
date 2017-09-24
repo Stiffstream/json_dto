@@ -278,23 +278,14 @@ template< typename T >
 inline void
 read_json_value(
 	cpp17::optional<T> & v,
-	const rapidjson::Value & object )
-{
-	T value_from_stream;
-	read_json_value( value_from_stream, object );
-	v = std::move(value_from_stream);
-}
+	const rapidjson::Value & object );
 
 template< typename T >
 inline void
 write_json_value(
 	const cpp17::optional<T> & v,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator )
-{
-	if( v )
-		write_json_value( *v, object, allocator );
-}
+	rapidjson::MemoryPoolAllocator<> & allocator );
 #endif
 
 //
@@ -588,6 +579,33 @@ write_json_value(
 	else
 		object.SetNull();
 }
+
+#if defined( JSON_DTO_SUPPORTS_STD_OPTIONAL )
+//
+// std::optional
+//
+template< typename T >
+inline void
+read_json_value(
+	cpp17::optional<T> & v,
+	const rapidjson::Value & object )
+{
+	T value_from_stream;
+	read_json_value( value_from_stream, object );
+	v = std::move(value_from_stream);
+}
+
+template< typename T >
+inline void
+write_json_value(
+	const cpp17::optional<T> & v,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	if( v )
+		write_json_value( *v, object, allocator );
+}
+#endif
 
 //
 // ARRAY
