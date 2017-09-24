@@ -12,6 +12,12 @@ working with JSON in various projects.
 
 # What's new?
 
+## v.0.2.2
+
+Bug fix in implementation of `std::optional` support.
+
+New example tutorial6.1 added.
+
 ## v.0.2.1
 
 Some code style changes to meet expectations of some users.
@@ -211,8 +217,8 @@ template<typename Dto>
 std::string
 to_json(const Dto & dto);
 
-template<typename TYPE>
-TYPE
+template<typename Type>
+Type
 from_json(const std::string & json);
 ~~~~~
 

@@ -33,7 +33,7 @@ MxxRu::Cpp::composite_target( MxxRu::BUILD_ROOT ) {
   required_prj( "sample/tutorial4/prj.rb" )
   required_prj( "sample/tutorial5/prj.rb" )
   required_prj( "sample/tutorial6/prj.rb" )
-  required_prj( "sample/tutorial6_1/prj.rb" )
+  required_prj( "sample/tutorial6.1/prj.rb" )
   required_prj( "sample/tutorial7/prj.rb" )
   required_prj( "sample/tutorial8/prj.rb" )
   required_prj( "sample/tutorial9/prj.rb" )

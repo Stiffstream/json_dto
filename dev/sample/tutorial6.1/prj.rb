@@ -5,7 +5,7 @@ require 'mxx_ru/cpp'
 MxxRu::Cpp::exe_target {
 
   # Define your target name here.
-  target 'sample.tutorial6_1'
+  target 'sample.tutorial6.1'
 
   required_prj 'rapidjson_mxxru/prj.rb'
 
