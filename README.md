@@ -12,6 +12,10 @@ working with JSON in various projects.
 
 # What's new?
 
+## v.0.2.3
+
+Bug fix in support of `std::vector<bool>`.
+
 ## v.0.2.2
 
 Bug fix in implementation of `std::optional` support.
