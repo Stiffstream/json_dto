@@ -632,6 +632,25 @@ read_json_value(
 		throw ex_t{ "value is not an array" };
 }
 
+namespace details
+{
+
+template< typename T >
+struct std_vector_item_read_access_type
+{
+	using type = const T&;
+};
+
+// since v.0.2.3
+// std::vector<bool> must be processed different way.
+template<>
+struct std_vector_item_read_access_type<bool>
+{
+	using type = const bool;
+};
+
+} /* namespace details */
+
 template< typename T, typename A  >
 void
 write_json_value(
@@ -640,25 +659,7 @@ write_json_value(
 	rapidjson::MemoryPoolAllocator<> & allocator )
 {
 	object.SetArray();
-	for( const auto & v : vec )
-	{
-		rapidjson::Value o;
-		write_json_value( v, o, allocator );
-		object.PushBack( o, allocator );
-	}
-}
-
-// since v.0.2.3
-// std::vector<bool> must be processed different way.
-template<>
-void
-write_json_value<bool, std::allocator<bool>>(
-	const std::vector< bool, std::allocator<bool> > & vec,
-	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator )
-{
-	object.SetArray();
-	for( const auto v : vec )
+	for( typename details::std_vector_item_read_access_type<T>::type v : vec )
 	{
 		rapidjson::Value o;
 		write_json_value( v, o, allocator );
