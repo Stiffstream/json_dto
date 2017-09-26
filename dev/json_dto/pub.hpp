@@ -648,6 +648,24 @@ write_json_value(
 	}
 }
 
+// since v.0.2.3
+// std::vector<bool> must be processed different way.
+template<>
+void
+write_json_value<bool, std::allocator<bool>>(
+	const std::vector< bool, std::allocator<bool> > & vec,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	object.SetArray();
+	for( const auto v : vec )
+	{
+		rapidjson::Value o;
+		write_json_value( v, o, allocator );
+		object.PushBack( o, allocator );
+	}
+}
+
 //
 // Funcs for handling nullable property.
 //
