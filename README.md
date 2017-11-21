@@ -341,8 +341,7 @@ Binders for mandatory fields are created via `mandatory()` function:
 template<
 		typename Field_Type,
 		typename Validator = empty_validator_t>
-auto
-mandatory(
+auto mandatory(
 	string_ref_t field_name,
 	Field_Type & field,
 	Validator validator = Validator{});
@@ -368,8 +367,7 @@ template<
 		typename Field_Type,
 		typename Field_Default_Value_Type,
 		typename Validator = empty_validator_t>
-auto
-optional(
+auto optional(
 	string_ref_t field_name,
 	Field_Type & field,
 	Field_Default_Value_Type default_value,
@@ -378,8 +376,7 @@ optional(
 template<
 		typename Field_Type,
 		typename Validator = empty_validator_t>
-auto
-optional_no_default(
+auto optional_no_default(
 	string_ref_t field_name,
 	Field_Type & field,
 	Validator validator = Validator{});
@@ -639,8 +636,7 @@ void json_io(Json_Io & io, message_t & msg)
 
 } /* namespace json_dto */
 
-void
-some_function( ... )
+void some_function( ... )
 {
 	// ...
 	auto msg = json_dto::from_json<message_t>(json_data);
@@ -653,8 +649,7 @@ some_function( ... )
 	// ...
 }
 
-void
-some_other_function( ... )
+void some_other_function( ... )
 {
 	message_t msg{ ... };
 	// ...
@@ -819,8 +814,7 @@ validation is the same as for input.
 A simple example of using validators:
 ~~~~~
 ::c++
-void
-check_all_7bit(
+void check_all_7bit(
 	const std::string & text)
 {
 	const auto it = std::find_if(std::begin(text), std::end(text),
@@ -870,12 +864,10 @@ type of template instance from arguments:
 ~~~~~
 ::c++
 template<typename Number>
-auto
-min_max_constraint(Number min_value, Number max_value);
+auto min_max_constraint(Number min_value, Number max_value);
 
 template<typename Field_Type>
-auto
-one_of_constraint(std::initializer_list<Field_Type> values);
+auto one_of_constraint(std::initializer_list<Field_Type> values);
 ~~~~~
 
 [See full example with standard validators](./dev/sample/tutorial12/main.cpp)
@@ -910,14 +902,12 @@ enum class level_t
 // read_json_value and write_json_value for level_t are
 // defined in importance_levels namespace.
 // They will be found by argument dependent lookup.
-void
-read_json_value(
+void read_json_value(
 	level_t & value,
 	const rapidjson::Value & from)
 {...}
 
-void
-write_json_value(
+void write_json_value(
 	const level_t & value,
 	rapidjson::Value & object,
 	rapidjson::MemoryPoolAllocator<> & allocator)
@@ -937,15 +927,13 @@ class some_template
 {...}
 
 template<typename T>
-void
-read_json_value(
+void read_json_value(
 	some_template<T> & value,
 	const rapidjson::Value & from)
 {...}
 
 template<typename T>
-void
-write_json_value(
+void write_json_value(
 	const some_template<T> & value,
 	rapidjson::Value & object,
 	rapidjson::MemoryPoolAllocator<> & allocator)
@@ -977,8 +965,7 @@ namespace json_dto
 {
 
 template<>
-void
-read_json_value(
+void read_json_value(
 	Custom_Type & v,
 	const rapidjson::Value & object)
 {
@@ -986,8 +973,7 @@ read_json_value(
 }
 
 template<>
-void
-write_json_value(
+void write_json_value(
 	const Custom_Type & v,
 	rapidjson::Value & object,
 	rapidjson::MemoryPoolAllocator<> & allocator)
