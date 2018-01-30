@@ -115,6 +115,17 @@ see Mxx_ru documentation for further details.
 
 # How to use it?
 
+**An important notice:** if you do not use Mxx_ru for building your project then
+add the following defines for your project:
+
+~~~~~{.cpp}
+RAPIDJSON_HAS_STDSTRING
+RAPIDJSON_HAS_CXX11_RVALUE_REFS
+~~~~~
+
+If you use Mxx_ru and `rapidjson_mxxru/prj.rb` then these definitions will be
+added automatically.
+
 ## Getting started
 
 To start using *json_dto* simply include `<json_dto/pub.hpp>` header.
