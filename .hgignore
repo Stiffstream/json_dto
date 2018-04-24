@@ -3,6 +3,8 @@ syntax: glob
 .externals
 *.swp
 dev/target
+dev/cmake_build
+dev/build
 dev/zbuild
 dev/rapidjson
 dev/rapidjson_mxxru

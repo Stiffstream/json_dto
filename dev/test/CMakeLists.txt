@@ -1,0 +1,13 @@
+project(tests)
+
+add_subdirectory(floats)
+add_subdirectory(non_intrusive_io)
+add_subdirectory(nullable)
+add_subdirectory(numeric_limits)
+add_subdirectory(optional)
+add_subdirectory(std_optional)
+add_subdirectory(std_vector_bool)
+add_subdirectory(stream_io_helpers)
+add_subdirectory(user_defined_io)
+add_subdirectory(user_defined_io_2)
+add_subdirectory(validators)
