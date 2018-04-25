@@ -4,6 +4,7 @@ syntax: glob
 *.swp
 dev/target
 dev/cmake_build
+dev/cmake_test
 dev/build
 dev/zbuild
 dev/rapidjson
