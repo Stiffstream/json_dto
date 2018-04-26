@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.3)
 
-set(JSON_DTO json_dto)
+SET(JSON_DTO json_dto)
 
 include(cmake/target.cmake)
 
@@ -21,8 +21,8 @@ ENDIF ()
 
 get_filename_component(CURRENT_FILE_DIR ${CMAKE_CURRENT_LIST_FILE} DIRECTORY)
 get_filename_component(CURRENT_FILE_DIR ${CURRENT_FILE_DIR} DIRECTORY)
-set(JSON_DTO_INCLUDE_PATH ${CURRENT_FILE_DIR})
-unset(CURRENT_FILE_DIR)
+SET(JSON_DTO_INCLUDE_PATH ${CURRENT_FILE_DIR})
+UNSET(CURRENT_FILE_DIR)
 
 IF (JSON_DTO_DEPENDENCIES_WITH_FIND_PACKAGE)
 	TARGET_INCLUDE_DIRECTORIES( ${JSON_DTO} INTERFACE ${RAPIDJSON_INCLUDE_DIRS} )
@@ -39,7 +39,7 @@ TARGET_COMPILE_DEFINITIONS(${JSON_DTO} INTERFACE
 	-DRAPIDJSON_HAS_STDSTRING=1
 	-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
 
-set(JSON_DTO_HEADERS_ALL
+SET(JSON_DTO_HEADERS_ALL
 	pub.hpp
 	validators.hpp )
 
@@ -47,10 +47,10 @@ IF (JSON_DTO_INSTALL)
 	include(GNUInstallDirs)
 	include(CMakePackageConfigHelpers)
 
-	set(JSON_DTO_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/json_dto CACHE STRING
+	SET(JSON_DTO_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/json_dto CACHE STRING
 		"Installation directory for cmake files, relative to ${CMAKE_INSTALL_PREFIX}.")
-	set(JSON_DTO_VERSION_CONFIG ${PROJECT_BINARY_DIR}/json_dto-config-version.cmake)
-	set(JSON_DTO_PROJECT_CONFIG ${PROJECT_BINARY_DIR}/json_dto-config.cmake)
+	SET(JSON_DTO_VERSION_CONFIG ${PROJECT_BINARY_DIR}/json_dto-config-version.cmake)
+	SET(JSON_DTO_PROJECT_CONFIG ${PROJECT_BINARY_DIR}/json_dto-config.cmake)
 
 	SET(JSON_DTO_INC_DIR ${CMAKE_INSTALL_INCLUDEDIR}/json_dto/ CACHE STRING
 		"Installation directory for include files, relative to ${CMAKE_INSTALL_PREFIX}.")
