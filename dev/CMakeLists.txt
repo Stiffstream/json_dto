@@ -14,15 +14,7 @@ option(JSON_DTO_INSTALL "Generate the install target." ${JSON_DTO_MASTER_PROJECT
 option(JSON_DTO_TEST "Build the tests." ${JSON_DTO_MASTER_PROJECT})
 option(JSON_DTO_SAMPLE "Build samples." ${JSON_DTO_MASTER_PROJECT})
 option(JSON_DTO_INSTALL_SAMPLES "Build install samples." ${JSON_DTO_MASTER_PROJECT})
-
-IF ("x${CMAKE_CXX_COMPILER_ID}" MATCHES "xGNU"
-		OR "x${CMAKE_CXX_COMPILER_ID}" MATCHES "xClang"
-		OR "x${CMAKE_CXX_COMPILER_ID}" MATCHES "xIntel")
-	add_definitions(-pthread -mtune=native -march=native)
-ELSEIF (${MSVC})
-ELSE ()
-	message(FATAL_ERROR "Your C++ compiler (ID: '${CMAKE_CXX_COMPILER_ID}') not supported.")
-ENDIF ()
+option(JSON_DTO_DEPENDENCIES_WITH_FIND_PACKAGE "Get json_dto dependencies with `find_package()`." OFF)
 
 IF (JSON_DTO_MASTER_PROJECT)
 	# ------------------------------------------------------------------------------
