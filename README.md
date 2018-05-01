@@ -12,6 +12,12 @@ working with JSON in various projects.
 
 # What's new?
 
+## v.0.2.4
+
+Add cmake support.
+
+Make string value setter independent to `RAPIDJSON_HAS_STDSTRING`.
+
 ## v.0.2.3
 
 Bug fix in support of `std::vector<bool>`.
