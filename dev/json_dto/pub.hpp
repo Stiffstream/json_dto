@@ -248,7 +248,15 @@ write_json_value(
 	rapidjson::Value & object,
 	rapidjson::MemoryPoolAllocator<> & allocator )
 {
-	object.SetString( s.data(), s.size(), allocator );
+	constexpr std::string::size_type max_str_len = std::numeric_limits< rapidjson::SizeType >::max();
+
+	if( max_str_len < s.size() )
+	{
+		throw ex_t{ "string length is too large: " + std::to_string( s.size() ) + 
+					" (max is " + std::to_string( max_str_len ) + ")" };
+	}
+
+	object.SetString( s.data(), static_cast< rapidjson::SizeType >( s.size() ), allocator );
 }
 
 //
