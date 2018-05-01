@@ -63,11 +63,13 @@ And for running test:
 
 Assuming that *Mercurial* and *Mxx_ru* are already installed.
 
-### Cloning of Hg Repository
+### Cloning of Hg (Git) Repository
 
 ```
 hg clone https://bitbucket.org/sobjectizerteam/json_dto-0.2
+git clone https://github.com/Stiffstream/json_dto.git
 ```
+
 And then:
 ```
 cd json_dto-0.2
@@ -78,18 +80,17 @@ to download and extract *json_dto*'s dependencies.
 ### MxxRu::externals recipe
 
 For *json_dto* itself:
-~~~~~
-::ruby
+```ruby
 MxxRu::arch_externals :json_dto do |e|
   e.url 'https://bitbucket.org/sobjectizerteam/json_dto-0.2/get/v.0.2.0.tar.bz2'
 
   e.map_dir 'dev/json_dto' => 'dev'
 end
-~~~~~
+```
 
 For *rapidjson* and *rapidjson_mxxru* dependencies:
-~~~~~
-::ruby
+
+```ruby
 MxxRu::arch_externals :rapidjson do |e|
   e.url 'https://github.com/miloyip/rapidjson/archive/v1.1.0.zip'
 
@@ -101,13 +102,14 @@ MxxRu::arch_externals :rapidjson_mxxru do |e|
 
   e.map_dir 'dev/rapidjson_mxxru' => 'dev'
 end
-~~~~~
+```
 
 ## Build
 
 While *json_dto* is header-only library test and samples require a build.
 
 Compiling with Mxx_ru:
+
 ```
 hg clone https://bitbucket.org/sobjectizerteam/json_dto-0.2
 cd json_dto
@@ -124,10 +126,10 @@ see Mxx_ru documentation for further details.
 **An important notice:** if you do not use Mxx_ru for building your project then
 add the following defines for your project:
 
-~~~~~{.cpp}
+```C++
 RAPIDJSON_HAS_STDSTRING
 RAPIDJSON_HAS_CXX11_RVALUE_REFS
-~~~~~
+```
 
 If you use Mxx_ru and `rapidjson_mxxru/prj.rb` then these definitions will be
 added automatically.
@@ -142,20 +144,20 @@ where *rapidjson::Value* plays the role of archive.
 
 Let's assume we have a c++ structure that must be serialized to JSON
 and deserialized from JSON:
-~~~~~
-::c++
+
+```C++
 struct message_t
 {
 	std::string m_from;
 	std::int64_t m_when;
 	std::string m_text;
 };
-~~~~~
+```
 
 For integrating this struct with *json_dto* facilities the struct must be
 modified as follows:
-~~~~~
-::c++
+
+```C++
 struct message_t
 {
 	std::string m_from;
@@ -171,7 +173,7 @@ struct message_t
 			& json_dto::mandatory("text", m_text);
 	}
 };
-~~~~~
+```
 
 Here `json_io()` function is an entry point for *json_dto* library.
 It describes how to read the data from *rapidjson::Value*
@@ -185,8 +187,8 @@ dto to JSON-value. Both `json_dto::json_input_t` and `json_dto::json_output_t`
 override `operator&` for splitting io functionality.
 
 There are also iostream-like overrides for `operator<<` and `operator>>`:
-~~~~~
-::c++
+
+```C++
 template<typename Dto>
 json_input_t &
 operator>>(json_input_t & i, Dto & v);
@@ -194,14 +196,14 @@ operator>>(json_input_t & i, Dto & v);
 template<typename Dto>
 inline json_output_t &
 operator<<(json_output_t & o, const Dto & v);
-~~~~~
+```
 
 But they are only helpful for top level read/write operations.
 
 In general *json_dto* gets data from `rapidjson::Value` and puts
 the data into `rapidjson::Value`. So read/write operations look like this:
-~~~~~
-::c++
+
+```C++
 // Read
 rapidjson::Document document;
 
@@ -213,10 +215,9 @@ message_t msg;
 jin >> msg;
 
 // If no exceptions were thrown DTO contains data received from JSON.
-~~~~~
+```
 
-~~~~~
-::c++
+```C++
 // Write
 rapidjson::Document document;
 
@@ -228,12 +229,12 @@ const message_t msg = get_message();
 jout << msg;
 
 // If no exceptions were thrown document contains data received from DTO.
-~~~~~
+```
 
 But usually it is enough to work with `std::string` objects, so *json_dto*
 comes with handy to/from string helpers:
-~~~~~
-::c++
+
+```C++
 template<typename Dto>
 std::string
 to_json(const Dto & dto);
@@ -241,7 +242,7 @@ to_json(const Dto & dto);
 template<typename Type>
 Type
 from_json(const std::string & json);
-~~~~~
+```
 
 [See full example](./dev/sample/tutorial1/main.cpp).
 
@@ -252,8 +253,8 @@ from_json(const std::string & json);
 When it is unwanted to add an extra function to C++ structure
 it is possible to use a non intrusive `json_io()` version.
 In previous example dto part will look like this:
-~~~~~
-::c++
+
+```C++
 struct message_t
 {
 	std::string m_from;
@@ -273,7 +274,7 @@ void json_io(Json_Io & io, message_t & msg)
 }
 
 } /* namespace json_dto */
-~~~~~
+```
 
 [See full example](./dev/sample/tutorial2/main.cpp).
 
@@ -293,8 +294,8 @@ Out of the box *json_dto* lib supports following types:
 * C++17 specific: std::optional (or std::experimental::optional)
 
 Example:
-~~~~~
-::c++
+
+```C++
 struct supported_types_t
 {
 	bool m_bool{ false };
@@ -330,7 +331,7 @@ void json_io(Json_Io & io, supported_types_t & obj)
 }
 
 } /* namespace json_dto */
-~~~~~
+```
 
 [See full example](./dev/sample/tutorial3/main.cpp)
 
@@ -353,8 +354,8 @@ the underlying field.
 ### Mandatory fields
 
 Binders for mandatory fields are created via `mandatory()` function:
-~~~~~
-::c++
+
+```C++
 template<
 		typename Field_Type,
 		typename Validator = empty_validator_t>
@@ -362,7 +363,7 @@ auto mandatory(
 	string_ref_t field_name,
 	Field_Type & field,
 	Validator validator = Validator{});
-~~~~~
+```
 
 First parameter *field_name* is of type `string_ref_t`
 which is an alias for `rapidjson::Value::StringRefType`.
@@ -379,7 +380,8 @@ is used, and as it says it does nothing.
 
 Binders for optional fields are created via `optional()` and
 `optional_no_default()` functions:
-~~~~~{.cpp}
+
+```C++
 template<
 		typename Field_Type,
 		typename Field_Default_Value_Type,
@@ -397,7 +399,7 @@ auto optional_no_default(
 	string_ref_t field_name,
 	Field_Type & field,
 	Validator validator = Validator{});
-~~~~~
+```
 
 Parameters for functions are pretty much the same as for
 `mandatory()` functon.
@@ -415,8 +417,8 @@ For `optional()` there is a partial specification that accepts
 `nullable_t<T>` fields.
 
 Example of using optional fields:
-~~~~~
-::c++
+
+```C++
 struct message_t
 {
 	std::string m_from;
@@ -440,7 +442,8 @@ void json_io(Json_Io & io, message_t & msg)
 }
 
 } /* namespace json_dto */
-~~~~~
+```
+
 [See full example](./dev/sample/tutorial4/main.cpp)
 
 #### Optional fields and std::optional
@@ -449,7 +452,7 @@ Since v.0.2 it is possible to use C++17's `std::optional` template as a type
 for field. In this case `std::nullopt` can be passed as third argument to
 `json_dto::optional()` function:
 
-~~~~~{.cpp}
+```C++
 struct email_data_t
 {
 	std::string m_from;
@@ -469,7 +472,7 @@ struct email_data_t
 			...
 	}
 };
-~~~~~
+```
 
 *Note.* If a compiler doesn't have `std::optional` but have
 `std::experimental::optional` then `std::experimental::optional` and
@@ -488,8 +491,8 @@ of the same type, for successful input it is mandatory
 that all elements of the array are convertible to vector value type.
 
 Example for array-fields:
-~~~~~
-::c++
+
+```C++
 struct vector_types_t
 {
 	std::vector<bool> m_bool{};
@@ -525,7 +528,8 @@ void json_io(Json_Io & io, vector_types_t & obj)
 }
 
 } /* namespace json_dto */
-~~~~~
+```
+
 [See full example](./dev/sample/tutorial5/main.cpp)
 
 ## Nullable fields
@@ -537,8 +541,8 @@ data member of type `nullable_t<T>`.
 Interface of `nullable_t<T>` tries to mimic `std::optional` interface.
 
 Example for `nullable_t<T>` field:
-~~~~~
-::c++
+
+```C++
 struct message_t
 {
 	message_t() {}
@@ -598,7 +602,8 @@ some_function( ... )
 
 	// ...
 }
-~~~~~
+```
+
 [See full example](./dev/sample/tutorial6/main.cpp)
 
 Here default value for optional nullble field is `nullptr`.
@@ -607,8 +612,8 @@ So when converting to JSON no-value nullable field
 wouldn't be included in JSON as `"field":null` piece.
 
 Nullable fields can be used with arrays:
-~~~~~
-::c++
+
+```C++
 struct message_t
 {
 	message_t() {}
@@ -678,7 +683,8 @@ void some_other_function( ... )
 
 	// ...
 }
-~~~~~
+```
+
 [See full example](./dev/sample/tutorial7/main.cpp)
 
 ## Complex types
@@ -694,8 +700,8 @@ However there are some constraints:
 (more precisely an equality operator between nested type and type of passed default value).
 
 Suppose there is a type which is already integrated with *json_dto*:
-~~~~~
-::c++
+
+```C++
 struct message_source_t
 {
 	std::int32_t m_thread_id{ 0 };
@@ -708,11 +714,11 @@ struct message_source_t
 			& json_dto::mandatory("subsystem", m_subsystem);
 	}
 };
-~~~~~
+```
 
 Then it can be used as a nested object in other type:
-~~~~~
-::c++
+
+```C++
 struct message_t
 {
 	message_source_t m_from;
@@ -727,11 +733,11 @@ struct message_t
 			& json_dto::mandatory("text", m_text);
 	}
 };
-~~~~~
+```
+
 [See full example](./dev/sample/tutorial8/main.cpp)
 
-And
-[See full example using nested objects as nullable and arrays](./dev/sample/tutorial9/main.cpp)
+[And see full example using nested objects as nullable and arrays](./dev/sample/tutorial9/main.cpp)
 
 ## Inheritance
 
@@ -739,8 +745,8 @@ And
 base implementation of `json_io()` function or completely override it.
 
 For example derived class can use base class like this:
-~~~~~
-::c++
+
+```C++
 struct derived_t : public base_t
 {
 	//...
@@ -756,13 +762,13 @@ struct derived_t : public base_t
 			;
 	}
 };
-~~~~~
+```
 
 However for easier maintenance it is recommended to use non intrusive
 `json_io()` function. Because if base class is integrated with *json_dto*
 in non intrusive manner, then the following wouldn't work:
-~~~~~
-::c++
+
+```C++
 	template<typename Json_Io>
 	void json_io(Json_Io & io)
 	{
@@ -770,11 +776,11 @@ in non intrusive manner, then the following wouldn't work:
 		base_t::json_io(io); // Run io on base class.
 		// ...
 	}
-~~~~~
+```
 
 So it is preferred to put inheritance this way:
-~~~~~
-::c++
+
+```C++
 struct message_source_t
 {
 	std::int32_t m_thread_id{ 0 };
@@ -807,7 +813,8 @@ struct message_t : public message_source_t
 			& json_dto::mandatory("text", m_text);
 	}
 };
-~~~~~
+```
+
 [See full example](./dev/sample/tutorial10/main.cpp)
 
 ## Validators
@@ -829,8 +836,8 @@ trying to assign field value of JSON object. In all other respects
 validation is the same as for input.
 
 A simple example of using validators:
-~~~~~
-::c++
+
+```C++
 void check_all_7bit(
 	const std::string & text)
 {
@@ -861,7 +868,8 @@ struct message_t
 			& json_dto::mandatory("text", m_text, check_all_7bit);
 	}
 };
-~~~~~
+```
+
 [See full example](./dev/sample/tutorial11/main.cpp)
 
 ### Standard validators
@@ -878,14 +886,14 @@ Standard validators are template classes with overloaded `operator()`.
 And as they are template classes so for convenience
 for each validator there is an auxiliary function that helps deduce
 type of template instance from arguments:
-~~~~~
-::c++
+
+```C++
 template<typename Number>
 auto min_max_constraint(Number min_value, Number max_value);
 
 template<typename Field_Type>
 auto one_of_constraint(std::initializer_list<Field_Type> values);
-~~~~~
+```
 
 [See full example with standard validators](./dev/sample/tutorial12/main.cpp)
 
@@ -905,7 +913,8 @@ an user should define `read_json_value` and `write_json_value` in the same
 namespace where types are defined. The right implementations of
 `read_json_value` and `write_json_value` will be found by C++ compiler automatically.
 For example:
-~~~~~{.cpp}
+
+```C++
 namespace importance_levels
 {
 
@@ -931,11 +940,12 @@ void write_json_value(
 {...}
 
 } /* namespace importance_levels */
-~~~~~
+```
 
 This approach also allows to define `read_json_value` and `write_json_value`
 for user's template type. For example:
-~~~~~{.cpp}
+
+```C++
 namespace demo
 {
 
@@ -971,13 +981,14 @@ struct my_data_t
 			...
 	}
 };
-~~~~~
+```
+
 [See full example with custom IO and ADL](./dev/sample/tutorial15/main.cpp)
 
 The second way uses explicit template specialization for 2 functons
 inside `json_dto` namespace:
-~~~~~
-::c++
+
+```C++
 namespace json_dto
 {
 
@@ -999,7 +1010,7 @@ void write_json_value(
 }
 
 } /* namespace json_dto */
-~~~~~
+```
 
 *json_dto* will consider these specializations for using with
 specified `Custom_Type`. This way can be used when it is impossible
@@ -1007,7 +1018,6 @@ to place `read_json_value` and `write_json_value` into the namespace where
 the type if defined (for example if it is standard type like `std::filesystem::path`).
 
 [See full example with custom IO](./dev/sample/tutorial14/main.cpp)
-
 
 # License
 
