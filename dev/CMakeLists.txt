@@ -14,13 +14,13 @@ option(JSON_DTO_INSTALL "Generate the install target." ${JSON_DTO_MASTER_PROJECT
 option(JSON_DTO_TEST "Build the tests." ${JSON_DTO_MASTER_PROJECT})
 option(JSON_DTO_SAMPLE "Build samples." ${JSON_DTO_MASTER_PROJECT})
 option(JSON_DTO_INSTALL_SAMPLES "Build install samples." ${JSON_DTO_MASTER_PROJECT})
-option(JSON_DTO_DEPENDENCIES_WITH_FIND_PACKAGE "Get json_dto dependencies with `find_package()`." OFF)
+option(JSON_DTO_FIND_DEPS "Get json_dto dependencies with `find_package()`." OFF)
 
 IF (JSON_DTO_MASTER_PROJECT)
 	# ------------------------------------------------------------------------------
 	# json_dto dependencies:
 
-	IF (JSON_DTO_DEPENDENCIES_WITH_FIND_PACKAGE)
+	IF (JSON_DTO_FIND_DEPS)
 		# Require necessary packages.
 		find_package(RapidJSON REQUIRED)
 	ELSE ()
