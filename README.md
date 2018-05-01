@@ -1,4 +1,37 @@
-[TOC]
+Table of Contents
+=================
+
+   * [What Is json_dto?](#what-is-json_dto)
+   * [What's new?](#whats-new)
+      * [v.0.2.4](#v024)
+      * [v.0.2.3](#v023)
+      * [v.0.2.2](#v022)
+      * [v.0.2.1](#v021)
+      * [v.0.2.0](#v020)
+   * [Obtain and build](#obtain-and-build)
+      * [Prerequisites](#prerequisites)
+      * [Obtaining](#obtaining)
+         * [Cloning of Hg (Git) Repository](#cloning-of-hg-git-repository)
+         * [MxxRu::externals recipe](#mxxruexternals-recipe)
+      * [Build](#build)
+   * [How to use it?](#how-to-use-it)
+      * [Getting started](#getting-started)
+      * [Non intrusive json_io()](#non-intrusive-json_io)
+      * [Supported field types](#supported-field-types)
+      * [Mandatory and optional fields](#mandatory-and-optional-fields)
+         * [Mandatory fields](#mandatory-fields)
+         * [Optional fields](#optional-fields)
+            * [Optional fields and std::optional](#optional-fields-and-stdoptional)
+      * [Array support](#array-support)
+      * [Nullable fields](#nullable-fields)
+      * [Complex types](#complex-types)
+      * [Inheritance](#inheritance)
+      * [Validators](#validators)
+         * [Standard validators](#standard-validators)
+      * [User defined IO](#user-defined-io)
+   * [License](#license)
+
+*TOC Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc).*
 
 # What Is json_dto?
 
