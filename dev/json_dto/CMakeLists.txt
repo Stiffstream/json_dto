@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.3)
 
-SET(JSON_DTO json_dto)
+SET(JSON_DTO json-dto)
 
 include(cmake/target.cmake)
 
 project(${JSON_DTO}) # not to misspell it.
 
 add_library(${JSON_DTO} INTERFACE)
-add_library(json_dto::json_dto ALIAS ${JSON_DTO})
+add_library(json-dto::json-dto ALIAS ${JSON_DTO})
 
 IF (${CMAKE_VERSION} VERSION_LESS "3.8.0")
 	set_target_properties(${JSON_DTO} PROPERTIES
@@ -47,10 +47,10 @@ IF (JSON_DTO_INSTALL)
 	include(GNUInstallDirs)
 	include(CMakePackageConfigHelpers)
 
-	SET(JSON_DTO_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/json_dto CACHE STRING
+	SET(JSON_DTO_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/json-dto CACHE STRING
 		"Installation directory for cmake files, relative to ${CMAKE_INSTALL_PREFIX}.")
-	SET(JSON_DTO_VERSION_CONFIG ${PROJECT_BINARY_DIR}/json_dto-config-version.cmake)
-	SET(JSON_DTO_PROJECT_CONFIG ${PROJECT_BINARY_DIR}/json_dto-config.cmake)
+	SET(JSON_DTO_VERSION_CONFIG ${PROJECT_BINARY_DIR}/json-dto-config-version.cmake)
+	SET(JSON_DTO_PROJECT_CONFIG ${PROJECT_BINARY_DIR}/json-dto-config.cmake)
 
 	SET(JSON_DTO_INC_DIR ${CMAKE_INSTALL_INCLUDEDIR}/json_dto/ CACHE STRING
 		"Installation directory for include files, relative to ${CMAKE_INSTALL_PREFIX}.")
@@ -62,7 +62,7 @@ IF (JSON_DTO_INSTALL)
 		COMPATIBILITY ExactVersion )
 
 	configure_package_config_file(
-		"cmake/json_dto-config.cmake.in"
+		"cmake/json-dto-config.cmake.in"
 		${JSON_DTO_PROJECT_CONFIG}
 		INSTALL_DESTINATION ${JSON_DTO_CMAKE_DIR}
 		PATH_VARS JSON_DTO_VERSION)
@@ -84,8 +84,8 @@ IF (JSON_DTO_INSTALL)
 
 	install(
 		EXPORT JSON_DTO_ALL_TARGETS
-		NAMESPACE json_dto::
-		FILE json_dto-targets.cmake
+		NAMESPACE json-dto::
+		FILE json-dto-targets.cmake
 		DESTINATION ${JSON_DTO_CMAKE_DIR} )
 
 	FOREACH(HEADER_FILE ${JSON_DTO_HEADERS_ALL} )

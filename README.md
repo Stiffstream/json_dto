@@ -45,6 +45,10 @@ working with JSON in various projects.
 
 # What's new?
 
+## v.0.2.5
+
+Modify cmake-scripts for vcpkg port (target name `json-dto::json-dto`).
+
 ## v.0.2.4
 
 Add cmake support.
