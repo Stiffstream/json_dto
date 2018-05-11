@@ -1,8 +1,10 @@
 Table of Contents
 =================
 
+   * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.5](#v025)
       * [v.0.2.4](#v024)
       * [v.0.2.3](#v023)
       * [v.0.2.2](#v022)
