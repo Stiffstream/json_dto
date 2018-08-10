@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.6](#v026)
       * [v.0.2.5](#v025)
       * [v.0.2.4](#v024)
       * [v.0.2.3](#v023)
@@ -25,6 +26,8 @@ Table of Contents
          * [Optional fields](#optional-fields)
             * [Optional fields and std::optional](#optional-fields-and-stdoptional)
       * [Array support](#array-support)
+         * [Array fields](#array-fields)
+         * [Arrays and to_json and from_json](#arrays-and-to_json-and-from_json)
       * [Nullable fields](#nullable-fields)
       * [Complex types](#complex-types)
       * [Inheritance](#inheritance)
@@ -33,7 +36,7 @@ Table of Contents
       * [User defined IO](#user-defined-io)
    * [License](#license)
 
-*TOC Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc).*
+Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
 # What Is json_dto?
 
