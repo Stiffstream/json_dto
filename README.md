@@ -12,6 +12,11 @@ working with JSON in various projects.
 
 # What's new?
 
+## v.0.2.6
+
+Support for `std::vector` for `json_dto::to_json` and `json_dto::from_json`
+functions.
+
 ## v.0.2.5
 
 Modify cmake-scripts for vcpkg port (target name `json-dto::json-dto`).
@@ -485,6 +490,8 @@ struct email_data_t
 
 ## Array support
 
+### Array fields
+
 JSON arrays are supported by *json_dto*, but there is one very important
 limitation: all elements of the array must have the same type.
 To set up an array simply use `std::vector<T>`.
@@ -535,6 +542,47 @@ void json_io(Json_Io & io, vector_types_t & obj)
 ```
 
 [See full example](./dev/sample/tutorial5/main.cpp)
+
+### Arrays and to_json and from_json
+
+Since v.0.2.6 it is possible to serialize array of objects into JSON
+by `json_dto::to_json` function. It is also possible to deserialize
+JSON with array of objects into `std::vector` by `json_dto::from_json`
+function. For example:
+
+```C++
+#include <json_dto/pub.hpp>
+
+#include <iostream>
+#include <algorithm>
+
+struct data_t {
+	std::string m_key;
+	int m_value;
+
+	template<typename Json_Io>
+	void json_io(Json_Io & io) {
+		io & json_dto::mandatory("key", m_key)
+			& json_dto::mandatory("value", m_value);
+	}
+};
+
+int main() {
+	const std::string json_data{
+		R"JSON(
+			[{"key":"first", "value":32},
+			 {"key":"second", "value":15},
+			 {"key":"third", "value":80}]
+		)JSON"
+	};
+
+	auto data = json_dto::from_json< std::vector<data_t> >(json_data);
+	std::sort(data.begin(), data.end(),
+		[](const auto & a, const auto & b) { return a.m_value < b.m_value; });
+
+	std::cout << "Sorted data: " << json_dto::to_json(data) << std::endl;
+}
+```
 
 ## Nullable fields
 
