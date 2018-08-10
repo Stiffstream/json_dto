@@ -633,7 +633,7 @@ read_json_value(
 		{
 			T v;
 			read_json_value( v, object[ i ] );
-			vec.push_back( v );
+			vec.push_back( std::move(v) );
 		}
 	}
 	else
@@ -659,7 +659,7 @@ struct std_vector_item_read_access_type<bool>
 
 } /* namespace details */
 
-template< typename T, typename A  >
+template< typename T, typename A >
 void
 write_json_value(
 	const std::vector< T, A > & vec,
@@ -673,6 +673,52 @@ write_json_value(
 		write_json_value( v, o, allocator );
 		object.PushBack( o, allocator );
 	}
+}
+
+//
+// Support for to_json/from_json for std::vector<T,A>.
+// Since v.0.2.6
+//
+namespace details {
+
+template< typename T, typename A >
+struct vector_reader_t {
+	std::vector<T, A> & m_dest;
+
+	void
+	read_from( const rapidjson::Value & from ) const
+	{
+		read_json_value( m_dest, from );
+	}
+};
+
+template< typename T, typename A >
+struct vector_writer_t {
+	const std::vector<T, A> & m_src;
+
+	void
+	write_to(
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
+	{
+		write_json_value( m_src, to, allocator );
+	}
+};
+
+} /* namespace details */
+
+template< typename T, typename A >
+void
+json_io( json_input_t & from, std::vector<T, A> & what )
+{
+	from & details::vector_reader_t<T, A>{ what };
+}
+
+template< typename T, typename A >
+void
+json_io( json_output_t & from, std::vector<T, A> & what )
+{
+	from & details::vector_writer_t<T, A>{ what };
 }
 
 //

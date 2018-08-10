@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.6](#v026)
       * [v.0.2.5](#v025)
       * [v.0.2.4](#v024)
       * [v.0.2.3](#v023)
@@ -25,6 +26,8 @@ Table of Contents
          * [Optional fields](#optional-fields)
             * [Optional fields and std::optional](#optional-fields-and-stdoptional)
       * [Array support](#array-support)
+         * [Array fields](#array-fields)
+         * [Arrays and to_json and from_json](#arrays-and-to_json-and-from_json)
       * [Nullable fields](#nullable-fields)
       * [Complex types](#complex-types)
       * [Inheritance](#inheritance)
@@ -33,7 +36,7 @@ Table of Contents
       * [User defined IO](#user-defined-io)
    * [License](#license)
 
-*TOC Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc).*
+Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
 # What Is json_dto?
 
@@ -46,6 +49,11 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.2.6
+
+Support for `std::vector` for `json_dto::to_json` and `json_dto::from_json`
+functions.
 
 ## v.0.2.5
 
@@ -96,7 +104,7 @@ And for building with mxxru:
 
 And for running test:
 
-* [CATCH](https://github.com/philsquared/Catch) 1.10.0
+* [CATCH2](https://github.com/catchorg/Catch2) 2.3.0
 
 ## Obtaining
 
@@ -520,6 +528,8 @@ struct email_data_t
 
 ## Array support
 
+### Array fields
+
 JSON arrays are supported by *json_dto*, but there is one very important
 limitation: all elements of the array must have the same type.
 To set up an array simply use `std::vector<T>`.
@@ -570,6 +580,47 @@ void json_io(Json_Io & io, vector_types_t & obj)
 ```
 
 [See full example](./dev/sample/tutorial5/main.cpp)
+
+### Arrays and to_json and from_json
+
+Since v.0.2.6 it is possible to serialize array of objects into JSON
+by `json_dto::to_json` function. It is also possible to deserialize
+JSON with array of objects into `std::vector` by `json_dto::from_json`
+function. For example:
+
+```C++
+#include <json_dto/pub.hpp>
+
+#include <iostream>
+#include <algorithm>
+
+struct data_t {
+	std::string m_key;
+	int m_value;
+
+	template<typename Json_Io>
+	void json_io(Json_Io & io) {
+		io & json_dto::mandatory("key", m_key)
+			& json_dto::mandatory("value", m_value);
+	}
+};
+
+int main() {
+	const std::string json_data{
+		R"JSON(
+			[{"key":"first", "value":32},
+			 {"key":"second", "value":15},
+			 {"key":"third", "value":80}]
+		)JSON"
+	};
+
+	auto data = json_dto::from_json< std::vector<data_t> >(json_data);
+	std::sort(data.begin(), data.end(),
+		[](const auto & a, const auto & b) { return a.m_value < b.m_value; });
+
+	std::cout << "Sorted data: " << json_dto::to_json(data) << std::endl;
+}
+```
 
 ## Nullable fields
 

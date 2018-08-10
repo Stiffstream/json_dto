@@ -11,7 +11,7 @@ MxxRu::arch_externals :rapidjson_mxxru do |e|
 end
 
 MxxRu::arch_externals :catch do |e|
-  e.url 'https://github.com/philsquared/Catch/archive/v1.10.0.tar.gz'
+  e.url 'https://github.com/catchorg/Catch2/archive/v2.3.0.zip'
 
-  e.map_file 'single_include/catch.hpp' => 'dev/catch/*'
+  e.map_dir 'single_include/catch2' => 'dev'
 end
