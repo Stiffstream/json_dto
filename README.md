@@ -61,7 +61,7 @@ And for building with mxxru:
 
 And for running test:
 
-* [CATCH](https://github.com/philsquared/Catch) 1.10.0
+* [CATCH2](https://github.com/catchorg/Catch2) 2.3.0
 
 ## Obtaining
 
