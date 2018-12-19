@@ -33,8 +33,11 @@
 	#endif
 
 	#if defined( JSON_DTO_CHECK_FOR_STD_OPTIONAL )
-		#if __cpp_lib_optional
+		#if __has_include(<optional>)
 			#include <optional>
+		#endif
+
+		#if defined( __cpp_lib_optional )
 			#define JSON_DTO_HAS_STD_OPTIONAL
 		#elif __has_include(<experimental/optional>)
 			#include <experimental/optional>
