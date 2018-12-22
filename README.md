@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.6.1](#v0261)
       * [v.0.2.6](#v026)
       * [v.0.2.5](#v025)
       * [v.0.2.4](#v024)
@@ -49,6 +50,10 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.2.6.1
+
+Improve `std::optional` availability check.
 
 ## v.0.2.6
 
