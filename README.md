@@ -50,6 +50,10 @@ working with JSON in various projects.
 
 # What's new?
 
+## v.0.2.6.1
+
+Improve `std::optional` availability check.
+
 ## v.0.2.6
 
 Support for `std::vector` for `json_dto::to_json` and `json_dto::from_json`

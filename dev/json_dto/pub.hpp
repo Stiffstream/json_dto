@@ -33,12 +33,15 @@
 	#endif
 
 	#if defined( JSON_DTO_CHECK_FOR_STD_OPTIONAL )
-		#if __has_include(<experimental/optional>)
+		#if __has_include(<optional>)
+			#include <optional>
+		#endif
+
+		#if defined( __cpp_lib_optional )
+			#define JSON_DTO_HAS_STD_OPTIONAL
+		#elif __has_include(<experimental/optional>)
 			#include <experimental/optional>
 			#define JSON_DTO_HAS_EXPERIMENTAL_OPTIONAL
-		#elif __has_include(<optional>)
-			#include <optional>
-			#define JSON_DTO_HAS_STD_OPTIONAL
 		#endif
 		#if defined(JSON_DTO_HAS_STD_OPTIONAL) || \
 				defined(JSON_DTO_HAS_EXPERIMENTAL_OPTIONAL)
@@ -252,7 +255,7 @@ write_json_value(
 
 	if( max_str_len < s.size() )
 	{
-		throw ex_t{ "string length is too large: " + std::to_string( s.size() ) + 
+		throw ex_t{ "string length is too large: " + std::to_string( s.size() ) +
 					" (max is " + std::to_string( max_str_len ) + ")" };
 	}
 
