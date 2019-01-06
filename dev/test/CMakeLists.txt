@@ -1,5 +1,6 @@
 project(tests)
 
+add_subdirectory(catch_main)
 add_subdirectory(floats)
 add_subdirectory(non_intrusive_io)
 add_subdirectory(nullable)
@@ -12,3 +13,4 @@ add_subdirectory(stream_io_helpers)
 add_subdirectory(user_defined_io)
 add_subdirectory(user_defined_io_2)
 add_subdirectory(validators)
+add_subdirectory(ensure_object)

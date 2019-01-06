@@ -15,5 +15,6 @@ MxxRu::Cpp::composite_target {
 	required_prj( "test/user_defined_io_2/prj.ut.rb" )
 	required_prj( "test/validators/prj.ut.rb" )
 	required_prj( "test/stream_io_helpers/prj.ut.rb" )
+	required_prj( "test/ensure_object/prj.ut.rb" )
 }
 
