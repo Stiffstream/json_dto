@@ -12,6 +12,10 @@ working with JSON in various projects.
 
 # What's new?
 
+## v.0.2.6.2
+
+Fix: add check for reading fields of DTO to ensure that a source JSON value is of type Object.
+
 ## v.0.2.6.1
 
 Improve `std::optional` availability check.
