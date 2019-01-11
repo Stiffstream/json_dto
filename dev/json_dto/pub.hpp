@@ -936,6 +936,13 @@ class binder_t
 		read_from_impl(
 			const rapidjson::Value & object ) const
 		{
+			if( !object.IsObject() )
+			{
+				throw ex_t{
+					"unable to extract field \"" + std::string{ m_field_name.s } + "\": "
+					"parent json type must be object" };
+			}
+
 			const auto it = object.FindMember( m_field_name );
 
 			if( object.MemberEnd() != it )

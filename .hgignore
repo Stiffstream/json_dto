@@ -10,7 +10,7 @@ dev/zbuild
 dev/rapidjson
 dev/rapidjson_mxxru
 dev/lib/.*
-dev/catch
+dev/catch2
 dev/local-build.rb
 *.sublime-project
 *.sublime-workspace
