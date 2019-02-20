@@ -42,6 +42,7 @@ MxxRu::Cpp::composite_target( MxxRu::BUILD_ROOT ) {
   required_prj( "sample/tutorial12/prj.rb" )
   required_prj( "sample/tutorial14/prj.rb" )
   required_prj( "sample/tutorial15/prj.rb" )
+  required_prj( "sample/tutorial16/prj.rb" )
 }
 
 # vim:ts=2:sts=2:sw=2:expandtab
