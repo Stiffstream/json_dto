@@ -21,6 +21,7 @@
 #include <memory>
 #include <limits>
 #include <type_traits>
+#include <iostream>
 
 #if defined( __has_include )
 	//
