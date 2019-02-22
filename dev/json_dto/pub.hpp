@@ -21,6 +21,7 @@
 #include <memory>
 #include <limits>
 #include <type_traits>
+#include <iostream>
 
 #if defined( __has_include )
 	//
@@ -1153,17 +1154,12 @@ check_document_parse_status(
 // from_json
 //
 
-//! Helper function to read DTO from json-string.
-template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+//! Helper function to read DTO from already parsed document.
+template< typename Type >
 Type
-from_json( const std::string & json )
+from_json( const rapidjson::Value & json )
 {
-	rapidjson::Document document;
-	json_input_t jin{ document };
-
-	document.Parse< Rapidjson_Parseflags >( json.c_str() );
-
-	check_document_parse_status( document );
+	json_input_t jin{ json };
 
 	Type result;
 
@@ -1172,19 +1168,43 @@ from_json( const std::string & json )
 	return result;
 }
 
+//! Helper function to read from already parsed document to already
+//! constructed DTO.
+template< typename Type >
+void
+from_json( const rapidjson::Value & json, Type & o )
+{
+	json_input_t jin{ json };
+
+	jin >> o;
+}
+
+//! Helper function to read DTO from json-string.
+template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+Type
+from_json( const std::string & json )
+{
+	rapidjson::Document document;
+
+	document.Parse< Rapidjson_Parseflags >( json.c_str() );
+
+	check_document_parse_status( document );
+
+	return from_json<Type>( document );
+}
+
 //! Helper function to read an already instantiated DTO.
 template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
 void
 from_json( const std::string & json, Type & o )
 {
 	rapidjson::Document document;
-	json_input_t jin{ document };
 
 	document.Parse< Rapidjson_Parseflags >( json.c_str() );
 
 	check_document_parse_status( document );
 
-	jin >> o;
+	from_json( document, o );
 }
 
 template< typename Type >
