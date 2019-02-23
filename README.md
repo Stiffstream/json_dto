@@ -1,9 +1,9 @@
 Table of Contents
 =================
 
-   * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.7](#v027)
       * [v.0.2.6.2](#v0262)
       * [v.0.2.6.1](#v0261)
       * [v.0.2.6](#v026)
@@ -51,6 +51,48 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.2.7
+
+Two new forms of `from_json` added. It is possible now to deserialize a DTO from already parsed document. For example:
+
+```cpp
+struct update_period {
+	...
+	template<typename Json_Io> void json_io(Json_Io & io) {...}
+};
+struct read_sensor {
+	...
+	template<typename Json_Io> void json_io(Json_Io & io) {...}
+};
+...
+void parse_and_handle_message( const std::string & raw_msg )
+{
+	rapidjson::Document whole_msg;
+	whole_msg.Parse< rapidjson::kParseDefaultFlags >( raw_msg );
+	if( whole_msg.HasParseError() )
+		throw std::runtime_error(
+				std::string{ "unable to parse message: " } +
+				rapidjson::GetParseError_En( whole_msg.GetParseError() ) );
+
+	const std::string msg_type = whole_msg[ "message_type" ].GetString();
+	const auto & payload = whole_msg[ "payload" ];
+	if( "Update-Period" == msg_type )
+	{
+		auto dto = json_dto::from_json< update_period >( payload );
+		...
+	}
+	else if( "Read-Sensor" == msg_type )
+	{
+		auto dto = json_dto::from_json< read_sensor >( payload );
+		...
+	}
+	else
+		...
+}
+```
+
+Fix: compilation problems on FreeBSD 12 with clang-6.0.1.
 
 ## v.0.2.6.2
 
