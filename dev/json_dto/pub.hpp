@@ -297,47 +297,9 @@ using container_filler_t = container_filler_impl_t<
 
 } /* namespace sequence_containers */
 
+//FIXME: this namespace should be removed if it will stay empty.
 namespace associative_containers
 {
-
-template< typename C, bool is_ordered >
-class keys_equal_comparator_impl_t;
-
-// Specialization for std::map/std::multimap.
-template< typename C >
-class keys_equal_comparator_impl_t< C, true >
-{
-	using key_compare_type = typename C::key_compare;
-
-	key_compare_type m_cmp;
-
-public :
-	keys_equal_comparator_impl_t( const C & cnt ) : m_cmp{ cnt.key_comp() } {}
-
-	template< typename K >
-	bool operator()( const K & a, const K & b ) const noexcept(noexcept(m_cmp(a, b)))
-	{
-		return !m_cmp(a, b) && !m_cmp(b, a);
-	}
-};
-
-//
-// has_key_comp
-//
-template< typename, typename = json_dto::details::meta::void_t<> >
-struct has_key_comp : public std::false_type {};
-
-template< typename T >
-struct has_key_comp<
-		T,
-		json_dto::details::meta::void_t<
-				decltype(std::declval<const T &>().key_comp()) >
-		> : public std::true_type {};
-
-template< typename C >
-using keys_equal_comparator_t = keys_equal_comparator_impl_t<
-		C,
-		has_key_comp<C>::value >;
 
 } /* namespace associative_containers */
 
@@ -1130,7 +1092,14 @@ read_json_value(
 	}
 }
 
-//FIXME: complex logic of this method should be documented.
+/*
+ * NOTE. There is no a special handling for multimap cases.
+ * All values from the container are deserialized.
+ *
+ * It it possible to check for duplicates of keys in the containers.
+ * But this check has performance penalty. So at v.0.2.8 there is no
+ * such check.
+ */
 template< typename C >
 std::enable_if_t<
 		details::meta::is_stl_map_like_associative_container<C>::value,
@@ -1140,9 +1109,6 @@ write_json_value(
 	rapidjson::Value & object,
 	rapidjson::MemoryPoolAllocator<> & allocator )
 {
-	const details::associative_containers::keys_equal_comparator_t<C>
-			is_equal_keys{ cnt };
-
 	const auto write_item = [&object, &allocator]( const auto & kv ) {
 				rapidjson::Value key;
 				rapidjson::Value value;
@@ -1154,26 +1120,8 @@ write_json_value(
 			};
 
 	object.SetObject();
-
-	const auto end = cnt.end();
-	auto current = cnt.begin();
-	if( current != end )
-	{
-		// The very first item should be stored always.
-		write_item( *current );
-
-		auto prev = current++;
-		while( current != end )
-		{
-			if( !is_equal_keys( prev->first, current->first ) )
-			{
-				// New key is found. The current value should be stored.
-				write_item( *current );
-				prev = current;
-			}
-			++current;
-		}
-	}
+	for( const auto & kv : cnt )
+		write_item( kv );
 }
 
 //

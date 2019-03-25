@@ -123,20 +123,34 @@ TEST_CASE( "map<string, int>: write to json" , "write-map-string-int" )
 	REQUIRE( R"({"data":{"one":1,"three":3,"two":2}})" == r );
 }
 
+TEST_CASE( "multimap<string, int>: read from json" , "read-multimap-string-int" )
+{
+	{
+		const std::string json_data{
+			R"JSON(
+			{"data":{"one":1, "two":2, "three":3}}
+			)JSON" };
+		auto obj = json_dto::from_json<
+				data_with_t< std::multimap<std::string, int> > >( json_data );
+
+		const std::multimap<std::string, int> expected{
+			{"one", 1}, {"three", 3}, {"two", 2}
+		};
+		REQUIRE( obj.m_data == expected );
+	}
+}
+
 TEST_CASE( "multimap<string, int>: write to json" , "write-multimap-string-int" )
 {
+	//NOTE: presence of duplicated keys is not checked because
+	//the v.0.2.8 doesn't handle them.
 	data_with_t< std::multimap<std::string, int> > obj{
-		{ {"one", 1}, {"three", 3}, {"two", 2},
-			{"one", 11},
-			{"three", 33}, {"three", 333}
-		}
+		{ {"one", 1}, {"three", 3}, {"two", 2} }
 	};
 	const auto r = json_dto::to_json( obj );
 
 	REQUIRE( R"({"data":{"one":1,"three":3,"two":2}})" == r );
 }
-
-#if 0
 
 TEST_CASE( "hash_map<string, int>: read from json" , "read-hash_map-string-int" )
 {
@@ -170,4 +184,36 @@ TEST_CASE( "hash_map<string, int>: write to json" , "write-hash_map-string-int" 
 			Contains(R"("three":3)") );
 }
 
-#endif
+TEST_CASE( "hash_multimap<string, int>: read from json" , "read-hash_multimap-string-int" )
+{
+	{
+		const std::string json_data{
+			R"JSON(
+			{"data":{"one":1, "two":2, "three":3}}
+			)JSON" };
+		auto obj = json_dto::from_json<
+				data_with_t< std::unordered_multimap<std::string, int> > >(
+						json_data );
+
+		const std::unordered_multimap<std::string, int> expected{
+			{"one", 1}, {"three", 3}, {"two", 2}
+		};
+		REQUIRE( obj.m_data == expected );
+	}
+}
+
+TEST_CASE( "hash_multimap<string, int>: write to json" , "write-hash_multimap-string-int" )
+{
+	using namespace Catch::Matchers;
+
+	data_with_t< std::unordered_multimap<std::string, int> > obj{
+		{ {"one", 1}, {"three", 3}, {"two", 2} }
+	};
+	const auto r = json_dto::to_json( obj );
+
+	REQUIRE_THAT( r,
+			Contains(R"("one":1)") &&
+			Contains(R"("two":2)") &&
+			Contains(R"("three":3)") );
+}
+
