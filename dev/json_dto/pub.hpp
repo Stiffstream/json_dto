@@ -65,13 +65,31 @@ template<typename... Ts> struct make_void { typedef void type;};
 template<typename... Ts> using void_t = typename make_void<Ts...>::type;
 
 //
-// has_value_type_type
+// has_value_type
 //
 template< typename, typename = void_t<> >
-struct has_value_type_type : public std::false_type {};
+struct has_value_type : public std::false_type {};
 
 template< typename T >
-struct has_value_type_type< T, void_t<typename T::value_type> > : public std::true_type {};
+struct has_value_type< T, void_t<typename T::value_type> > : public std::true_type {};
+
+//
+// has_key_type
+//
+template< typename, typename = void_t<> >
+struct has_key_type : public std::false_type {};
+
+template< typename T >
+struct has_key_type< T, void_t<typename T::key_type> > : public std::true_type {};
+
+//
+// has_mapped_type
+//
+template< typename, typename = void_t<> >
+struct has_mapped_type : public std::false_type {};
+
+template< typename T >
+struct has_mapped_type< T, void_t<typename T::mapped_type> > : public std::true_type {};
 
 //
 // has_iterator_type
@@ -170,7 +188,8 @@ template< typename T >
 struct is_stl_like_sequence_container
 	{
 		static constexpr bool value = 
-				has_value_type_type<T>::value &&
+				has_value_type<T>::value &&
+				!has_key_type<T>::value &&
 				has_iterator_type<T>::value &&
 				has_const_iterator_type<T>::value &&
 				has_begin<T>::value &&
@@ -178,6 +197,44 @@ struct is_stl_like_sequence_container
 				( has_emplace_back<T>::value ||
 				  	(has_before_begin<T>::value && has_emplace_after<T>::value) )
 				;
+	};
+
+//
+// is_stl_like_associative_container
+//
+template< typename T >
+struct is_stl_like_associative_container
+	{
+		static constexpr bool value = 
+				has_value_type<T>::value &&
+				has_key_type<T>::value &&
+				has_iterator_type<T>::value &&
+				has_const_iterator_type<T>::value &&
+				has_begin<T>::value &&
+				has_end<T>::value
+				;
+	};
+
+//
+// is_stl_map_like_associative_container
+template< typename T >
+struct is_stl_map_like_associative_container
+	{
+		static constexpr bool value = 
+				is_stl_like_associative_container<T>::value &&
+				has_mapped_type<T>::value
+				;
+	};
+
+//
+// is_stl_like_container
+//
+template< typename T >
+struct is_stl_like_container
+	{
+		static constexpr bool value =
+				is_stl_like_sequence_container<T>::value ||
+				is_stl_like_associative_container<T>::value;
 	};
 
 } /* namespace meta */
@@ -526,6 +583,26 @@ write_json_value(
 	rapidjson::MemoryPoolAllocator<> & allocator );
 
 //
+// STL-map-like associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_map_like_associative_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object );
+
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_map_like_associative_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator );
+
+//
 // nullable_t
 //
 
@@ -753,7 +830,7 @@ json_io( Io & io, Dto & dto )
 
 template< typename Dto >
 std::enable_if_t<
-		!details::meta::is_stl_like_sequence_container<Dto>::value,
+		!details::meta::is_stl_like_container<Dto>::value,
 		void >
 read_json_value(
 	Dto & v,
@@ -765,7 +842,7 @@ read_json_value(
 
 template< typename Dto >
 std::enable_if_t<
-		!details::meta::is_stl_like_sequence_container<Dto>::value,
+		!details::meta::is_stl_like_container<Dto>::value,
 		void >
 write_json_value(
 	const Dto & v,
@@ -979,6 +1056,55 @@ write_json_value(
 		rapidjson::Value o;
 		write_json_value( v, o, allocator );
 		object.PushBack( o, allocator );
+	}
+}
+
+//
+// STL-map-like associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_map_like_associative_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object )
+{
+	if( !object.IsObject() )
+		throw ex_t{ "value can't be deserialized into std::map-like container!" };
+
+	cnt.clear();
+	for( auto it = object.MemberBegin(); it != object.MemberEnd(); ++it )
+	{
+		typename C::key_type key;
+		typename C::mapped_type value;
+
+		read_json_value( key, it->name );
+		read_json_value( value, it->value );
+
+		cnt.emplace( typename C::value_type{ std::move(key), std::move(value) } );
+	}
+}
+
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_map_like_associative_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	object.SetObject();
+	for( const auto & kv : cnt )
+	{
+		rapidjson::Value key;
+		rapidjson::Value value;
+
+		write_json_value( kv.first, key, allocator );
+		write_json_value( kv.second, value, allocator );
+
+		object.AddMember( key, value, allocator );
 	}
 }
 
