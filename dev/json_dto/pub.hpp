@@ -54,6 +54,181 @@
 namespace json_dto
 {
 
+namespace details
+{
+
+namespace meta
+{
+
+// See https://en.cppreference.com/w/cpp/types/void_t for details.
+template<typename... Ts> struct make_void { typedef void type;};
+template<typename... Ts> using void_t = typename make_void<Ts...>::type;
+
+//
+// has_value_type_type
+//
+template< typename, typename = void_t<> >
+struct has_value_type_type : public std::false_type {};
+
+template< typename T >
+struct has_value_type_type< T, void_t<typename T::value_type> > : public std::true_type {};
+
+//
+// has_iterator_type
+//
+template< typename, typename = void_t<> >
+struct has_iterator_type : public std::false_type {};
+
+template< typename T >
+struct has_iterator_type< T, void_t<typename T::iterator> > : public std::true_type {};
+
+//
+// has_const_iterator_type
+//
+template< typename, typename = void_t<> >
+struct has_const_iterator_type : public std::false_type {};
+
+template< typename T >
+struct has_const_iterator_type< T, void_t<typename T::const_iterator> > : public std::true_type {};
+
+//
+// has_begin
+//
+template< typename, typename = void_t<> >
+struct has_begin : public std::false_type {};
+
+template< typename T >
+struct has_begin<
+		T,
+		void_t<decltype(std::declval<const T &>().begin())> > : public std::true_type {};
+
+//
+// has_end
+//
+template< typename, typename = void_t<> >
+struct has_end : public std::false_type {};
+
+template< typename T >
+struct has_end<
+		T,
+		void_t<decltype(std::declval<const T &>().end())> > : public std::true_type {};
+
+//
+// has_emplace_back
+//
+template< typename, typename = void_t<> >
+struct has_emplace_back : public std::false_type {};
+
+template< typename T >
+struct has_emplace_back<
+		T,
+		void_t<
+			decltype(
+					std::declval<T &>().emplace_back(
+							std::declval<typename T::value_type>() )
+			) >
+		> : public std::true_type {};
+
+//
+// has_emplace_after
+//
+template< typename, typename = void_t<> >
+struct has_emplace_after : public std::false_type {};
+
+template< typename T >
+struct has_emplace_after<
+		T,
+		void_t<
+			decltype(
+					std::declval<T &>().emplace_after(
+							std::declval<typename T::const_iterator>(),
+							std::declval<typename T::value_type>() )
+			) >
+		> : public std::true_type {};
+
+//
+// has_before_begin
+//
+template< typename, typename = void_t<> >
+struct has_before_begin : public std::false_type {};
+
+template< typename T >
+struct has_before_begin<
+		T,
+		void_t<
+			std::enable_if_t<
+					std::is_same<
+							typename T::iterator,
+							decltype(std::declval<T &>().before_begin()) >::value >
+			>
+		> : public std::true_type {};
+
+//
+// is_stl_like_sequence_container
+//
+template< typename T >
+struct is_stl_like_sequence_container
+	{
+		static constexpr bool value = 
+				has_value_type_type<T>::value &&
+				has_iterator_type<T>::value &&
+				has_const_iterator_type<T>::value &&
+				has_begin<T>::value &&
+				has_end<T>::value &&
+				( has_emplace_back<T>::value ||
+				  	(has_before_begin<T>::value && has_emplace_after<T>::value) )
+				;
+	};
+
+} /* namespace meta */
+
+namespace sequence_containers
+{
+
+//FIXME: document this!
+template< typename C >
+std::enable_if_t<
+		meta::has_emplace_back<C>::value,
+		typename C::iterator >
+first_insert_it( C & cnt )
+{
+	return cnt.end();
+}
+
+template< typename C >
+std::enable_if_t<
+		meta::has_emplace_after<C>::value,
+		typename C::iterator >
+first_insert_it( C & cnt )
+{
+	return cnt.before_begin();
+}
+
+//FIXME: document this!
+//FIXME: passing of pos that is ignored is not good thing!
+template< typename It, typename V, typename C >
+std::enable_if_t<
+		meta::has_emplace_back<C>::value,
+		typename C::iterator >
+emplace_to( C & cnt, It /*pos*/, V && value )
+{
+	cnt.emplace_back( std::move(value) );
+	return cnt.end();
+}
+
+template< typename It, typename V, typename C >
+std::enable_if_t<
+		meta::has_emplace_after<C>::value,
+		typename C::iterator >
+emplace_to( C & cnt, It pos, V && value )
+{
+	return cnt.insert_after( pos, std::move(value) );
+}
+
+} /* namespace sequence_containers */
+
+} /* namespace details */
+
 namespace cpp17
 {
 #if defined(JSON_DTO_SUPPORTS_STD_OPTIONAL)
@@ -318,6 +493,26 @@ write_json_value(
 	rapidjson::MemoryPoolAllocator<> & allocator );
 
 //
+// STL-like non-associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_sequence_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object );
+
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_sequence_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator );
+
+//
 // nullable_t
 //
 
@@ -544,7 +739,9 @@ json_io( Io & io, Dto & dto )
 //
 
 template< typename Dto >
-void
+std::enable_if_t<
+		!details::meta::is_stl_like_sequence_container<Dto>::value,
+		void >
 read_json_value(
 	Dto & v,
 	const rapidjson::Value & object )
@@ -554,7 +751,9 @@ read_json_value(
 }
 
 template< typename Dto >
-void
+std::enable_if_t<
+		!details::meta::is_stl_like_sequence_container<Dto>::value,
+		void >
 write_json_value(
 	const Dto & v,
 	rapidjson::Value & object,
@@ -723,6 +922,54 @@ void
 json_io( json_output_t & from, std::vector<T, A> & what )
 {
 	from & details::vector_writer_t<T, A>{ what };
+}
+
+//
+// STL-like non-associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_sequence_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object )
+{
+	if( object.IsArray() )
+	{
+		cnt.clear();
+		auto insert_at = details::sequence_containers::first_insert_it( cnt );
+
+		for( rapidjson::SizeType i = 0; i < object.Size(); ++i )
+		{
+			typename C::value_type v;
+			read_json_value( v, object[ i ] );
+			insert_at = details::sequence_containers::emplace_to(
+					cnt,
+					insert_at,
+					std::move(v) );
+		}
+	}
+	else
+		throw ex_t{ "value is not an array" };
+}
+
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_sequence_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	object.SetArray();
+	for( const auto & v : cnt )
+	{
+		rapidjson::Value o;
+		write_json_value( v, o, allocator );
+		object.PushBack( o, allocator );
+	}
 }
 
 //
