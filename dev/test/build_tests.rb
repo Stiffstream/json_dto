@@ -7,6 +7,7 @@ MxxRu::Cpp::composite_target {
 	required_prj( "test/floats/prj.ut.rb" )
 	required_prj( "test/optional/prj.ut.rb" )
 	required_prj( "test/std_optional/prj.ut.rb" )
+	required_prj( "test/stl_containers/prj.ut.rb" )
 	required_prj( "test/std_vector_bool/prj.ut.rb" )
 	required_prj( "test/std_vector_top_level/prj.ut.rb" )
 	required_prj( "test/nullable/prj.ut.rb" )

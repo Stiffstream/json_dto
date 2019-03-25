@@ -185,45 +185,58 @@ struct is_stl_like_sequence_container
 namespace sequence_containers
 {
 
-//FIXME: document this!
-template< typename C >
-std::enable_if_t<
-		meta::has_emplace_back<C>::value,
-		typename C::iterator >
-first_insert_it( C & cnt )
-{
-	return cnt.end();
-}
+//
+// Helper class for hiding details of emplacing values at the end
+// of the sequence_container.
+//
+// In case of std::vector/list/deque there is emplace_back() method
+// that should be called for each new item.
+//
+// But in the case of std::forward_list we should call to
+// before_begin() at the very beginning and then we have to call
+// emplace_after() for each new item with storing and reusing of
+// the returned pointer.
+//
+template< typename C, bool is_forward_list >
+class container_filler_impl_t;
 
 template< typename C >
-std::enable_if_t<
-		meta::has_emplace_after<C>::value,
-		typename C::iterator >
-first_insert_it( C & cnt )
+class container_filler_impl_t< C, false > final
 {
-	return cnt.before_begin();
-}
+	C & m_cnt;
 
-//FIXME: document this!
-//FIXME: passing of pos that is ignored is not good thing!
-template< typename It, typename V, typename C >
-std::enable_if_t<
-		meta::has_emplace_back<C>::value,
-		typename C::iterator >
-emplace_to( C & cnt, It /*pos*/, V && value )
-{
-	cnt.emplace_back( std::move(value) );
-	return cnt.end();
-}
+public :
+	container_filler_impl_t( C & cnt ) : m_cnt{ cnt } {}
 
-template< typename It, typename V, typename C >
-std::enable_if_t<
-		meta::has_emplace_after<C>::value,
-		typename C::iterator >
-emplace_to( C & cnt, It pos, V && value )
+	template< typename V >
+	void emplace_back( V && value )
+	{
+		m_cnt.emplace_back( std::forward<V>(value) );
+	}
+};
+
+template< typename C >
+class container_filler_impl_t< C, true > final
 {
-	return cnt.insert_after( pos, std::move(value) );
-}
+	C & m_cnt;
+	typename C::iterator m_it;
+
+public :
+	container_filler_impl_t<C, true>( C & cnt )
+		: m_cnt{ cnt }, m_it{ cnt.before_begin() }
+	{}
+
+	template< typename V >
+	void emplace_back( V && value )
+	{
+		m_it = m_cnt.emplace_after( m_it, std::forward<V>(value) );
+	}
+};
+
+template< typename C >
+using container_filler_t = container_filler_impl_t<
+		C,
+		meta::has_before_begin<C>::value && meta::has_emplace_after<C>::value >;
 
 } /* namespace sequence_containers */
 
@@ -938,16 +951,13 @@ read_json_value(
 	if( object.IsArray() )
 	{
 		cnt.clear();
-		auto insert_at = details::sequence_containers::first_insert_it( cnt );
+		details::sequence_containers::container_filler_t<C> filler{ cnt };
 
 		for( rapidjson::SizeType i = 0; i < object.Size(); ++i )
 		{
 			typename C::value_type v;
 			read_json_value( v, object[ i ] );
-			insert_at = details::sequence_containers::emplace_to(
-					cnt,
-					insert_at,
-					std::move(v) );
+			filler.emplace_back( std::move(v) );
 		}
 	}
 	else
