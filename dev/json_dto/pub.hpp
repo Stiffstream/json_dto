@@ -1025,54 +1025,6 @@ write_json_value(
 }
 
 //
-// Support for to_json/from_json for std::vector<T,A>.
-// Since v.0.2.6
-//
-namespace details {
-
-template< typename T, typename A >
-struct vector_reader_t {
-	std::vector<T, A> & m_dest;
-
-	void
-	read_from( const rapidjson::Value & from ) const
-	{
-		read_json_value( m_dest, from );
-	}
-};
-
-template< typename T, typename A >
-struct vector_writer_t {
-	const std::vector<T, A> & m_src;
-
-	void
-	write_to(
-		rapidjson::Value & to,
-		rapidjson::MemoryPoolAllocator<> & allocator ) const
-	{
-		write_json_value( m_src, to, allocator );
-	}
-};
-
-} /* namespace details */
-
-template< typename T, typename A >
-void
-json_io( json_input_t & from, std::vector<T, A> & what )
-{
-	from & details::vector_reader_t<T, A>{ what };
-}
-
-// NOTE: argument 'what' is not const.
-// It is required by implementation of operator<<() below.
-template< typename T, typename A >
-void
-json_io( json_output_t & from, std::vector<T, A> & what )
-{
-	from & details::vector_writer_t<T, A>{ what };
-}
-
-//
 // STL-like non-associative containers.
 //
 template< typename C >
