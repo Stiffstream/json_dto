@@ -1069,6 +1069,8 @@ json_io( json_input_t & from, std::vector<T, A> & what )
 	from & details::vector_reader_t<T, A>{ what };
 }
 
+// NOTE: argument 'what' is not const.
+// It is required by implementation of operator<<() below.
 template< typename T, typename A >
 void
 json_io( json_output_t & from, std::vector<T, A> & what )
@@ -1119,6 +1121,58 @@ write_json_value(
 		write_json_value( v, o, allocator );
 		object.PushBack( o, allocator );
 	}
+}
+
+//
+// Support for to_json/from_json for STL-like sequence containers.
+// Since v.0.2.8
+//
+namespace details {
+
+template< typename C >
+struct stl_like_sequence_container_reader_t {
+	C & m_dest;
+
+	void
+	read_from( const rapidjson::Value & from ) const
+	{
+		read_json_value( m_dest, from );
+	}
+};
+
+template< typename C >
+struct stl_like_sequence_container_writer_t {
+	const C & m_src;
+
+	void
+	write_to(
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
+	{
+		write_json_value( m_src, to, allocator );
+	}
+};
+
+} /* namespace details */
+
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_sequence_container<C>::value,
+		void >
+json_io( json_input_t & from, C & what )
+{
+	from & details::stl_like_sequence_container_reader_t<C>{ what };
+}
+
+// NOTE: argument 'what' is not const.
+// It is required by implementation of operator<<() below.
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_sequence_container<C>::value,
+		void >
+json_io( json_output_t & from, C & what )
+{
+	from & details::stl_like_sequence_container_writer_t<C>{ what };
 }
 
 //
