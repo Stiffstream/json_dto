@@ -132,8 +132,27 @@ struct has_end<
 		void_t<decltype(std::declval<const T &>().end())> > : public std::true_type {};
 
 //
+// has_emplace
+//
+// emplace() method will be used for set-like structures.
+template< typename, typename = void_t<> >
+struct has_emplace : public std::false_type {};
+
+template< typename T >
+struct has_emplace<
+		T,
+		void_t<
+			decltype(
+					std::declval<T &>().emplace(
+							std::declval<typename T::value_type>() )
+			) >
+		> : public std::true_type {};
+
+//
 // has_emplace_back
 //
+// emplace_back() method will be used for sequence containers
+// except std::forward_list.
 template< typename, typename = void_t<> >
 struct has_emplace_back : public std::false_type {};
 
@@ -150,6 +169,7 @@ struct has_emplace_back<
 //
 // has_emplace_after
 //
+// emplace_after() method will be used for std::forward_list.
 template< typename, typename = void_t<> >
 struct has_emplace_after : public std::false_type {};
 
@@ -167,6 +187,8 @@ struct has_emplace_after<
 //
 // has_before_begin
 //
+// If containers has emplace_after() and before_begin() methods then
+// we assume that it is std::forward_list (or compatible container).
 template< typename, typename = void_t<> >
 struct has_before_begin : public std::false_type {};
 
@@ -211,18 +233,32 @@ struct is_stl_like_associative_container
 				has_iterator_type<T>::value &&
 				has_const_iterator_type<T>::value &&
 				has_begin<T>::value &&
-				has_end<T>::value
+				has_end<T>::value &&
+				has_emplace<T>::value
 				;
 	};
 
 //
 // is_stl_map_like_associative_container
+//
 template< typename T >
 struct is_stl_map_like_associative_container
 	{
 		static constexpr bool value = 
 				is_stl_like_associative_container<T>::value &&
 				has_mapped_type<T>::value
+				;
+	};
+
+//
+// is_stl_set_like_associative_container
+//
+template< typename T >
+struct is_stl_set_like_associative_container
+	{
+		static constexpr bool value = 
+				is_stl_like_associative_container<T>::value &&
+				!has_mapped_type<T>::value
 				;
 	};
 
@@ -582,6 +618,26 @@ read_json_value(
 template< typename C >
 std::enable_if_t<
 		details::meta::is_stl_like_sequence_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator );
+
+//
+// STL-set-like associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_set_like_associative_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object );
+
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_set_like_associative_container<C>::value,
 		void >
 write_json_value(
 	const C & cnt,
@@ -1063,6 +1119,57 @@ write_json_value(
 		write_json_value( v, o, allocator );
 		object.PushBack( o, allocator );
 	}
+}
+
+//
+// STL-set-like associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_set_like_associative_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object )
+{
+	if( !object.IsArray() )
+		throw ex_t{ "value can't be deserialized into std::set-like container!" };
+
+	cnt.clear();
+	for( rapidjson::SizeType i = 0; i < object.Size(); ++i )
+	{
+		typename C::value_type v;
+		read_json_value( v, object[ i ] );
+		cnt.emplace( std::move(v) );
+	}
+}
+
+/*
+ * NOTE. There is no a special handling for multiset cases.
+ * All values from the container are deserialized.
+ *
+ * It it possible to check for duplicates of keys in the containers.
+ * But this check has performance penalty. So at v.0.2.8 there is no
+ * such check.
+ */
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_set_like_associative_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	const auto write_item = [&object, &allocator]( const auto & v ) {
+				rapidjson::Value o;
+				write_json_value( v, o, allocator );
+				object.PushBack( o, allocator );
+			};
+
+	object.SetArray();
+	for( const auto & v : cnt )
+		write_item( v );
 }
 
 //
