@@ -12,6 +12,46 @@ working with JSON in various projects.
 
 # What's new?
 
+## v.0.2.8
+
+Support for STL containers like `std::deque`, `std::list`, `std::forward_list`, `std::set`, `std::unordered_set`, `std::map` and `std::unordered_map` is implemented. These types can be used as types of fields in a serialized type, for example:
+
+```cpp
+#include <json_dto/pub.hpp>
+
+#include <deque>
+#include <set>
+#include <map>
+
+struct my_message {
+	std::deque<int> ids_;
+	std::set<std::string> tags_;
+	std::map<std::string, some_another_type> props_;
+	...
+	template<typename Json_Io>
+	void json_io(Json_Io & io) {
+		io & json_dto::mandatory("ids", ids_)
+			& json_dto::mandatory("tags", tags_)
+			& json_dto::mandatory("properties", props_)
+			...
+			;
+	}
+};
+```
+
+These types can also be used with json_dto::from_json() and json_dto::to_json() functions:
+
+```cpp
+auto messages = json_dto::from_json< std::forward_list<my_message> >(...);
+...
+auto json = json_dto::to_json(messages);
+```
+
+
+A new example tutorial17 added. This example shows the usage of new features.
+
+An important note about support for `std::multiset`, `std::unordered_multiset`, `std::multimap` and `std::unordered_multimap`: those containers are also supported. But json_dto doesn't do any checks for duplicate keys. In that aspect, json_dto relies on RapidJSON behavior. For example, if an instance of `std::multimap` contains several values for some key all those values will be serialized. What happens to those values is dependent on RapidJSON.
+
 ## v.0.2.7
 
 Two new forms of `from_json` added. It is possible now to deserialize a DTO from already parsed document. For example:
@@ -105,7 +145,7 @@ may require to specify C++17 standard in compiler params (like `/std:c++17` for 
 
 To use *json_dto* it is necessary to have:
 
-* C++14 compiler (VC++14.0, GCC 5.2 or above, clang 3.6 or above)
+* C++14 compiler (VC++15.0, GCC 5.4 or above, clang 4.0 or above)
 * [rapidjson](https://github.com/miloyip/rapidjson)
 
 And for building with mxxru:
@@ -116,7 +156,7 @@ And for building with mxxru:
 
 And for running test:
 
-* [CATCH2](https://github.com/catchorg/Catch2) 2.3.0
+* [CATCH2](https://github.com/catchorg/Catch2) 2.5.0
 
 ## Obtaining
 
