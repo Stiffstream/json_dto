@@ -39,7 +39,7 @@ struct my_message {
 };
 ```
 
-These types can also be used with json_dto::from_json() and json_dto::to_json() functions:
+These types can also be used with `json_dto::from_json()` and `json_dto::to_json()` functions:
 
 ```cpp
 auto messages = json_dto::from_json< std::forward_list<my_message> >(...);
@@ -673,6 +673,45 @@ int main() {
 	std::cout << "Sorted data: " << json_dto::to_json(data) << std::endl;
 }
 ```
+
+## Other types of containers
+
+Since v.0.2.8 there is a support for STL containers like `std::deque`, `std::list`, `std::forward_list`, `std::set`, `std::unordered_set`, `std::map` and `std::unordered_map`. Those types can be used as types of fields of serialized struct/classes:
+
+```cpp
+#include <json_dto/pub.hpp>
+
+#include <deque>
+#include <set>
+#include <map>
+
+struct my_message {
+	std::deque<int> ids_;
+	std::set<std::string> tags_;
+	std::map<std::string, some_another_type> props_;
+	...
+	template<typename Json_Io>
+	void json_io(Json_Io & io) {
+		io & json_dto::mandatory("ids", ids_)
+			& json_dto::mandatory("tags", tags_)
+			& json_dto::mandatory("properties", props_)
+			...
+			;
+	}
+};
+```
+
+Also STL containers are supported by `json_dto::from_json()` and `json_dto::to_json()` functions:
+
+```cpp
+auto messages = json_dto::from_json< std::forward_list<my_message> >(...);
+...
+auto json = json_dto::to_json(messages);
+```
+
+[See a special example with usage of STL containers](./dev/sample/tutorial17/main.cpp)
+
+Note that support for those STL-containers is not hardcoded in json_dto. Instead, json_dto tries to detect a type of a container by inspecting the presence of types like `value_type`, `key_type`, `mapped_type` and methods like `begin()/end()`, `emplace()`, `emplace_back()` and so one. It means that json_dto may work not only with STL-containers but with other containers those mimics like STL-containers.
 
 ## Nullable fields
 
