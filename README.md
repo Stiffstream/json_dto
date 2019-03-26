@@ -711,7 +711,7 @@ auto json = json_dto::to_json(messages);
 
 [See a special example with usage of STL containers](./dev/sample/tutorial17/main.cpp)
 
-Note that support for those STL-containers is not hardcoded in json_dto. Instead, json_dto tries to detect a type of a container by inspecting the presence of types like `value_type`, `key_type`, `mapped_type` and methods like `begin()/end()`, `emplace()`, `emplace_back()` and so one. It means that json_dto may work not only with STL-containers but with other containers those mimics like STL-containers.
+Note that support for those STL-containers is not hardcoded in json_dto. Instead, json_dto tries to detect a type of a container by inspecting the presence of types like `value_type`, `key_type`, `mapped_type` and methods like `begin()/end()`, `emplace()`, `emplace_back()` and so on. It means that json_dto may work not only with STL-containers but with other containers those mimics like STL-containers.
 
 ## Nullable fields
 
