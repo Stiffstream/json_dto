@@ -14,7 +14,9 @@ working with JSON in various projects.
 
 ## v.0.2.8
 
-Support for STL containers like `std::deque`, `std::list`, `std::forward_list`, `std::set`, `std::unordered_set`, `std::map` and `std::unordered_map` is implemented. These types can be used as types of fields in a serialized type, for example:
+Support for STL containers like `std::deque`, `std::list`, `std::forward_list`,
+`std::set`, `std::unordered_set`, `std::map` and `std::unordered_map` is implemented.
+These types can be used as types of fields in a serialized type, for example:
 
 ```cpp
 #include <json_dto/pub.hpp>
@@ -50,7 +52,12 @@ auto json = json_dto::to_json(messages);
 
 A new example tutorial17 added. This example shows the usage of new features.
 
-An important note about support for `std::multiset`, `std::unordered_multiset`, `std::multimap` and `std::unordered_multimap`: those containers are also supported. But json_dto doesn't do any checks for duplicate keys. In that aspect, json_dto relies on RapidJSON behavior. For example, if an instance of `std::multimap` contains several values for some key all those values will be serialized. What happens to those values is dependent on RapidJSON.
+An important note about support for `std::multiset`, `std::unordered_multiset`,
+`std::multimap` and `std::unordered_multimap`: those containers are also supported.
+But json_dto doesn't do any checks for duplicate keys. In that aspect, json_dto relies
+on RapidJSON behavior. For example, if an instance of `std::multimap` contains several
+values for some key all those values will be serialized.
+What happens to those values is dependent on RapidJSON.
 
 ## v.0.2.7
 
@@ -676,7 +683,9 @@ int main() {
 
 ## Other types of containers
 
-Since v.0.2.8 there is a support for STL containers like `std::deque`, `std::list`, `std::forward_list`, `std::set`, `std::unordered_set`, `std::map` and `std::unordered_map`. Those types can be used as types of fields of serialized struct/classes:
+Since v.0.2.8 there is a support for STL containers like `std::deque`, `std::list`,
+`std::forward_list`, `std::set`, `std::unordered_set`, `std::map` and `std::unordered_map`.
+Those types can be used as types of fields of serialized struct/classes:
 
 ```cpp
 #include <json_dto/pub.hpp>
@@ -711,7 +720,25 @@ auto json = json_dto::to_json(messages);
 
 [See a special example with usage of STL containers](./dev/sample/tutorial17/main.cpp)
 
-Note that support for those STL-containers is not hardcoded in json_dto. Instead, json_dto tries to detect a type of a container by inspecting the presence of types like `value_type`, `key_type`, `mapped_type` and methods like `begin()/end()`, `emplace()`, `emplace_back()` and so on. It means that json_dto may work not only with STL-containers but with other containers those mimics like STL-containers.
+Note that support for those STL-containers is not hardcoded in json_dto. 
+Instead, json_dto tries to detect a type of a container by inspecting the presence of types
+like `value_type`, `key_type`, `mapped_type` and methods like `begin()/end()`, `emplace()`,
+`emplace_back()` and so on. It means that json_dto may work not only with STL-containers but
+with other containers those mimics like STL-containers.
+
+**Note.** Type `std::array` is not supported now. If you have to deal with `std::array` and
+want to have a support of it in json_dto please
+[open an issue](https://bitbucket.org/sobjectizerteam/json_dto-0.2/issues)
+and we'll discuss some corner cases related to `std::array`.
+
+### Multimaps and multisets
+
+An important note about support for `std::multiset`, `std::unordered_multiset`,
+`std::multimap` and `std::unordered_multimap`: those containers are also supported.
+But json_dto doesn't do any checks for duplicate keys. In that aspect, json_dto relies
+on RapidJSON behavior. For example, if an instance of `std::multimap` contains several
+values for some key all those values will be serialized.
+What happens to those values is dependent on RapidJSON.
 
 ## Nullable fields
 
