@@ -1,8 +1,9 @@
 Table of Contents
 =================
-
+   * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.8](#v028)
       * [v.0.2.7](#v027)
       * [v.0.2.6.2](#v0262)
       * [v.0.2.6.1](#v0261)
@@ -30,6 +31,8 @@ Table of Contents
       * [Array support](#array-support)
          * [Array fields](#array-fields)
          * [Arrays and to_json and from_json](#arrays-and-to_json-and-from_json)
+      * [Other types of containers](#other-types-of-containers)
+         * [Multimaps and multisets](#multimaps-and-multisets)
       * [Nullable fields](#nullable-fields)
       * [Complex types](#complex-types)
       * [Inheritance](#inheritance)
