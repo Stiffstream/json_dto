@@ -54,6 +54,287 @@
 namespace json_dto
 {
 
+namespace details
+{
+
+namespace meta
+{
+
+// See https://en.cppreference.com/w/cpp/types/void_t for details.
+template<typename... Ts> struct make_void { typedef void type;};
+template<typename... Ts> using void_t = typename make_void<Ts...>::type;
+
+//
+// has_value_type
+//
+template< typename, typename = void_t<> >
+struct has_value_type : public std::false_type {};
+
+template< typename T >
+struct has_value_type< T, void_t<typename T::value_type> > : public std::true_type {};
+
+//
+// has_key_type
+//
+template< typename, typename = void_t<> >
+struct has_key_type : public std::false_type {};
+
+template< typename T >
+struct has_key_type< T, void_t<typename T::key_type> > : public std::true_type {};
+
+//
+// has_mapped_type
+//
+template< typename, typename = void_t<> >
+struct has_mapped_type : public std::false_type {};
+
+template< typename T >
+struct has_mapped_type< T, void_t<typename T::mapped_type> > : public std::true_type {};
+
+//
+// has_iterator_type
+//
+template< typename, typename = void_t<> >
+struct has_iterator_type : public std::false_type {};
+
+template< typename T >
+struct has_iterator_type< T, void_t<typename T::iterator> > : public std::true_type {};
+
+//
+// has_const_iterator_type
+//
+template< typename, typename = void_t<> >
+struct has_const_iterator_type : public std::false_type {};
+
+template< typename T >
+struct has_const_iterator_type< T, void_t<typename T::const_iterator> > : public std::true_type {};
+
+//
+// has_begin
+//
+template< typename, typename = void_t<> >
+struct has_begin : public std::false_type {};
+
+template< typename T >
+struct has_begin<
+		T,
+		void_t<decltype(std::declval<const T &>().begin())> > : public std::true_type {};
+
+//
+// has_end
+//
+template< typename, typename = void_t<> >
+struct has_end : public std::false_type {};
+
+template< typename T >
+struct has_end<
+		T,
+		void_t<decltype(std::declval<const T &>().end())> > : public std::true_type {};
+
+//
+// has_emplace
+//
+// emplace() method will be used for set-like structures.
+template< typename, typename = void_t<> >
+struct has_emplace : public std::false_type {};
+
+template< typename T >
+struct has_emplace<
+		T,
+		void_t<
+			decltype(
+					std::declval<T &>().emplace(
+							std::declval<typename T::value_type>() )
+			) >
+		> : public std::true_type {};
+
+//
+// has_emplace_back
+//
+// emplace_back() method will be used for sequence containers
+// except std::forward_list.
+template< typename, typename = void_t<> >
+struct has_emplace_back : public std::false_type {};
+
+template< typename T >
+struct has_emplace_back<
+		T,
+		void_t<
+			decltype(
+					std::declval<T &>().emplace_back(
+							std::declval<typename T::value_type>() )
+			) >
+		> : public std::true_type {};
+
+//
+// has_emplace_after
+//
+// emplace_after() method will be used for std::forward_list.
+template< typename, typename = void_t<> >
+struct has_emplace_after : public std::false_type {};
+
+template< typename T >
+struct has_emplace_after<
+		T,
+		void_t<
+			decltype(
+					std::declval<T &>().emplace_after(
+							std::declval<typename T::const_iterator>(),
+							std::declval<typename T::value_type>() )
+			) >
+		> : public std::true_type {};
+
+//
+// has_before_begin
+//
+// If containers has emplace_after() and before_begin() methods then
+// we assume that it is std::forward_list (or compatible container).
+template< typename, typename = void_t<> >
+struct has_before_begin : public std::false_type {};
+
+template< typename T >
+struct has_before_begin<
+		T,
+		void_t<
+			std::enable_if_t<
+					std::is_same<
+							typename T::iterator,
+							decltype(std::declval<T &>().before_begin()) >::value >
+			>
+		> : public std::true_type {};
+
+//
+// is_stl_like_sequence_container
+//
+template< typename T >
+struct is_stl_like_sequence_container
+	{
+		static constexpr bool value = 
+				has_value_type<T>::value &&
+				!has_key_type<T>::value &&
+				has_iterator_type<T>::value &&
+				has_const_iterator_type<T>::value &&
+				has_begin<T>::value &&
+				has_end<T>::value &&
+				( has_emplace_back<T>::value ||
+				  	(has_before_begin<T>::value && has_emplace_after<T>::value) )
+				;
+	};
+
+//
+// is_stl_like_associative_container
+//
+template< typename T >
+struct is_stl_like_associative_container
+	{
+		static constexpr bool value = 
+				has_value_type<T>::value &&
+				has_key_type<T>::value &&
+				has_iterator_type<T>::value &&
+				has_const_iterator_type<T>::value &&
+				has_begin<T>::value &&
+				has_end<T>::value &&
+				has_emplace<T>::value
+				;
+	};
+
+//
+// is_stl_map_like_associative_container
+//
+template< typename T >
+struct is_stl_map_like_associative_container
+	{
+		static constexpr bool value = 
+				is_stl_like_associative_container<T>::value &&
+				has_mapped_type<T>::value
+				;
+	};
+
+//
+// is_stl_set_like_associative_container
+//
+template< typename T >
+struct is_stl_set_like_associative_container
+	{
+		static constexpr bool value = 
+				is_stl_like_associative_container<T>::value &&
+				!has_mapped_type<T>::value
+				;
+	};
+
+//
+// is_stl_like_container
+//
+template< typename T >
+struct is_stl_like_container
+	{
+		static constexpr bool value =
+				is_stl_like_sequence_container<T>::value ||
+				is_stl_like_associative_container<T>::value;
+	};
+
+} /* namespace meta */
+
+namespace sequence_containers
+{
+
+//
+// Helper class for hiding details of emplacing values at the end
+// of the sequence_container.
+//
+// In case of std::vector/list/deque there is emplace_back() method
+// that should be called for each new item.
+//
+// But in the case of std::forward_list we should call to
+// before_begin() at the very beginning and then we have to call
+// emplace_after() for each new item with storing and reusing of
+// the returned pointer.
+//
+template< typename C, bool is_forward_list >
+class container_filler_impl_t;
+
+template< typename C >
+class container_filler_impl_t< C, false > final
+{
+	C & m_cnt;
+
+public :
+	container_filler_impl_t( C & cnt ) : m_cnt{ cnt } {}
+
+	template< typename V >
+	void emplace_back( V && value )
+	{
+		m_cnt.emplace_back( std::forward<V>(value) );
+	}
+};
+
+template< typename C >
+class container_filler_impl_t< C, true > final
+{
+	C & m_cnt;
+	typename C::iterator m_it;
+
+public :
+	container_filler_impl_t<C, true>( C & cnt )
+		: m_cnt{ cnt }, m_it{ cnt.before_begin() }
+	{}
+
+	template< typename V >
+	void emplace_back( V && value )
+	{
+		m_it = m_cnt.emplace_after( m_it, std::forward<V>(value) );
+	}
+};
+
+template< typename C >
+using container_filler_t = container_filler_impl_t<
+		C,
+		meta::has_before_begin<C>::value && meta::has_emplace_after<C>::value >;
+
+} /* namespace sequence_containers */
+
+} /* namespace details */
+
 namespace cpp17
 {
 #if defined(JSON_DTO_SUPPORTS_STD_OPTIONAL)
@@ -318,6 +599,66 @@ write_json_value(
 	rapidjson::MemoryPoolAllocator<> & allocator );
 
 //
+// STL-like non-associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_sequence_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object );
+
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_sequence_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator );
+
+//
+// STL-set-like associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_set_like_associative_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object );
+
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_set_like_associative_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator );
+
+//
+// STL-map-like associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_map_like_associative_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object );
+
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_map_like_associative_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator );
+
+//
 // nullable_t
 //
 
@@ -544,7 +885,9 @@ json_io( Io & io, Dto & dto )
 //
 
 template< typename Dto >
-void
+std::enable_if_t<
+		!details::meta::is_stl_like_container<Dto>::value,
+		void >
 read_json_value(
 	Dto & v,
 	const rapidjson::Value & object )
@@ -554,7 +897,9 @@ read_json_value(
 }
 
 template< typename Dto >
-void
+std::enable_if_t<
+		!details::meta::is_stl_like_container<Dto>::value,
+		void >
 write_json_value(
 	const Dto & v,
 	rapidjson::Value & object,
@@ -680,14 +1025,169 @@ write_json_value(
 }
 
 //
-// Support for to_json/from_json for std::vector<T,A>.
-// Since v.0.2.6
+// STL-like non-associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_sequence_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object )
+{
+	if( object.IsArray() )
+	{
+		cnt.clear();
+		details::sequence_containers::container_filler_t<C> filler{ cnt };
+
+		for( rapidjson::SizeType i = 0; i < object.Size(); ++i )
+		{
+			typename C::value_type v;
+			read_json_value( v, object[ i ] );
+			filler.emplace_back( std::move(v) );
+		}
+	}
+	else
+		throw ex_t{ "value is not an array" };
+}
+
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_sequence_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	object.SetArray();
+	for( const auto & v : cnt )
+	{
+		rapidjson::Value o;
+		write_json_value( v, o, allocator );
+		object.PushBack( o, allocator );
+	}
+}
+
+//
+// STL-set-like associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_set_like_associative_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object )
+{
+	if( !object.IsArray() )
+		throw ex_t{ "value can't be deserialized into std::set-like container!" };
+
+	cnt.clear();
+	for( rapidjson::SizeType i = 0; i < object.Size(); ++i )
+	{
+		typename C::value_type v;
+		read_json_value( v, object[ i ] );
+		cnt.emplace( std::move(v) );
+	}
+}
+
+/*
+ * NOTE. There is no a special handling for multiset cases.
+ * All values from the container are deserialized.
+ *
+ * It it possible to check for duplicates of keys in the containers.
+ * But this check has performance penalty. So at v.0.2.8 there is no
+ * such check.
+ */
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_set_like_associative_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	const auto write_item = [&object, &allocator]( const auto & v ) {
+				rapidjson::Value o;
+				write_json_value( v, o, allocator );
+				object.PushBack( o, allocator );
+			};
+
+	object.SetArray();
+	for( const auto & v : cnt )
+		write_item( v );
+}
+
+//
+// STL-map-like associative containers.
+//
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_map_like_associative_container<C>::value,
+		void >
+read_json_value(
+	C & cnt,
+	const rapidjson::Value & object )
+{
+	if( !object.IsObject() )
+		throw ex_t{ "value can't be deserialized into std::map-like container!" };
+
+	cnt.clear();
+	for( auto it = object.MemberBegin(); it != object.MemberEnd(); ++it )
+	{
+		typename C::key_type key;
+		typename C::mapped_type value;
+
+		read_json_value( key, it->name );
+		read_json_value( value, it->value );
+
+		cnt.emplace( typename C::value_type{ std::move(key), std::move(value) } );
+	}
+}
+
+/*
+ * NOTE. There is no a special handling for multimap cases.
+ * All values from the container are deserialized.
+ *
+ * It it possible to check for duplicates of keys in the containers.
+ * But this check has performance penalty. So at v.0.2.8 there is no
+ * such check.
+ */
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_map_like_associative_container<C>::value,
+		void >
+write_json_value(
+	const C & cnt,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	const auto write_item = [&object, &allocator]( const auto & kv ) {
+				rapidjson::Value key;
+				rapidjson::Value value;
+
+				write_json_value( kv.first, key, allocator );
+				write_json_value( kv.second, value, allocator );
+
+				object.AddMember( key, value, allocator );
+			};
+
+	object.SetObject();
+	for( const auto & kv : cnt )
+		write_item( kv );
+}
+
+//
+// Support for to_json/from_json for STL-like containers.
+// Since v.0.2.8
 //
 namespace details {
 
-template< typename T, typename A >
-struct vector_reader_t {
-	std::vector<T, A> & m_dest;
+template< typename C >
+struct stl_like_container_reader_t {
+	C & m_dest;
 
 	void
 	read_from( const rapidjson::Value & from ) const
@@ -696,9 +1196,9 @@ struct vector_reader_t {
 	}
 };
 
-template< typename T, typename A >
-struct vector_writer_t {
-	const std::vector<T, A> & m_src;
+template< typename C >
+struct stl_like_container_writer_t {
+	const C & m_src;
 
 	void
 	write_to(
@@ -711,18 +1211,24 @@ struct vector_writer_t {
 
 } /* namespace details */
 
-template< typename T, typename A >
-void
-json_io( json_input_t & from, std::vector<T, A> & what )
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_container<C>::value,
+		void >
+json_io( json_input_t & from, C & what )
 {
-	from & details::vector_reader_t<T, A>{ what };
+	from & details::stl_like_container_reader_t<C>{ what };
 }
 
-template< typename T, typename A >
-void
-json_io( json_output_t & from, std::vector<T, A> & what )
+// NOTE: argument 'what' is not const.
+// It is required by implementation of operator<<() below.
+template< typename C >
+std::enable_if_t<
+		details::meta::is_stl_like_container<C>::value,
+		void >
+json_io( json_output_t & from, C & what )
 {
-	from & details::vector_writer_t<T, A>{ what };
+	from & details::stl_like_container_writer_t<C>{ what };
 }
 
 //
