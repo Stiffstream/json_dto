@@ -10,11 +10,9 @@ add_library(${JSON_DTO} INTERFACE)
 add_library(json-dto::json-dto ALIAS ${JSON_DTO})
 
 IF (${CMAKE_VERSION} VERSION_LESS "3.8.0")
-	set_target_properties(${JSON_DTO} PROPERTIES
-		CXX_STANDARD 14
-		CXX_STANDARD_REQUIRED YES
-		CXX_EXTENSIONS NO
-	)
+	set(CMAKE_CXX_STANDARD 14)
+	set(CMAKE_CXX_STANDARD_REQUIRED ON)
+	set(CMAKE_CXX_EXTENSIONS OFF)
 ELSE ()
 	target_compile_features(${JSON_DTO} INTERFACE cxx_std_14)
 ENDIF ()
