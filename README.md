@@ -17,7 +17,7 @@ Table of Contents
    * [Obtain and build](#obtain-and-build)
       * [Prerequisites](#prerequisites)
       * [Obtaining](#obtaining)
-         * [Cloning of Hg (Git) Repository](#cloning-of-hg-git-repository)
+         * [Cloning of Git Repository](#cloning-of-git-repository)
          * [MxxRu::externals recipe](#mxxruexternals-recipe)
       * [Build](#build)
    * [How to use it?](#how-to-use-it)
@@ -206,16 +206,15 @@ And for building with mxxru:
 
 And for running test:
 
-* [CATCH2](https://github.com/catchorg/Catch2) 2.5.0
+* [CATCH2](https://github.com/catchorg/Catch2) 2.5.0 or above
 
 ## Obtaining
 
-Assuming that *Mercurial* and *Mxx_ru* are already installed.
+Assuming that *Git* and *Mxx_ru* are already installed.
 
-### Cloning of Hg (Git) Repository
+### Cloning of Git Repository
 
 ```
-hg clone https://bitbucket.org/sobjectizerteam/json_dto-0.2
 git clone https://github.com/Stiffstream/json_dto.git
 ```
 
@@ -231,7 +230,7 @@ to download and extract *json_dto*'s dependencies.
 For *json_dto* itself:
 ```ruby
 MxxRu::arch_externals :json_dto do |e|
-  e.url 'https://bitbucket.org/sobjectizerteam/json_dto-0.2/get/v.0.2.0.tar.bz2'
+  e.url 'https://github.com/Stiffstream/json_dto/archive/v.0.2.8.1.tar.gz'
 
   e.map_dir 'dev/json_dto' => 'dev'
 end
@@ -260,7 +259,7 @@ While *json_dto* is header-only library test and samples require a build.
 Compiling with Mxx_ru:
 
 ```
-hg clone https://bitbucket.org/sobjectizerteam/json_dto-0.2
+git clone https://github.com/Stiffstream/json_dto
 cd json_dto
 mxxruexternals
 cd dev
@@ -771,7 +770,7 @@ with other containers those mimics like STL-containers.
 
 **Note.** Type `std::array` is not supported now. If you have to deal with `std::array` and
 want to have a support of it in json_dto please
-[open an issue](https://bitbucket.org/sobjectizerteam/json_dto-0.2/issues)
+[open an issue](https://github.com/stiffstream/json_dto/issues)
 and we'll discuss some corner cases related to `std::array`.
 
 ### Multimaps and multisets
