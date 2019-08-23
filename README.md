@@ -200,7 +200,7 @@ To use *json_dto* it is necessary to have:
 
 And for building with mxxru:
 
-* [rapidjson_mxxru](https://bitbucket.org/sobjectizerteam/rapidjson_mxxru-1.0)
+* [rapidjson_mxxru](https://github.com/Stiffstream/rapidjson_mxxru)
 	(v.1.0.0 or above)
 * [Mxx_ru](https://sourceforge.net/projects/mxxru/) 1.6.13 or above
 
@@ -246,7 +246,7 @@ MxxRu::arch_externals :rapidjson do |e|
 end
 
 MxxRu::arch_externals :rapidjson_mxxru do |e|
-  e.url 'https://bitbucket.org/sobjectizerteam/rapidjson_mxxru-1.0/get/v.1.0.0.tar.bz2'
+  e.url 'https://github.com/Stiffstream/rapidjson_mxxru/archive/v.1.0.1.tar.gz'
 
   e.map_dir 'dev/rapidjson_mxxru' => 'dev'
 end
