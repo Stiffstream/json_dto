@@ -87,8 +87,7 @@ std::vector<char> pdu = extract_data();
 // string_view from C++17 is used just for a demonstration.
 string_view headers;
 string_view payload;
-std::tie(headers, payload) = split_pdu_to_headers_and_payload(
-	&pdu.front(), pdu.size());
+std::tie(headers, payload) = split_pdu_to_headers_and_payload(&pdu.front(), pdu.size());
 
 auto parsed_payload = json_dto::from_json<PayloadType>(
 		json_dto::make_string_ref(payload.data(), payload.size());
@@ -99,7 +98,7 @@ Versions with ``const char *`` are added to resolve ambious overloads with
 in the following cases:
 
 ```cpp
-auto payload = json_dto::from_json<PayloadType>("{"id":10}");
+auto payload = json_dto::from_json<PayloadType>(R"JSON({"id":10})JSON");
 ```
 
 Please note that ``string_ref_t`` is not ``std::string_view``. ``string_ref_t``
@@ -110,7 +109,7 @@ has a constructor is the form:
 StringRefType(const char * ch, SizeType length);
 ```
 
-But RapidJSON's ``SizeType`` is not ``std::string``. So if someone writes:
+But RapidJSON's ``SizeType`` is not ``std::size_t``. So if someone writes:
 
 ```cpp
 std::vector<char> payload{...};
