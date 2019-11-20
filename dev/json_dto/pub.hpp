@@ -1367,6 +1367,36 @@ struct optional_nodefault_attr_t
 
 using string_ref_t = rapidjson::Value::StringRefType;
 
+//! Helper function to make a string_ref instance.
+/*!
+ * @since v.0.2.9
+ */
+inline string_ref_t
+make_string_ref( const char * src, std::size_t length )
+{
+	return { src, static_cast<rapidjson::SizeType>(length) };
+}
+
+//! Helper function to make a string_ref instance from std::string object.
+/*!
+ * @since v.0.2.9
+ */
+inline string_ref_t
+make_string_ref( const std::string & src )
+{
+	return make_string_ref( src.data(), src.size() );
+}
+
+//! Helper function to make a string_ref instance from raw pointer.
+/*!
+ * @since v.0.2.9
+ */
+inline string_ref_t
+make_string_ref( const char * src )
+{
+	return make_string_ref( src, std::strlen(src) );
+}
+
 //
 // empty_validator_t
 //
@@ -1699,6 +1729,37 @@ from_json( const std::string & json )
 	return from_json<Type>( document );
 }
 
+//! Helper function to read DTO from json-string in form of string_ref.
+/*!
+ * @since v.0.2.9
+ */
+template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+Type
+from_json( const string_ref_t & json )
+{
+	rapidjson::Document document;
+
+	document.Parse< Rapidjson_Parseflags >( json );
+
+	check_document_parse_status( document );
+
+	return from_json<Type>( document );
+}
+
+//! Helper function to read DTO from json-string.
+/*!
+ * This version reads the JSON content from a raw char pointer
+ * (it's assumed that it is a null-terminated string).
+ *
+ * @since v.0.2.9
+ */
+template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+Type
+from_json( const char * json )
+{
+	return from_json< Type, Rapidjson_Parseflags >( make_string_ref(json) );
+}
+
 //! Helper function to read an already instantiated DTO.
 template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
 void
@@ -1711,6 +1772,40 @@ from_json( const std::string & json, Type & o )
 	check_document_parse_status( document );
 
 	from_json( document, o );
+}
+
+//! Helper function to read an already instantiated DTO.
+/*!
+ * This version reads the JSON content from a string_ref_t (aka
+ * rapidjson::Value::StringRefType) object.
+ *
+ * @since v.0.2.9
+ */
+template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+void
+from_json( const string_ref_t & json, Type & o )
+{
+	rapidjson::Document document;
+
+	document.Parse< Rapidjson_Parseflags >( json );
+
+	check_document_parse_status( document );
+
+	from_json( document, o );
+}
+
+//! Helper function to read an already instantiated DTO.
+/*!
+ * This version reads the JSON content from a raw char pointer
+ * (it's assumed that it is a null-terminated string).
+ *
+ * @since v.0.2.9
+ */
+template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+void
+from_json( const char * json, Type & o )
+{
+	from_json< Type, Rapidjson_Parseflags >( make_string_ref(json), o );
 }
 
 template< typename Type >
