@@ -3,6 +3,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.9](#v029)
       * [v.0.2.8](#v028)
       * [v.0.2.7](#v027)
       * [v.0.2.6.2](#v0262)
@@ -54,6 +55,87 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.2.9
+
+New overloads for ``from_json`` function:
+
+```cpp
+// Parses null-terminated string and returns a new object.
+template<typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags>
+Type from_json( const char * json );
+
+// Parses null-terminated string into alredy existed object.
+template<typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags>
+void from_json( const char * json, Type & o );
+
+// Parses a string-view and returns a new object.
+// NOTE. string_ref_t is just an alias for RapidJSON's StringRefType.
+template<typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags>
+Type from_json( const string_ref_t & json );
+
+// Parses a string-view into alredy existed object.
+template<typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags>
+void from_json( const string_ref_t & json, Type & o );
+```
+
+Versions with ``string_ref_t`` arguments are intended to be used in cases where a part of existing buffer should be parsed. For example:
+
+```cpp
+std::vector<char> pdu = extract_data();
+
+// string_view from C++17 is used just for a demonstration.
+string_view headers;
+string_view payload;
+std::tie(headers, payload) = split_pdu_to_headers_and_payload(
+	&pdu.front(), pdu.size());
+
+auto parsed_payload = json_dto::from_json<PayloadType>(
+		json_dto::make_string_ref(payload.data(), payload.size());
+```
+
+Versions with ``const char *`` are added to resolve ambious overloads with
+``from_string(const std::string &)`` and ``from_string(const string_ref_t &)``
+in the following cases:
+
+```cpp
+auto payload = json_dto::from_json<PayloadType>("{"id":10}");
+```
+
+Please note that ``string_ref_t`` is not ``std::string_view``. ``string_ref_t``
+is just an alias for RapidJSON's ``StringRefType``. And type ``StringRefType``
+has a constructor is the form:
+
+```cpp
+StringRefType(const char * ch, SizeType length);
+```
+
+But RapidJSON's ``SizeType`` is not ``std::string``. So if someone writes:
+
+```cpp
+std::vector<char> payload{...};
+auto data = json_dto::from_json<PayloadType>(
+		json_dto::string_ref_t{&payload.front(), payload.size()} );
+```
+
+there could be a warning from the compiler about narrowing of ``std::size_t``
+to ``SizeType``.
+
+A set on ``make_string_ref`` functions is added to json_dto to avoid such warnings:
+
+```cpp
+string_ref_t make_string_ref(const char * v);
+string_ref_t make_string_ref(const char * v, std::size_t length);
+string_ref_t make_string_ref(const std::string & v);
+```
+
+Use those functions to avoid warnings from the compiler:
+
+```cpp
+std::vector<char> payload{...};
+auto data = json_dto::from_json<PayloadType>(
+		json_dto::make_string_ref(&payload.front(), payload.size()) );
+```
 
 ## v.0.2.8
 
