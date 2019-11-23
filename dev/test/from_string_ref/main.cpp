@@ -105,6 +105,39 @@ TEST_CASE( "from_json from string_ref" , "[read]" )
 		REQUIRE( obj.m_string == "TEST STRING" );
 	}
 
+	SECTION( "read part of string (from_json(json))" )
+	{
+		const std::string json_data{
+			R"JSON({
+				"bool" : true,
+				"int16" : -1,
+				"uint16" : 2,
+				"int32" : -4,
+				"uint32" : 8,
+				"int64" : -16,
+				"uint64" : 32,
+				"double" : 2.718281828,
+				"string" : "TEST STRING"
+			} --123456--)JSON"
+		};
+
+		supported_types_t obj;
+
+		obj = from_json< supported_types_t >(
+				json_dto::make_string_ref(
+						json_data.data(), json_data.size() - 10u ) );
+
+		REQUIRE( obj.m_bool );
+		REQUIRE( obj.m_int16 == -1 );
+		REQUIRE( obj.m_uint16 == 2 );
+		REQUIRE( obj.m_int32 == -4 );
+		REQUIRE( obj.m_uint32 == 8 );
+		REQUIRE( obj.m_int64 == -16LL );
+		REQUIRE( obj.m_uint64 == 32ULL );
+		REQUIRE( equal( obj.m_double , 2.718281828 ) );
+		REQUIRE( obj.m_string == "TEST STRING" );
+	}
+
 	SECTION( "read valid (from_json(json, dest))" )
 	{
 		const std::string json_data{
@@ -125,6 +158,40 @@ TEST_CASE( "from_json from string_ref" , "[read]" )
 
 		from_json(
 				json_dto::make_string_ref( json_data ),
+				obj );
+
+		REQUIRE( obj.m_bool );
+		REQUIRE( obj.m_int16 == -1 );
+		REQUIRE( obj.m_uint16 == 2 );
+		REQUIRE( obj.m_int32 == -4 );
+		REQUIRE( obj.m_uint32 == 8 );
+		REQUIRE( obj.m_int64 == -16LL );
+		REQUIRE( obj.m_uint64 == 32ULL );
+		REQUIRE( equal( obj.m_double , 2.718281828 ) );
+		REQUIRE( obj.m_string == "TEST STRING" );
+	}
+
+	SECTION( "read part of string (from_json(json, dest))" )
+	{
+		const std::string json_data{
+			R"JSON({
+				"bool" : true,
+				"int16" : -1,
+				"uint16" : 2,
+				"int32" : -4,
+				"uint32" : 8,
+				"int64" : -16,
+				"uint64" : 32,
+				"double" : 2.718281828,
+				"string" : "TEST STRING"
+			} --123456--)JSON"
+		};
+
+		supported_types_t obj;
+
+		from_json(
+				json_dto::make_string_ref(
+						json_data.data(), json_data.size() - 10u ),
 				obj );
 
 		REQUIRE( obj.m_bool );

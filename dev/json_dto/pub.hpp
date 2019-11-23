@@ -1715,20 +1715,6 @@ from_json( const rapidjson::Value & json, Type & o )
 	jin >> o;
 }
 
-//! Helper function to read DTO from json-string.
-template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
-Type
-from_json( const std::string & json )
-{
-	rapidjson::Document document;
-
-	document.Parse< Rapidjson_Parseflags >( json.c_str() );
-
-	check_document_parse_status( document );
-
-	return from_json<Type>( document );
-}
-
 //! Helper function to read DTO from json-string in form of string_ref.
 /*!
  * @since v.0.2.9
@@ -1739,11 +1725,19 @@ from_json( const string_ref_t & json )
 {
 	rapidjson::Document document;
 
-	document.Parse< Rapidjson_Parseflags >( json );
+	document.Parse< Rapidjson_Parseflags >( json.s, json.length );
 
 	check_document_parse_status( document );
 
 	return from_json<Type>( document );
+}
+
+//! Helper function to read DTO from json-string.
+template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+Type
+from_json( const std::string & json )
+{
+	return from_json< Type, Rapidjson_Parseflags >( make_string_ref(json) );
 }
 
 //! Helper function to read DTO from json-string.
@@ -1761,20 +1755,6 @@ from_json( const char * json )
 }
 
 //! Helper function to read an already instantiated DTO.
-template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
-void
-from_json( const std::string & json, Type & o )
-{
-	rapidjson::Document document;
-
-	document.Parse< Rapidjson_Parseflags >( json.c_str() );
-
-	check_document_parse_status( document );
-
-	from_json( document, o );
-}
-
-//! Helper function to read an already instantiated DTO.
 /*!
  * This version reads the JSON content from a string_ref_t (aka
  * rapidjson::Value::StringRefType) object.
@@ -1787,11 +1767,19 @@ from_json( const string_ref_t & json, Type & o )
 {
 	rapidjson::Document document;
 
-	document.Parse< Rapidjson_Parseflags >( json );
+	document.Parse< Rapidjson_Parseflags >( json.s, json.length );
 
 	check_document_parse_status( document );
 
 	from_json( document, o );
+}
+
+//! Helper function to read an already instantiated DTO.
+template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+void
+from_json( const std::string & json, Type & o )
+{
+	from_json< Type, Rapidjson_Parseflags >( make_string_ref(json), o );
 }
 
 //! Helper function to read an already instantiated DTO.
