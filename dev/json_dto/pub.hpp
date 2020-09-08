@@ -366,6 +366,21 @@ class ex_t
 		{}
 };
 
+//
+// field_proxy_t
+//
+template< typename Tag, typename Field_Type >
+struct field_proxy_t
+{
+	Field_Type * m_field;
+};
+
+template< typename Tag, typename Field_Type >
+field_proxy_t<Tag, Field_Type>
+field_proxy( Field_Type & field )
+{
+	return { &field };
+}
 
 //
 // json_input_t
@@ -937,6 +952,23 @@ write_json_value(
 		object.SetNull();
 }
 
+//
+// RW specializations for field_proxy< Tag, Field_Type >
+//
+
+template< typename Tag, typename Field_Type >
+void
+read_json_value(
+	field_proxy_t<Tag, Field_Type> & f,
+	const rapidjson::Value & object );
+
+template< typename Tag, typename Field_Type >
+void
+write_json_value(
+	field_proxy_t<Tag, Field_Type> & f,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator );
+
 #if defined( JSON_DTO_SUPPORTS_STD_OPTIONAL )
 //
 // std::optional
@@ -1409,6 +1441,25 @@ struct empty_validator_t
 	{}
 };
 
+namespace details
+{
+
+template< typename Field_Type >
+struct field_type_traits
+{
+	using member_type = Field_Type &;
+	using ctor_arg_type = Field_Type &;
+};
+
+template< typename Tag, typename Field_Type >
+struct field_type_traits< field_proxy_t<Tag, Field_Type> >
+{
+	using member_type = field_proxy_t<Tag, Field_Type>;
+	using ctor_arg_type = field_proxy_t<Tag, Field_Type>;
+};
+
+} /* namespace details */
+
 //
 // binder_t
 //
@@ -1420,10 +1471,12 @@ template<
 		typename Validator >
 class binder_t
 {
+	using field_type_traits = details::field_type_traits<Field_Type>;
+
 	public:
 		binder_t(
 			string_ref_t field_name,
-			Field_Type & field,
+			typename field_type_traits::ctor_arg_type field,
 			Manopt_Policy && manopt_policy,
 			Validator && validator )
 			:	m_field_name{ field_name }
@@ -1524,7 +1577,7 @@ class binder_t
 		}
 
 		string_ref_t m_field_name;
-		Field_Type & m_field;
+		typename field_type_traits::member_type m_field;
 		Manopt_Policy m_manopt_policy;
 		Validator m_validator;
 };
