@@ -17,36 +17,40 @@ namespace json_dto
 {
 
 template< typename T >
-void
-read_json_value< test::my_enum_image, T >(
-	field_proxy_t<test::my_enum_image, T > & value,
-	const rapidjson::Value & from )
+struct tagged_proxy_io_t< test::my_enum_image, T >
 {
-	using json_dto::read_json_value;
+	static_assert( std::is_enum<T>::value, "T should be an enum type" );
 
-	using ut = std::underlying_type_t< T >;
+	static void
+	read_json_value(
+		T & value,
+		const rapidjson::Value & from )
+	{
+		using json_dto::read_json_value;
 
-	ut representation;
-	read_json_value( representation, from );
+		using ut = std::underlying_type_t< T >;
 
-	*(value.m_field) = static_cast<T>(representation);
-}
+		ut representation;
+		read_json_value( representation, from );
 
-template< typename T >
-void
-write_json_value< test::my_enum_image, T >(
-	const field_proxy_t<test::my_enum_image, T > & value,
-	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator )
-{
-	using json_dto::write_json_value;
+		value = static_cast<T>(representation);
+	}
 
-	using ut = std::underlying_type_t< T >;
+	static void
+	write_json_value(
+		const T & value,
+		rapidjson::Value & object,
+		rapidjson::MemoryPoolAllocator<> & allocator )
+	{
+		using json_dto::write_json_value;
 
-	ut representation{ static_cast<ut>(*(value.m_field)) };
+		using ut = std::underlying_type_t< T >;
 
-	write_json_value( representation, object, allocator );
-}
+		const ut representation{ static_cast<ut>(value) };
+
+		write_json_value( representation, object, allocator );
+	}
+};
 
 } /* namespace json_dto */
 
@@ -77,10 +81,10 @@ struct data_t
 	{
 		io & json_dto::mandatory(
 				"level",
-				json_dto::field_proxy<my_enum_image>(m_level) )
+				json_dto::tagged_proxy<my_enum_image>(m_level) )
 			& json_dto::mandatory(
 				"cat",
-				json_dto::field_proxy<my_enum_image>(m_category) );
+				json_dto::tagged_proxy<my_enum_image>(m_category) );
 	}
 };
 
@@ -100,7 +104,6 @@ TEST_CASE( "read_json_value" , "read" )
 	REQUIRE( test::category_t::notice == obj.m_category );
 }
 
-#if 0
 TEST_CASE( "write_json_value" , "write" )
 {
 	const test::data_t src{ test::level_t::high, test::category_t::warning };
@@ -108,4 +111,4 @@ TEST_CASE( "write_json_value" , "write" )
 	const auto r = json_dto::to_json( src );
 	REQUIRE( R"({"level":2,"cat":100})" == r );
 }
-#endif
+

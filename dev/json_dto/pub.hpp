@@ -367,17 +367,17 @@ class ex_t
 };
 
 //
-// field_proxy_t
+// tagged_proxy_t
 //
 template< typename Tag, typename Field_Type >
-struct field_proxy_t
+struct tagged_proxy_t
 {
 	Field_Type * m_field;
 };
 
 template< typename Tag, typename Field_Type >
-field_proxy_t<Tag, Field_Type>
-field_proxy( Field_Type & field )
+tagged_proxy_t<Tag, Field_Type>
+tagged_proxy( Field_Type & field )
 {
 	return { &field };
 }
@@ -953,21 +953,47 @@ write_json_value(
 }
 
 //
-// RW specializations for field_proxy< Tag, Field_Type >
+// RW specializations for tagged_proxy< Tag, Field_Type >
 //
+
+template< typename Tag, typename Field_Type >
+struct tagged_proxy_io_t
+{
+	static void
+	read_json_value(
+		Field_Type & f,
+		const rapidjson::Value & object );
+
+	static void
+	write_json_value(
+		const Field_Type & f,
+		rapidjson::Value & object,
+		rapidjson::MemoryPoolAllocator<> & allocator );
+};
 
 template< typename Tag, typename Field_Type >
 void
 read_json_value(
-	field_proxy_t<Tag, Field_Type> & f,
-	const rapidjson::Value & object );
+	const tagged_proxy_t<Tag, Field_Type> & f,
+	const rapidjson::Value & object )
+{
+	tagged_proxy_io_t<Tag, Field_Type>::read_json_value(
+			*(f.m_field),
+			object );
+}
 
 template< typename Tag, typename Field_Type >
 void
 write_json_value(
-	field_proxy_t<Tag, Field_Type> & f,
+	const tagged_proxy_t<Tag, Field_Type> & f,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator );
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	tagged_proxy_io_t<Tag, Field_Type>::write_json_value(
+			*(f.m_field),
+			object,
+			allocator );
+}
 
 #if defined( JSON_DTO_SUPPORTS_STD_OPTIONAL )
 //
@@ -1452,10 +1478,10 @@ struct field_type_traits
 };
 
 template< typename Tag, typename Field_Type >
-struct field_type_traits< field_proxy_t<Tag, Field_Type> >
+struct field_type_traits< tagged_proxy_t<Tag, Field_Type> >
 {
-	using member_type = field_proxy_t<Tag, Field_Type>;
-	using ctor_arg_type = field_proxy_t<Tag, Field_Type>;
+	using member_type = tagged_proxy_t<Tag, Field_Type>;
+	using ctor_arg_type = tagged_proxy_t<Tag, Field_Type>;
 };
 
 } /* namespace details */
@@ -1597,6 +1623,30 @@ mandatory(
 	Validator validator = Validator{} )
 {
 	using binder_type_t = binder_t< Field_Type, mandatory_attr_t, Validator >;
+	return
+		binder_type_t{
+			field_name,
+			field,
+			mandatory_attr_t{},
+			std::move( validator ) };
+}
+
+//FIXME: document this!
+template<
+		typename Tag,
+		typename Field_Type,
+		typename Validator = empty_validator_t >
+auto
+mandatory(
+	string_ref_t field_name,
+	tagged_proxy_t<Tag, Field_Type> field,
+	Validator validator = Validator{} )
+{
+	using binder_type_t = binder_t<
+			tagged_proxy_t<Tag, Field_Type>,
+			mandatory_attr_t,
+			Validator >;
+
 	return
 		binder_type_t{
 			field_name,
