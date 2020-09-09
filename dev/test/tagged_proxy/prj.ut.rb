@@ -1,6 +1,6 @@
 require 'mxx_ru/binary_unittest'
 
-path = 'test/field_proxy'
+path = 'test/tagged_proxy'
 
 Mxx_ru::setup_target(
 	Mxx_ru::Binary_unittest_target.new(
