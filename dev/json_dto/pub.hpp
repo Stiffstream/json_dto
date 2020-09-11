@@ -544,6 +544,18 @@ write_json_value(
 	object.SetString( s.data(), static_cast< rapidjson::SizeType >( s.size() ), allocator );
 }
 
+// Since v.0.2.10.
+inline void
+write_json_value(
+	const rapidjson::Value::StringRefType & s,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	// NOTE: there is no check for max_str_len as for std::string version
+	// because s.length has type rapidjson::SizeType.
+	object.SetString( s.s, s.length, allocator );
+}
+
 //
 // JSON
 //

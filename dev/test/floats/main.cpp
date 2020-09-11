@@ -149,13 +149,14 @@ struct custom_floating_point_reader_writer
 		rapidjson::MemoryPoolAllocator<> & allocator ) const
 	{
 		using json_dto::write_json_value;
+		using json_dto::string_ref_t;
 
 		if( std::isnan(v) )
-			write_json_value( std::string{"nan"}, to, allocator );
+			write_json_value( string_ref_t{"nan"}, to, allocator );
 		else if( v > std::numeric_limits<T>::max() )
-			write_json_value( std::string{"inf"}, to, allocator );
+			write_json_value( string_ref_t{"inf"}, to, allocator );
 		else if( v < std::numeric_limits<T>::min() )
-			write_json_value( std::string{"-inf"}, to, allocator );
+			write_json_value( string_ref_t{"-inf"}, to, allocator );
 		else
 			write_json_value( v, to, allocator );
 	}
