@@ -1410,11 +1410,36 @@ struct empty_validator_t
 };
 
 //
+// default_reader_writer_t
+//
+//FIXME: document this!
+struct default_reader_writer_t
+{
+	template< typename Field_Type >
+	void
+	read( Field_Type & v, const rapidjson::Value & from ) const
+	{
+		read_json_value( v, from );
+	}
+
+	template< typename Field_Type >
+	void
+	write(
+		Field_Type & v,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
+	{
+		write_json_value( v, to, allocator );
+	}
+};
+
+//
 // binder_t
 //
 
 //! JSON IO binder_t for a field.
 template<
+		typename Reader_Writer,
 		typename Field_Type,
 		typename Manopt_Policy,
 		typename Validator >
@@ -1422,11 +1447,13 @@ class binder_t
 {
 	public:
 		binder_t(
+			Reader_Writer && reader_writer,
 			string_ref_t field_name,
 			Field_Type & field,
 			Manopt_Policy && manopt_policy,
 			Validator && validator )
-			:	m_field_name{ field_name }
+			:	m_reader_writer{ std::move(reader_writer) }
+			,	m_field_name{ field_name }
 			,	m_field{ field }
 			,	m_manopt_policy{ std::move( manopt_policy ) }
 			,	m_validator{ std::move( validator ) }
@@ -1488,7 +1515,7 @@ class binder_t
 
 				if( !value.IsNull() )
 				{
-					read_json_value( m_field, value );
+					m_reader_writer.read( m_field, value );
 				}
 				else
 				{
@@ -1514,7 +1541,7 @@ class binder_t
 			{
 				rapidjson::Value value;
 
-				write_json_value( m_field, value, allocator );
+				m_reader_writer.write( m_field, value, allocator );
 
 				object.AddMember(
 					m_field_name,
@@ -1523,6 +1550,7 @@ class binder_t
 			}
 		}
 
+		Reader_Writer m_reader_writer;
 		string_ref_t m_field_name;
 		Field_Type & m_field;
 		Manopt_Policy m_manopt_policy;
@@ -1543,9 +1571,40 @@ mandatory(
 	Field_Type & field,
 	Validator validator = Validator{} )
 {
-	using binder_type_t = binder_t< Field_Type, mandatory_attr_t, Validator >;
-	return
-		binder_type_t{
+	using binder_type_t = binder_t<
+			default_reader_writer_t,
+			Field_Type,
+			mandatory_attr_t,
+			Validator >;
+
+	return binder_type_t{
+			default_reader_writer_t{},
+			field_name,
+			field,
+			mandatory_attr_t{},
+			std::move( validator ) };
+}
+
+//! Create bind for a mandatory JSON field with validator.
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Validator = empty_validator_t >
+auto
+mandatory(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	Field_Type & field,
+	Validator validator = Validator{} )
+{
+	using binder_type_t = binder_t<
+			Reader_Writer,
+			Field_Type,
+			mandatory_attr_t,
+			Validator >;
+
+	return binder_type_t{
+			std::move(reader_writer),
 			field_name,
 			field,
 			mandatory_attr_t{},
@@ -1569,10 +1628,43 @@ optional(
 	Validator validator = Validator{} )
 {
 	using opt_attr_t = optional_attr_t< Field_Default_Value_Type >;
-	using binder_type_t = binder_t< Field_Type, opt_attr_t, Validator >;
+	using binder_type_t = binder_t<
+			default_reader_writer_t,
+			Field_Type,
+			opt_attr_t,
+			Validator >;
 
-	return
-		binder_type_t{
+	return binder_type_t{
+			default_reader_writer_t{},
+			field_name,
+			field,
+			opt_attr_t{ std::move( default_value ) },
+			std::move( validator ) };
+}
+
+//! Create bind for an optional JSON field with default value and validator.
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Field_Default_Value_Type,
+		typename Validator = empty_validator_t >
+auto
+optional(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	Field_Type & field,
+	Field_Default_Value_Type default_value,
+	Validator validator = Validator{} )
+{
+	using opt_attr_t = optional_attr_t< Field_Default_Value_Type >;
+	using binder_type_t = binder_t<
+			Reader_Writer,
+			Field_Type,
+			opt_attr_t,
+			Validator >;
+
+	return binder_type_t{
+			std::move(reader_writer),
 			field_name,
 			field,
 			opt_attr_t{ std::move( default_value ) },
@@ -1593,10 +1685,44 @@ optional_null(
 	Field_Type & field,
 	Validator validator = Validator{} )
 {
-	using binder_type_t = binder_t< Field_Type, optional_attr_null_t, Validator >;
-	return
-		binder_type_t{
-			field_name, field, optional_attr_null_t{}, std::move( validator ) };
+	using binder_type_t = binder_t<
+			default_reader_writer_t,
+			Field_Type,
+			optional_attr_null_t,
+			Validator >;
+
+	return binder_type_t{
+			default_reader_writer_t{},
+			field_name,
+			field,
+			optional_attr_null_t{},
+			std::move( validator ) };
+}
+
+//! Create bind for an optional JSON field with null default value .
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Validator = empty_validator_t >
+auto
+optional_null(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	Field_Type & field,
+	Validator validator = Validator{} )
+{
+	using binder_type_t = binder_t<
+			Reader_Writer,
+			Field_Type,
+			optional_attr_null_t,
+			Validator >;
+
+	return binder_type_t{
+			std::move(reader_writer),
+			field_name,
+			field,
+			optional_attr_null_t{},
+			std::move( validator ) };
 }
 
 //
@@ -1617,6 +1743,26 @@ optional(
 	return optional_null( field_name, field, std::move( validator ) );
 }
 
+//! Create bind for an optional JSON field with null default value.
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Validator = empty_validator_t >
+auto
+optional(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	Field_Type & field,
+	std::nullptr_t,
+	Validator validator = Validator{} )
+{
+	return optional_null(
+			std::move(reader_writer),
+			field_name,
+			field,
+			std::move( validator ) );
+}
+
 //
 // optional_no_default
 //
@@ -1631,9 +1777,44 @@ optional_no_default(
 	Field_Type & field,
 	Validator validator = Validator{} )
 {
-	using binder_type_t = binder_t< Field_Type, optional_nodefault_attr_t, Validator >;
+	using binder_type_t = binder_t<
+			default_reader_writer_t,
+			Field_Type,
+			optional_nodefault_attr_t,
+			Validator >;
+
 	return binder_type_t{
-			field_name, field, optional_nodefault_attr_t{}, std::move( validator ) };
+			default_reader_writer_t{},
+			field_name,
+			field,
+			optional_nodefault_attr_t{},
+			std::move( validator ) };
+}
+
+//! Create bind for an optional JSON field without default value.
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Validator = empty_validator_t >
+auto
+optional_no_default(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	Field_Type & field,
+	Validator validator = Validator{} )
+{
+	using binder_type_t = binder_t<
+			Reader_Writer,
+			Field_Type,
+			optional_nodefault_attr_t,
+			Validator >;
+
+	return binder_type_t{
+			std::move(reader_writer),
+			field_name,
+			field,
+			optional_nodefault_attr_t{},
+			std::move( validator ) };
 }
 
 template< typename Dto >
@@ -1668,9 +1849,11 @@ to_json( const Dto & dto )
 
 	rapidjson::StringBuffer buffer;
 	rapidjson::Writer< rapidjson::StringBuffer > writer( buffer );
-	output_doc.Accept( writer );
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_json: output_doc.Accept(writer) returns false" };
 
-	return buffer.GetString();
+	return { buffer.GetString(), buffer.GetSize() };
 }
 
 inline void
