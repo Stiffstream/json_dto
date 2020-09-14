@@ -1,1 +1,1 @@
-set(JSON_DTO_VERSION "0.2.9.2")
+set(JSON_DTO_VERSION "0.2.10")
