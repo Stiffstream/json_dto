@@ -1424,7 +1424,14 @@ struct empty_validator_t
 //
 // default_reader_writer_t
 //
-//FIXME: document this!
+/*!
+ * @brief The default implementation of Reader_Writer.
+ *
+ * This implementation simply calls read_json_value and write_json_value
+ * functions.
+ *
+ * @since v.0.2.10
+ */
 struct default_reader_writer_t
 {
 	template< typename Field_Type >
@@ -1450,6 +1457,15 @@ struct default_reader_writer_t
 //
 
 //! JSON IO binder_t for a field.
+/*!
+ * @note
+ * This template was extended in v.0.2.10 by a new template parameter
+ * Reader_Writer. This parameter specifies a type of object with
+ * two const methods `read` and `write`. Since v.0.2.10 those methods
+ * are used for reading and writting a value of Field_Type from/to
+ * rapidjson::Value. See default_reader_writer_t for an example
+ * of Reader_Writer.
+ */
 template<
 		typename Reader_Writer,
 		typename Field_Type,
