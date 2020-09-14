@@ -1398,7 +1398,7 @@ struct log_config
 };
 ```
 
-Serialization of `log_level` to JSON should use numeric values of log levels, e.g.: `{"level":0, "msg":"..."}`, but the serialization of `log_config` should use textual names instead of numeric values, e.g.: `{"path":"/var/log/demo", "level":"low"}.
+Serialization of `log_level` to JSON should use numeric values of log levels, e.g.: `{"level":0, "msg":"..."}`, but the serialization of `log_config` should use textual names instead of numeric values, e.g.: `{"path":"/var/log/demo", "level":"low"}`.
 
 Such a task can't be implemented by writing overloads of `read_json_value` and `write_json_value` functions. Custom Reader_Writers should be used in that case:
 
