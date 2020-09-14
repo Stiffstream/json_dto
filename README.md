@@ -1,8 +1,10 @@
 Table of Contents
 =================
+
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.10](#v0210)
       * [v.0.2.9](#v029)
       * [v.0.2.8](#v028)
       * [v.0.2.7](#v027)
@@ -40,6 +42,8 @@ Table of Contents
       * [Validators](#validators)
          * [Standard validators](#standard-validators)
       * [User defined IO](#user-defined-io)
+         * [Overloading of read_json_value and write_json_value](#overloading-of-read_json_value-and-write_json_value)
+         * [Usage of Reader_Writer](#usage-of-reader_writer)
    * [License](#license)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
@@ -55,6 +59,24 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.2.10
+
+Another way of custom read/write operations added. It's based on specifying an instance of some Reader_Writer type in the description of a field. See [Usage of Reader_Writer](#usage-of-reader_writer) for more details.
+
+For support of that feature new overloads of `json_dto::mandatory`, `json_dto::optional`, and `json_dto::optional_no_default` have been added.
+
+There is also a new `json_dto::write_json_value` overload:
+
+```cpp
+void write_json_value(
+	const rapidjson::Value::StringRefType & s,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator );
+```
+
+Please note that `json_dto::string_ref_t` is just an alias for
+`rapidjson::Value::StringRefType`.
 
 ## v.0.2.9
 
@@ -1230,6 +1252,8 @@ auto one_of_constraint(std::initializer_list<Field_Type> values);
 
 ## User defined IO
 
+### Overloading of read_json_value and write_json_value
+
 It is possible to define custom IO logic for a specific type.
 It might be useful for types when using object is an overkill,
 for example time point that can be stored in format of 'YYYY.MM.DD hh:mm:ss'
@@ -1349,6 +1373,209 @@ to place `read_json_value` and `write_json_value` into the namespace where
 the type if defined (for example if it is standard type like `std::filesystem::path`).
 
 [See full example with custom IO](./dev/sample/tutorial14/main.cpp)
+
+### Usage of Reader_Writer
+
+Suppose we have an enumeration `log_level` defined such way:
+
+```cpp
+enum class log_level { low, normal, high };
+```
+
+And we have two structs that use that `log_level` enumeration:
+
+```cpp
+struct log_message
+{
+	log_level level_;
+	std::string msg_;
+};
+
+struct log_config
+{
+	std::string path_;
+	log_level level_;
+};
+```
+
+Serialization of `log_level` to JSON should use numeric values of log levels, e.g.: `{"level":0, "msg":"..."}`, but the serialization of `log_config` should use textual names instead of numeric values, e.g.: `{"path":"/var/log/demo", "level":"low"}.
+
+Such a task can't be implemented by writing overloads of `read_json_value` and `write_json_value` functions. Custom Reader_Writers should be used in that case:
+
+```cpp
+struct numeric_log_level
+{
+	void read( log_level & v, const rapidjson::Value & from ) const
+	{
+		using json_dto::read_json_value;
+
+		int actual;
+		read_json_value( actual, from );
+
+		v = static_cast<log_level>(actual);
+	}
+
+	void
+	write(
+		const log_level & v,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
+	{
+		using json_dto::write_json_value;
+
+		const int actual = static_cast<int>(v);
+		write_json_value( actual, to, allocator );
+	}
+};
+
+struct log_message
+{
+	log_level level_;
+	std::string msg_;
+
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
+	{
+		io & json_dto::mandatory( numeric_log_level{}, "level", level_ )
+			& json_dto::mandatory( "msg", msg_ );
+	}
+};
+
+struct textual_log_level
+{
+	void read( log_level & v, const rapidjson::Value & from ) const
+	{
+		using json_dto::read_json_value;
+
+		std::string str_v;
+		read_json_value( str_v, from );
+
+		if( "low" == str_v ) v = log_level::low;
+		else if( "normal" == str_v ) v = log_level::normal;
+		else if( "high" == str_v ) v = log_level::high;
+		else throw json_dto::ex_t{ "invalid value for log_level" };
+	}
+
+	void
+	write(
+		const log_level & v,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
+	{
+		using json_dto::write_json_value;
+		using json_dto::string_ref_t;
+
+		switch( v )
+		{
+			case log_level::low:
+				write_json_value( string_ref_t{ "low" }, to, allocator );
+			break;
+
+			case log_level::normal:
+				write_json_value( string_ref_t{ "normal" }, to, allocator );
+			break;
+
+			case log_level::high:
+				write_json_value( string_ref_t{ "high" }, to, allocator );
+			break;
+		}
+	}
+};
+
+struct log_config
+{
+	std::string path_;
+	log_level level_;
+
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
+	{
+		io & json_dto::mandatory( "path", path_ )
+			& json_dto::mandatory( textual_log_level{}, "level", level_ );
+	}
+};
+```
+
+Note that Reader_Writer class should have two const methods `read` and `write` those signatures are the same with the signatures of `read_json_value` and `write_json_value` functions.
+
+[See full example with Reader_Writer](./dev/sample/tutorial18/main.cpp)
+
+Custom Reader_Writer classes can also be used for handling non-standard representation of some values in JSON document. For example, sometimes string-values like `"NAN"` or `"nan"` are used for NaN (Not-a-Number) values. RapidJSON can only parsed special value `NaN`, but not `"NAN"` nor `"nan"` values. In such case a custom Reader_Writer like the following one can be used:
+
+```cpp
+struct custom_floating_point_reader_writer
+{
+	template< typename T >
+	void read( T & v, const rapidjson::Value & from ) const
+	{
+		if( from.IsNumber() )
+		{
+			json_dto::read_json_value( v, from );
+			return;
+		}
+		else if( from.IsString() )
+		{
+			const json_dto::string_ref_t str_v{ from.GetString() };
+			if( equal_caseless( str_v, "nan" ) )
+			{
+				v = std::numeric_limits<T>::quiet_NaN();
+				return;
+			}
+			else if( equal_caseless( str_v, "inf" ) )
+			{
+				v = std::numeric_limits<T>::infinity();
+				return;
+			}
+			else if( equal_caseless( str_v, "-inf" ) )
+			{
+				v = -std::numeric_limits<T>::infinity();
+				return;
+			}
+		}
+
+		throw json_dto::ex_t{ "unable to parse value" };
+	}
+
+	template< typename T >
+	void
+	write(
+		T & v,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
+	{
+		using json_dto::write_json_value;
+		using json_dto::string_ref_t;
+
+		if( std::isnan(v) )
+			write_json_value( string_ref_t{"nan"}, to, allocator );
+		else if( v > std::numeric_limits<T>::max() )
+			write_json_value( string_ref_t{"inf"}, to, allocator );
+		else if( v < std::numeric_limits<T>::min() )
+			write_json_value( string_ref_t{"-inf"}, to, allocator );
+		else
+			write_json_value( v, to, allocator );
+	}
+};
+
+struct struct_with_floats_t
+{
+	float m_num_float;
+	double m_num_double;
+
+	template< typename Json_Io >
+	void
+	json_io( Json_Io & io )
+	{
+		io
+			& optional( custom_floating_point_reader_writer{},
+					"num_float", m_num_float, 0.0f )
+			& optional( custom_floating_point_reader_writer{},
+					"num_double", m_num_double, 0.0 );
+	}
+};
+```
+
+Note also that `read` and `write` methods of Reader_Writer class can be template methods.
 
 # License
 
