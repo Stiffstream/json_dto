@@ -62,7 +62,7 @@ working with JSON in various projects.
 
 ## v.0.2.10
 
-Another way of custom read/write operations added. It's based on specifying an instance of some Reader_Writer type in the description of a field. See [Usage of Reader_Writer](#usage-of-reader_writer) for more details.
+Another way of custom read/write operations added. It's based on specifying an instance of some user-supplied Reader_Writer type in the description of a field. See [Usage of Reader_Writer](#usage-of-reader_writer) for more details.
 
 For support of that feature new overloads of `json_dto::mandatory`, `json_dto::optional`, and `json_dto::optional_no_default` have been added.
 
@@ -614,16 +614,27 @@ auto mandatory(
 	string_ref_t field_name,
 	Field_Type & field,
 	Validator validator = Validator{});
+
+// Since v.0.2.10
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Validator = empty_validator_t>
+auto mandatory(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	Field_Type & field,
+	Validator validator = Validator{});
 ```
 
-First parameter *field_name* is of type `string_ref_t`
+The parameter *field_name* is of type `string_ref_t`
 which is an alias for `rapidjson::Value::StringRefType`.
 Typically it is enough to pass `std::string` or `char *` args
 (see *rapidjson*
 [documentation](http://rapidjson.org/classrapidjson_1_1_generic_value.html)
 for further details).
-The second parameter is a reference to the instance of the field value.
-The third parameter is optional and it sets validator on fields value.
+The parameter *field* is a reference to the instance of the field value.
+The parameter *validator* is optional and it sets validator on fields value.
 Validators will be described later. By default `empty_validator_t`
 is used, and as it says it does nothing.
 
@@ -647,6 +658,30 @@ template<
 		typename Field_Type,
 		typename Validator = empty_validator_t>
 auto optional_no_default(
+	string_ref_t field_name,
+	Field_Type & field,
+	Validator validator = Validator{});
+
+// Since v.0.2.10
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Field_Default_Value_Type,
+		typename Validator = empty_validator_t>
+auto optional(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	Field_Type & field,
+	Field_Default_Value_Type default_value,
+	Validator validator = Validator{});
+
+// Since v.0.2.10
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Validator = empty_validator_t>
+auto optional_no_default(
+	Reader_Writer reader_writer,
 	string_ref_t field_name,
 	Field_Type & field,
 	Validator validator = Validator{});
