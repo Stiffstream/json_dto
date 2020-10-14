@@ -286,6 +286,51 @@ TEST_CASE( "map<int, int>: read from json" , "read-map-int-int" )
 	REQUIRE( obj.m_data == expected );
 }
 
+TEST_CASE( "vector<map<int, int>>: write to json" , "write-map-int-int" )
+{
+	using inner_t = std::map<int, int>;
+
+	data_with_reader_writer_t<
+		std::vector<inner_t>,
+		json_dto::for_each_item_t<
+			json_dto::for_each_item_t<custom_map_int_int_formatter_t>
+		>
+	> obj{ {
+		inner_t{ {1, 11}, {3, 33}, {2, 22} },
+		inner_t{ {0, 0}, {4, 44} },
+		inner_t{ {6, 66}, {5, 55}, {1, 11} }
+	} };
+	const auto r = json_dto::to_json( obj );
+
+	REQUIRE( R"({"data":[{"1":11,"2":22,"3":33},{"0":0,"4":44},{"1":11,"5":55,"6":66}]})" == r );
+}
+
+TEST_CASE( "vector<map<int, int>>: read from json" , "read-map-int-int" )
+{
+	using inner_t = std::map<int, int>;
+	using obj_t = data_with_reader_writer_t<
+		std::vector<inner_t>,
+		json_dto::for_each_item_t<
+			json_dto::for_each_item_t<custom_map_int_int_formatter_t>
+		>
+	>;
+
+	const std::string json_data{
+		R"JSON(
+		{"data":[{"1":11,"2":22,"3":33},{"0":0,"4":44},{"1":11,"5":55,"6":66}]}
+		)JSON" };
+
+	auto obj = json_dto::from_json< obj_t >( json_data );
+
+	const obj_t expected{ {
+		inner_t{ {1, 11}, {3, 33}, {2, 22} },
+		inner_t{ {0, 0}, {4, 44} },
+		inner_t{ {6, 66}, {5, 55}, {1, 11} }
+	} };
+
+	REQUIRE( obj.m_data == expected.m_data );
+}
+
 TEST_CASE( "multimap<string, int>: read from json" , "read-multimap-string-int" )
 {
 	const std::string json_data{
