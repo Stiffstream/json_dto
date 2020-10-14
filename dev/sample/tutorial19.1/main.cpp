@@ -102,12 +102,12 @@ struct data_t
 	void json_io( Json_Io & io )
 	{
 		io & json_dto::mandatory(
-					// Use for_each_item_t from json_dto to apply
+					// Use apply_to_content_t from json_dto to apply
 					// simple_reader_writer to every member of m_weights.
-					json_dto::for_each_item_t< simple_reader_writer >{},
+					json_dto::apply_to_content_t< simple_reader_writer >{},
 					"weights", m_weights )
 			& json_dto::mandatory(
-					json_dto::for_each_item_t< color_hex_reader_writer >{},
+					json_dto::apply_to_content_t< color_hex_reader_writer >{},
 					"colors", m_colors )
 			;
 	}

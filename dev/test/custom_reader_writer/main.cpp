@@ -126,7 +126,7 @@ struct vector_of_ints_t
 	void json_io( Io & io )
 	{
 		io & json_dto::mandatory(
-				json_dto::for_each_item_t<hex_writer_t>{},
+				json_dto::apply_to_content_t<hex_writer_t>{},
 				"values",
 				m_values );
 	}

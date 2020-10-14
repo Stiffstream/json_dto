@@ -259,7 +259,7 @@ TEST_CASE( "map<int, int>: write to json" , "write-map-int-int" )
 {
 	data_with_reader_writer_t<
 		std::map<int, int>,
-		json_dto::for_each_item_t<custom_map_int_int_formatter_t>
+		json_dto::apply_to_content_t<custom_map_int_int_formatter_t>
 	> obj{
 		{ {1, 11}, {3, 33}, {2, 22} }
 	};
@@ -272,7 +272,7 @@ TEST_CASE( "map<int, int>: read from json" , "read-map-int-int" )
 {
 	using obj_t = data_with_reader_writer_t<
 			std::map<int, int>,
-			json_dto::for_each_item_t<custom_map_int_int_formatter_t>
+			json_dto::apply_to_content_t<custom_map_int_int_formatter_t>
 		>;
 	const std::string json_data{
 		R"JSON(
@@ -292,8 +292,8 @@ TEST_CASE( "vector<map<int, int>>: write to json" , "write-map-int-int" )
 
 	data_with_reader_writer_t<
 		std::vector<inner_t>,
-		json_dto::for_each_item_t<
-			json_dto::for_each_item_t<custom_map_int_int_formatter_t>
+		json_dto::apply_to_content_t<
+			json_dto::apply_to_content_t<custom_map_int_int_formatter_t>
 		>
 	> obj{ {
 		inner_t{ {1, 11}, {3, 33}, {2, 22} },
@@ -310,8 +310,8 @@ TEST_CASE( "vector<map<int, int>>: read from json" , "read-map-int-int" )
 	using inner_t = std::map<int, int>;
 	using obj_t = data_with_reader_writer_t<
 		std::vector<inner_t>,
-		json_dto::for_each_item_t<
-			json_dto::for_each_item_t<custom_map_int_int_formatter_t>
+		json_dto::apply_to_content_t<
+			json_dto::apply_to_content_t<custom_map_int_int_formatter_t>
 		>
 	>;
 

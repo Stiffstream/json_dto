@@ -1548,17 +1548,17 @@ default_reader_writer_t::write(
 
 //FIXME: document this!
 template< typename Item_Reader_Writer >
-struct for_each_item_t
+struct apply_to_content_t
 {
 	Item_Reader_Writer m_reader_writer;
 
-	for_each_item_t() = default;
+	apply_to_content_t() = default;
 
-	for_each_item_t( const Item_Reader_Writer & initial )
+	apply_to_content_t( const Item_Reader_Writer & initial )
 		:	m_reader_writer{ initial }
 	{}
 
-	for_each_item_t( Item_Reader_Writer && initial )
+	apply_to_content_t( Item_Reader_Writer && initial )
 		:	m_reader_writer{ std::move(initial) }
 	{}
 
