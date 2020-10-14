@@ -422,6 +422,34 @@ class json_output_t
 };
 
 //
+// const_map_key_t
+//
+//FIXME: document this!
+template< typename T >
+struct const_map_key_t
+{
+	const T & v;
+};
+
+template< typename T >
+const_map_key_t<T>
+const_map_key( const T & v ) noexcept { return { v }; };
+
+//
+// mutable_map_key_t
+//
+//FIXME: document this!
+template< typename T >
+struct mutable_map_key_t
+{
+	T & v;
+};
+
+template< typename T >
+mutable_map_key_t<T>
+mutable_map_key( T & v ) noexcept { return { v }; };
+
+//
 // default_reader_writer_t
 //
 // NOTE: implementation is going below.
@@ -442,7 +470,7 @@ struct default_reader_writer_t
 	template< typename Field_Type >
 	void
 	write(
-		Field_Type & v,
+		const Field_Type & v,
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const;
 };
@@ -580,6 +608,31 @@ write_json_value(
 	// NOTE: there is no check for max_str_len as for std::string version
 	// because s.length has type rapidjson::SizeType.
 	object.SetString( s.s, s.length, allocator );
+}
+
+//
+// const- and mutable map keys
+//
+
+// Since v.0.2.11.
+template< typename T >
+void
+read_json_value(
+	mutable_map_key_t<T> key,
+	const rapidjson::Value & object )
+{
+	read_json_value( key.v, object );
+}
+
+// Since v.0.2.11.
+template< typename T >
+void
+write_json_value(
+	const_map_key_t<T> key,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	write_json_value( key.v, object, allocator );
 }
 
 //
@@ -973,7 +1026,7 @@ read_json_value(
 template< typename Field_Type >
 void
 write_json_value(
-	nullable_t< Field_Type > & f,
+	const nullable_t< Field_Type > & f,
 	rapidjson::Value & object,
 	rapidjson::MemoryPoolAllocator<> & allocator )
 {
@@ -1194,7 +1247,10 @@ read_json_value(
 		typename C::key_type key;
 		typename C::mapped_type value;
 
-		reader_writer.read( key, it->name );
+		// It is necessary to have mutable_key_ref as a lvalue to pass
+		// a non-const reference to it to read() method of the reader_writer.
+		auto mutable_key_ref = mutable_map_key(key);
+		reader_writer.read( mutable_key_ref, it->name );
 		reader_writer.read( value, it->value );
 
 		cnt.emplace( typename C::value_type{ std::move(key), std::move(value) } );
@@ -1224,7 +1280,10 @@ write_json_value(
 				rapidjson::Value key;
 				rapidjson::Value value;
 
-				reader_writer.write( kv.first, key, allocator );
+				// It is necessary to have const_key_ref as a lvalue to pass a
+				// const reference to it to write() method of the reader_writer.
+				auto const_key_ref = const_map_key(kv.first);
+				reader_writer.write( const_key_ref, key, allocator );
 				reader_writer.write( kv.second, value, allocator );
 
 				object.AddMember( key, value, allocator );
@@ -1480,7 +1539,7 @@ default_reader_writer_t::read(
 template< typename Field_Type >
 void
 default_reader_writer_t::write(
-	Field_Type & v,
+	const Field_Type & v,
 	rapidjson::Value & to,
 	rapidjson::MemoryPoolAllocator<> & allocator ) const
 {
@@ -1520,7 +1579,6 @@ struct for_each_item_t
 		rapidjson::MemoryPoolAllocator<> & allocator ) const
 	{
 		//FIXME: static_asserts for the type of Field_Type.
-std::cout << "Delegating write to write_json_value" << std::endl;
 		write_json_value( v, to, allocator, m_reader_writer );
 	}
 };

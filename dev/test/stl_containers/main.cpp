@@ -24,6 +24,18 @@ struct data_with_t
 	}
 };
 
+template<typename T, typename Reader_Writer>
+struct data_with_reader_writer_t
+{
+	T m_data;
+
+	template<typename Json_Io>
+	void json_io( Json_Io & io )
+	{
+		io & json_dto::mandatory( Reader_Writer{}, "data", m_data );
+	}
+};
+
 TEST_CASE( "deque<int>: read from json" , "read-deque-int" )
 {
 	const std::string json_data{
@@ -204,17 +216,75 @@ TEST_CASE( "map<string, int>: write to json" , "write-map-string-int" )
 	REQUIRE( R"({"data":{"one":1,"three":3,"two":2}})" == r );
 }
 
-#if 0
+struct custom_map_int_int_formatter_t
+{
+	void
+	read( int & v, const rapidjson::Value & from ) const
+	{
+		json_dto::read_json_value( v, from );
+	}
+
+	void
+	write(
+		const int & v,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
+	{
+		json_dto::write_json_value( v, to, allocator );
+	}
+
+	void
+	read(
+		json_dto::mutable_map_key_t<int> & v,
+		const rapidjson::Value & from ) const
+	{
+		std::string str_v;
+		json_dto::read_json_value( str_v, from );
+
+		if( 1 != std::sscanf( str_v.c_str(), "%d", &v.v ) )
+			throw std::runtime_error( "unable to parse int key" );
+	}
+
+	void
+	write(
+		const json_dto::const_map_key_t<int> & v,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
+	{
+		json_dto::write_json_value( std::to_string(v.v), to, allocator );
+	}
+};
+
 TEST_CASE( "map<int, int>: write to json" , "write-map-int-int" )
 {
-	data_with_t< std::map<int, int> > obj{
+	data_with_reader_writer_t<
+		std::map<int, int>,
+		json_dto::for_each_item_t<custom_map_int_int_formatter_t>
+	> obj{
 		{ {1, 11}, {3, 33}, {2, 22} }
 	};
 	const auto r = json_dto::to_json( obj );
 
-	REQUIRE( R"({"data":{"1":11,"3":33,"2":22}})" == r );
+	REQUIRE( R"({"data":{"1":11,"2":22,"3":33}})" == r );
 }
-#endif
+
+TEST_CASE( "map<int, int>: read from json" , "read-map-int-int" )
+{
+	using obj_t = data_with_reader_writer_t<
+			std::map<int, int>,
+			json_dto::for_each_item_t<custom_map_int_int_formatter_t>
+		>;
+	const std::string json_data{
+		R"JSON(
+		{"data":{"4":44, "1":11, "5":55, "2":22, "3":33}}
+		)JSON" };
+	auto obj = json_dto::from_json< obj_t >( json_data );
+
+	const std::map<int, int> expected{
+		{1, 11}, {2, 22}, {3, 33}, {4, 44}, {5, 55}
+	};
+	REQUIRE( obj.m_data == expected );
+}
 
 TEST_CASE( "multimap<string, int>: read from json" , "read-multimap-string-int" )
 {
