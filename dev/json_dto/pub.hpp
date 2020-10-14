@@ -422,6 +422,32 @@ class json_output_t
 };
 
 //
+// default_reader_writer_t
+//
+// NOTE: implementation is going below.
+/*!
+ * @brief The default implementation of Reader_Writer.
+ *
+ * This implementation simply calls read_json_value and write_json_value
+ * functions.
+ *
+ * @since v.0.2.10
+ */
+struct default_reader_writer_t
+{
+	template< typename Field_Type >
+	void
+	read( Field_Type & v, const rapidjson::Value & from ) const;
+
+	template< typename Field_Type >
+	void
+	write(
+		Field_Type & v,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const;
+};
+
+//
 // reader functions.
 //
 
@@ -597,78 +623,86 @@ write_json_value(
 // ARRAY
 //
 
-template< typename T, typename A >
+template< typename T, typename A, typename Reader_Writer = default_reader_writer_t >
 void
 read_json_value(
 	std::vector< T, A > & vec,
-	const rapidjson::Value & object );
+	const rapidjson::Value & object,
+	const Reader_Writer & reader_writer = Reader_Writer{} );
 
-template< typename T, typename A >
+template< typename T, typename A, typename Reader_Writer = default_reader_writer_t >
 void
 write_json_value(
 	const std::vector< T, A > & vec,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator );
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	const Reader_Writer & reader_writer = Reader_Writer{} );
 
 //
 // STL-like non-associative containers.
 //
-template< typename C >
+template< typename C, typename Reader_Writer = default_reader_writer_t >
 std::enable_if_t<
 		details::meta::is_stl_like_sequence_container<C>::value,
 		void >
 read_json_value(
 	C & cnt,
-	const rapidjson::Value & object );
+	const rapidjson::Value & object,
+	const Reader_Writer & reader_writer = Reader_Writer{} );
 
-template< typename C >
+template< typename C, typename Reader_Writer = default_reader_writer_t >
 std::enable_if_t<
 		details::meta::is_stl_like_sequence_container<C>::value,
 		void >
 write_json_value(
 	const C & cnt,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator );
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	const Reader_Writer & reader_writer = Reader_Writer{} );
 
 //
 // STL-set-like associative containers.
 //
-template< typename C >
+template< typename C, typename Reader_Writer = default_reader_writer_t >
 std::enable_if_t<
 		details::meta::is_stl_set_like_associative_container<C>::value,
 		void >
 read_json_value(
 	C & cnt,
-	const rapidjson::Value & object );
+	const rapidjson::Value & object,
+	const Reader_Writer & reader_writer = Reader_Writer{} );
 
-template< typename C >
+template< typename C, typename Reader_Writer = default_reader_writer_t >
 std::enable_if_t<
 		details::meta::is_stl_set_like_associative_container<C>::value,
 		void >
 write_json_value(
 	const C & cnt,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator );
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	const Reader_Writer & reader_writer = Reader_Writer{} );
 
 //
 // STL-map-like associative containers.
 //
-template< typename C >
+template< typename C, typename Reader_Writer = default_reader_writer_t >
 std::enable_if_t<
 		details::meta::is_stl_map_like_associative_container<C>::value,
 		void >
 read_json_value(
 	C & cnt,
-	const rapidjson::Value & object );
+	const rapidjson::Value & object,
+	const Reader_Writer & reader_writer = default_reader_writer_t{} );
 
-template< typename C >
+template< typename C, typename Reader_Writer = default_reader_writer_t >
 std::enable_if_t<
 		details::meta::is_stl_map_like_associative_container<C>::value,
 		void >
 write_json_value(
 	const C & cnt,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator );
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	const Reader_Writer & reader_writer = Reader_Writer{} );
 
 //
 // nullable_t
@@ -980,11 +1014,12 @@ write_json_value(
 // ARRAY
 //
 
-template< typename T, typename A  >
+template< typename T, typename A, typename Reader_Writer >
 void
 read_json_value(
 	std::vector< T, A > & vec,
-	const rapidjson::Value & object )
+	const rapidjson::Value & object,
+	const Reader_Writer & reader_writer )
 {
 	if( object.IsArray() )
 	{
@@ -993,7 +1028,7 @@ read_json_value(
 		for( rapidjson::SizeType i = 0; i < object.Size(); ++i )
 		{
 			T v;
-			read_json_value( v, object[ i ] );
+			reader_writer.read( v, object[ i ] );
 			vec.push_back( std::move(v) );
 		}
 	}
@@ -1020,18 +1055,19 @@ struct std_vector_item_read_access_type<bool>
 
 } /* namespace details */
 
-template< typename T, typename A >
+template< typename T, typename A, typename Reader_Writer >
 void
 write_json_value(
 	const std::vector< T, A > & vec,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator )
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	const Reader_Writer & reader_writer )
 {
 	object.SetArray();
 	for( typename details::std_vector_item_read_access_type<T>::type v : vec )
 	{
 		rapidjson::Value o;
-		write_json_value( v, o, allocator );
+		reader_writer.write( v, o, allocator );
 		object.PushBack( o, allocator );
 	}
 }
@@ -1039,13 +1075,14 @@ write_json_value(
 //
 // STL-like non-associative containers.
 //
-template< typename C >
+template< typename C, typename Reader_Writer >
 std::enable_if_t<
 		details::meta::is_stl_like_sequence_container<C>::value,
 		void >
 read_json_value(
 	C & cnt,
-	const rapidjson::Value & object )
+	const rapidjson::Value & object,
+	const Reader_Writer & reader_writer )
 {
 	if( object.IsArray() )
 	{
@@ -1055,7 +1092,7 @@ read_json_value(
 		for( rapidjson::SizeType i = 0; i < object.Size(); ++i )
 		{
 			typename C::value_type v;
-			read_json_value( v, object[ i ] );
+			reader_writer.read( v, object[ i ] );
 			filler.emplace_back( std::move(v) );
 		}
 	}
@@ -1063,20 +1100,21 @@ read_json_value(
 		throw ex_t{ "value is not an array" };
 }
 
-template< typename C >
+template< typename C, typename Reader_Writer >
 std::enable_if_t<
 		details::meta::is_stl_like_sequence_container<C>::value,
 		void >
 write_json_value(
 	const C & cnt,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator )
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	const Reader_Writer & reader_writer )
 {
 	object.SetArray();
 	for( const auto & v : cnt )
 	{
 		rapidjson::Value o;
-		write_json_value( v, o, allocator );
+		reader_writer.write( v, o, allocator );
 		object.PushBack( o, allocator );
 	}
 }
@@ -1084,13 +1122,14 @@ write_json_value(
 //
 // STL-set-like associative containers.
 //
-template< typename C >
+template< typename C, typename Reader_Writer >
 std::enable_if_t<
 		details::meta::is_stl_set_like_associative_container<C>::value,
 		void >
 read_json_value(
 	C & cnt,
-	const rapidjson::Value & object )
+	const rapidjson::Value & object,
+	const Reader_Writer & reader_writer )
 {
 	if( !object.IsArray() )
 		throw ex_t{ "value can't be deserialized into std::set-like container!" };
@@ -1099,7 +1138,7 @@ read_json_value(
 	for( rapidjson::SizeType i = 0; i < object.Size(); ++i )
 	{
 		typename C::value_type v;
-		read_json_value( v, object[ i ] );
+		reader_writer.read( v, object[ i ] );
 		cnt.emplace( std::move(v) );
 	}
 }
@@ -1112,18 +1151,20 @@ read_json_value(
  * But this check has performance penalty. So at v.0.2.8 there is no
  * such check.
  */
-template< typename C >
+template< typename C, typename Reader_Writer >
 std::enable_if_t<
 		details::meta::is_stl_set_like_associative_container<C>::value,
 		void >
 write_json_value(
 	const C & cnt,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator )
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	const Reader_Writer & reader_writer )
 {
-	const auto write_item = [&object, &allocator]( const auto & v ) {
+	const auto write_item =
+			[&object, &allocator, &reader_writer]( const auto & v ) {
 				rapidjson::Value o;
-				write_json_value( v, o, allocator );
+				reader_writer.write( v, o, allocator );
 				object.PushBack( o, allocator );
 			};
 
@@ -1135,13 +1176,14 @@ write_json_value(
 //
 // STL-map-like associative containers.
 //
-template< typename C >
+template< typename C, typename Reader_Writer >
 std::enable_if_t<
 		details::meta::is_stl_map_like_associative_container<C>::value,
 		void >
 read_json_value(
 	C & cnt,
-	const rapidjson::Value & object )
+	const rapidjson::Value & object,
+	const Reader_Writer & reader_writer )
 {
 	if( !object.IsObject() )
 		throw ex_t{ "value can't be deserialized into std::map-like container!" };
@@ -1152,8 +1194,8 @@ read_json_value(
 		typename C::key_type key;
 		typename C::mapped_type value;
 
-		read_json_value( key, it->name );
-		read_json_value( value, it->value );
+		reader_writer.read( key, it->name );
+		reader_writer.read( value, it->value );
 
 		cnt.emplace( typename C::value_type{ std::move(key), std::move(value) } );
 	}
@@ -1167,21 +1209,23 @@ read_json_value(
  * But this check has performance penalty. So at v.0.2.8 there is no
  * such check.
  */
-template< typename C >
+template< typename C, typename Reader_Writer >
 std::enable_if_t<
 		details::meta::is_stl_map_like_associative_container<C>::value,
 		void >
 write_json_value(
 	const C & cnt,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator )
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	const Reader_Writer & reader_writer )
 {
-	const auto write_item = [&object, &allocator]( const auto & kv ) {
+	const auto write_item =
+			[&object, &allocator, &reader_writer]( const auto & kv ) {
 				rapidjson::Value key;
 				rapidjson::Value value;
 
-				write_json_value( kv.first, key, allocator );
-				write_json_value( kv.second, value, allocator );
+				reader_writer.write( kv.first, key, allocator );
+				reader_writer.write( kv.second, value, allocator );
 
 				object.AddMember( key, value, allocator );
 			};
@@ -1422,23 +1466,50 @@ struct empty_validator_t
 };
 
 //
-// default_reader_writer_t
+// the implementation of default_reader_writer_t
 //
-/*!
- * @brief The default implementation of Reader_Writer.
- *
- * This implementation simply calls read_json_value and write_json_value
- * functions.
- *
- * @since v.0.2.10
- */
-struct default_reader_writer_t
+
+template< typename Field_Type >
+void
+default_reader_writer_t::read(
+	Field_Type & v, const rapidjson::Value & from ) const
 {
+	read_json_value( v, from );
+}
+
+template< typename Field_Type >
+void
+default_reader_writer_t::write(
+	Field_Type & v,
+	rapidjson::Value & to,
+	rapidjson::MemoryPoolAllocator<> & allocator ) const
+{
+	write_json_value( v, to, allocator );
+}
+
+//FIXME: document this!
+template< typename Item_Reader_Writer >
+struct for_each_item_t
+{
+	Item_Reader_Writer m_reader_writer;
+
+	for_each_item_t() = default;
+
+	for_each_item_t( const Item_Reader_Writer & initial )
+		:	m_reader_writer{ initial }
+	{}
+
+	for_each_item_t( Item_Reader_Writer && initial )
+		:	m_reader_writer{ std::move(initial) }
+	{}
+
 	template< typename Field_Type >
 	void
-	read( Field_Type & v, const rapidjson::Value & from ) const
+	read(
+		Field_Type & v, const rapidjson::Value & from ) const
 	{
-		read_json_value( v, from );
+		//FIXME: static_asserts for the type of Field_Type.
+		read_json_value( v, from, m_reader_writer );
 	}
 
 	template< typename Field_Type >
@@ -1448,7 +1519,9 @@ struct default_reader_writer_t
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const
 	{
-		write_json_value( v, to, allocator );
+		//FIXME: static_asserts for the type of Field_Type.
+std::cout << "Delegating write to write_json_value" << std::endl;
+		write_json_value( v, to, allocator, m_reader_writer );
 	}
 };
 

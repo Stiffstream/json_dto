@@ -204,6 +204,18 @@ TEST_CASE( "map<string, int>: write to json" , "write-map-string-int" )
 	REQUIRE( R"({"data":{"one":1,"three":3,"two":2}})" == r );
 }
 
+#if 0
+TEST_CASE( "map<int, int>: write to json" , "write-map-int-int" )
+{
+	data_with_t< std::map<int, int> > obj{
+		{ {1, 11}, {3, 33}, {2, 22} }
+	};
+	const auto r = json_dto::to_json( obj );
+
+	REQUIRE( R"({"data":{"1":11,"3":33,"2":22}})" == r );
+}
+#endif
+
 TEST_CASE( "multimap<string, int>: read from json" , "read-multimap-string-int" )
 {
 	const std::string json_data{

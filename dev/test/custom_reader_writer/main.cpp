@@ -54,6 +54,25 @@ struct custom_reader_writer_t
 };
 
 //
+// hex_writer_t
+//
+struct hex_writer_t
+{
+	void write(
+		int v, 
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
+	{
+		using json_dto::write_json_value;
+
+		char buf[32];
+		std::sprintf( buf, "%x", v );
+
+		write_json_value( json_dto::make_string_ref(buf), to, allocator );
+	}
+};
+
+//
 // simple_types_dto_t
 //
 
@@ -96,6 +115,20 @@ struct simple_types_dto_t
 			eq( m_num_opt_no_default, other.m_num_opt_no_default ) &&
 			eq( m_num_opt_nullable, other.m_num_opt_nullable ) &&
 			eq( m_num_opt_no_default_nullable, other.m_num_opt_no_default_nullable );
+	}
+};
+
+struct vector_of_ints_t
+{
+	std::vector<int> m_values;
+
+	template< typename Io >
+	void json_io( Io & io )
+	{
+		io & json_dto::mandatory(
+				json_dto::for_each_item_t<hex_writer_t>{},
+				"values",
+				m_values );
 	}
 };
 
@@ -178,6 +211,19 @@ TEST_CASE("simple-types", "[simple]" )
 		dto.m_num_opt_no_default_nullable.emplace( 2016 );
 
 		REQUIRE( all_defined_json == to_json( dto ) );
+	}
+}
+
+TEST_CASE("vector with custom hex_writer", "[vector][hex_writer]")
+{
+	SECTION("not-empty vector")
+	{
+		const std::string json_str =
+				R"JSON({"values":["0","1","a","f","10","20"]})JSON";
+
+		vector_of_ints_t dto{ {0, 1, 10, 15, 16, 32} };
+
+		REQUIRE( json_str == to_json( dto ) );
 	}
 }
 
