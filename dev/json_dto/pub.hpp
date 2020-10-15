@@ -424,13 +424,32 @@ class json_output_t
 //
 // const_map_key_t
 //
-//FIXME: document this!
+/*!
+ * @brief A special indicator for the case when serialized value is a key
+ * in map-like container.
+ *
+ * Since v.0.2.11 json_dto makes distinction between keys and values
+ * in map-like containers. Values are serialized by calling write_json_value
+ * for a reference of type T (where T is a type of a value). But keys are
+ * now serialized by calling write_json_value for an instance of type
+ * const_map_key_t<T> (where T is a type of a key).
+ *
+ * It allows to override write_json_value for const_map_key_t<T> for
+ * the implementation of custom format for keys.
+ *
+ * @since v.0.2.11
+ */
 template< typename T >
 struct const_map_key_t
 {
 	const T & v;
 };
 
+/*!
+ * @brief Helper function for producing instances of const_map_key_t.
+ *
+ * @since v.0.2.11
+ */
 template< typename T >
 const_map_key_t<T>
 const_map_key( const T & v ) noexcept { return { v }; };
@@ -438,13 +457,32 @@ const_map_key( const T & v ) noexcept { return { v }; };
 //
 // mutable_map_key_t
 //
-//FIXME: document this!
+/*!
+ * @brief A special indicator for the case when deserialized value is a key
+ * in map-like container.
+ *
+ * Since v.0.2.11 json_dto makes distinction between keys and values
+ * in map-like containers. Values are deserialized by calling read_json_value
+ * for a reference of type T (where T is a type of a value). But keys are
+ * now deserialized by calling read_json_value for an instance of type
+ * mutable_map_key_t<T> (where T is a type of a key).
+ *
+ * It allows to override mutable_json_value for mutable_map_key_t<T> for
+ * the implementation of custom format for keys.
+ *
+ * @since v.0.2.11
+ */
 template< typename T >
 struct mutable_map_key_t
 {
 	T & v;
 };
 
+/*!
+ * @brief Helper function for producing instances of mutable_map_key_t.
+ *
+ * @since v.0.2.11
+ */
 template< typename T >
 mutable_map_key_t<T>
 mutable_map_key( T & v ) noexcept { return { v }; };
@@ -1556,7 +1594,127 @@ default_reader_writer_t::write(
 	write_json_value( v, to, allocator );
 }
 
-//FIXME: document this!
+/*!
+ * @brief A special proxy reader_writer that delegates actual
+ * formatting actions to the nested reader_writer.
+ *
+ * When a custom reader_writer is specified for a field it's applied
+ * to the field itself. For example:
+ * @code
+ * struct my_int_reader_writer {
+ * 	void read(int & v, ...) const {...}
+ * 	void write(const int & v, ...) const {...}
+ * };
+ *
+ * struct my_data {
+ * 	int field_;
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(my_int_reader_writer{}, "field", field_)
+ * 			...
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ * In that case a reference to integer field `field_` will be passed to
+ * `my_int_reader_writer`. And this is intended behavior.
+ *
+ * But there could be cases when (de)serialized field is a container.
+ * For example, in that case we'll get a compiler error:
+ * @code
+ * struct my_complex_data {
+ * 	std::vector<int> field_;
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(my_int_reader_writer{}, "field", field_)
+ * 			...
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ * It is because a reference to `vector<int>` will be passed to
+ * `my_int_reader_writer`, but `my_int_reader_writer` expects references
+ * to integers.
+ *
+ * It seems that this problem can be solved by extending `my_int_reader_writer`:
+ * @code
+ * struct my_int_reader_writer {
+ * 	void read(int & v, ...) const {...}
+ * 	void read(std::vector<int> & v, ...) const {...}
+ *
+ * 	void write(const int & v, ...) const {...}
+ * 	void write(const std::vector<int> & v, ...) const {...}
+ * };
+ * @endcode
+ * But this solution doesn't scale well because there are a plenty of
+ * container types. And it's not good to create an overload for every
+ * of them.
+ *
+ * So the template `apply_to_content_t` gives another solution:
+ * @code
+ * struct my_complex_data {
+ * 	std::vector<int> field_;
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::apply_to_content_t<my_int_reader_writer>{},
+ * 				"field", field_)
+ * 			...
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ *
+ * An instance of `apply_to_content_t` holds an instance of an actual
+ * reader_writer type and applies it to every item of container.
+ *
+ * @note
+ * The template `apply_to_content_t` should also be used will
+ * `nullable_t` and `std::optional` if an actual reader_writer has
+ * to be applied to the content of `nullable_t`/`std::optional`:
+ * @code
+ * struct my_data {
+ * 	std::optional<int> weight_;
+ * 	json_dto::nullable_t<int> priority_;
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::optional(
+ * 				json_dto::apply_to_content_t<my_int_reader_writer>{},
+ * 				"weight", weight_, std::nullopt)
+ * 			& json_dto::mandatory(
+ * 				json_dto::apply_to_content_t<my_int_reader_writer>{},
+ * 				"priority", priority_)
+ * 		...
+ * 		;
+ * 	}
+ * }
+ * @endcode
+ *
+ * @note
+ * Sometimes `apply_to_content_t` should be nested:
+ * @code
+ * struct my_complex_data {
+ * 	json_dto::nullable_t< std::vector<int> > params_;
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				// The first occurence of apply_to_content_t is for nullable_t.
+ * 				json_dto::apply_to_content_t<
+ * 					// The second occurence of apply_to_content_t is for std::vector.
+ * 					json_dto::apply_to_content_t<
+ * 						// This is for the content of std::vector.
+ * 						my_int_reader_writer
+ * 					>
+ * 				>{},
+ * 				"params", params_)
+ * 			...
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ *
+ * @since v.0.2.11
+ */
 template< typename Item_Reader_Writer >
 struct apply_to_content_t
 {
@@ -1577,7 +1735,6 @@ struct apply_to_content_t
 	read(
 		Field_Type & v, const rapidjson::Value & from ) const
 	{
-		//FIXME: static_asserts for the type of Field_Type.
 		read_json_value( v, from, m_reader_writer );
 	}
 
@@ -1588,7 +1745,6 @@ struct apply_to_content_t
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const
 	{
-		//FIXME: static_asserts for the type of Field_Type.
 		write_json_value( v, to, allocator, m_reader_writer );
 	}
 };
