@@ -1012,26 +1012,32 @@ write_json_value(
 // RW specializations for nullable_t< T >
 //
 
-template< typename Field_Type >
+template<
+	typename Field_Type,
+	typename Reader_Writer = default_reader_writer_t >
 void
 read_json_value(
 	nullable_t< Field_Type > & f,
-	const rapidjson::Value & object )
+	const rapidjson::Value & object,
+	Reader_Writer reader_writer = Reader_Writer{} )
 {
 	Field_Type value;
-	read_json_value( value, object );
+	reader_writer.read( value, object );
 	f = std::move( value );
 }
 
-template< typename Field_Type >
+template<
+	typename Field_Type,
+	typename Reader_Writer = default_reader_writer_t >
 void
 write_json_value(
 	const nullable_t< Field_Type > & f,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator )
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	Reader_Writer reader_writer = Reader_Writer{} )
 {
 	if( f )
-		write_json_value( *f, object, allocator );
+		reader_writer.write( *f, object, allocator );
 	else
 		object.SetNull();
 }

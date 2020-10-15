@@ -132,6 +132,26 @@ struct vector_of_ints_t
 	}
 };
 
+struct nullable_vector_of_ints_t
+{
+	json_dto::nullable_t< std::vector<int> > m_values;
+
+	nullable_vector_of_ints_t() = default;
+	nullable_vector_of_ints_t( std::vector<int> values )
+		:	m_values{ std::move(values) }
+	{}
+
+	template< typename Io >
+	void json_io( Io & io )
+	{
+		io & json_dto::mandatory(
+				json_dto::apply_to_content_t<
+					json_dto::apply_to_content_t<hex_writer_t> >{},
+				"values",
+				m_values );
+	}
+};
+
 TEST_CASE("simple-types", "[simple]" )
 {
 	SECTION( "read empty" )
@@ -222,6 +242,44 @@ TEST_CASE("vector with custom hex_writer", "[vector][hex_writer]")
 				R"JSON({"values":["0","1","a","f","10","20"]})JSON";
 
 		vector_of_ints_t dto{ {0, 1, 10, 15, 16, 32} };
+
+		REQUIRE( json_str == to_json( dto ) );
+	}
+}
+
+TEST_CASE("nullable vector with custom hex_writer",
+		"[vector][nullable][hex_writer]")
+{
+	SECTION("null vector")
+	{
+		const std::string json_str =
+				R"JSON({"values":null})JSON";
+
+		nullable_vector_of_ints_t dto;
+
+		REQUIRE( json_str == to_json( dto ) );
+	}
+
+	SECTION("empty vector")
+	{
+		const std::string json_str =
+				R"JSON({"values":[]})JSON";
+
+		nullable_vector_of_ints_t dto{
+				std::vector<int>{}
+		};
+
+		REQUIRE( json_str == to_json( dto ) );
+	}
+
+	SECTION("not-empty vector")
+	{
+		const std::string json_str =
+				R"JSON({"values":["0","1","a","f","10","20"]})JSON";
+
+		nullable_vector_of_ints_t dto{
+				std::vector<int>{0, 1, 10, 15, 16, 32}
+		};
 
 		REQUIRE( json_str == to_json( dto ) );
 	}
