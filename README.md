@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.11](#v0211)
       * [v.0.2.10](#v0210)
       * [v.0.2.9](#v029)
       * [v.0.2.8](#v028)
@@ -44,6 +45,9 @@ Table of Contents
       * [User defined IO](#user-defined-io)
          * [Overloading of read_json_value and write_json_value](#overloading-of-read_json_value-and-write_json_value)
          * [Usage of Reader_Writer](#usage-of-reader_writer)
+            * [Custom Reader_Writer with containers and nullable_t, and std::optional](#custom-reader_writer-with-containers-and-nullable_t-and-stdoptional)
+         * [Overloading of read_json_value/write_json_value for const_map_key_t/mutable_map_key_t](#overloading-of-read_json_valuewrite_json_value-for-const_map_key_tmutable_map_key_t)
+         * [Custom Reader_Writer and mutable/const_map_key_t](#custom-reader_writer-and-mutableconst_map_key_t)
    * [License](#license)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
@@ -59,6 +63,12 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.2.11
+
+New types `mutable_map_key_t<T>` and `const_map_key_t<T>` are now used for (de)serializing keys of map-like structures. See [the description below](#overloading-of-read_json_valuewrite_json_value-for-const_map_key_tmutable_map_key_t).
+
+A new Reader_Writer proxy `apply_to_content_t` added to address an issue of using custom Reader_Writers to the content of containers, `nullable_t` and `std::optional`. See [the description below](#custom-reader_writer-with-containers-and-nullable_t-and-stdoptional).
 
 ## v.0.2.10
 
@@ -1723,6 +1733,70 @@ struct my_complex_data {
 	}
 };
 ```
+
+### Overloading of read_json_value/write_json_value for const_map_key_t/mutable_map_key_t
+
+Since v.0.2.11 json_dto (de)serializes keys of map-like containers (like `std::map`, `std::multimap`, `std::unordered_map` and so on) by using new proxy types `const_map_key_t` and `mutable_map_key_t`.
+
+A new type `const_map_key_t<T>` is used for serializing a key of type T.
+
+A new type `mutable_map_key_t<T>` is used for deserializing a key of type T.
+
+It means that if someone wants to make overloads of `read_json_value` and `write_json_value` for types that used as keys in map-like structures, then such overloads should be placed into `json_dto` namespace and should have the following prototypes:
+
+```cpp
+namespace json_dto {
+
+void read_json_value(
+	mutable_map_key_t<UserType> key,
+	const rapidjson::Value & from);
+
+void write_json_value(
+	const_map_key_t<UserType> key,
+	rapidjson::Value & to,
+	rapidjson::MemoryPoolAllocator<> & allocator);
+
+} /* namespace json_dto */
+```
+
+[See full example with overloading of read/write_json_value for mutable/const_map_key_t](./dev/sample/tutorial19/main.cpp)
+
+### Custom Reader_Writer and mutable/const_map_key_t
+
+The addition of `mutable_map_key_t`/`const_map_key_t` in the v.0.2.11 means that custom Reader_Writers should take the presence of those types into the account.
+
+For example, if a custom Reader_Writer is used for (de)serializing a content of `std::map` then that Reader_Writer should have implementations of `read`/`write` methods for keys and values from the map:
+
+```cpp
+struct my_kv_formatter
+{
+	// Read a key.
+	void read(
+		json_dto::mutable_map_key_t<KeyType> & key,
+		const rapidjson::Value & from) const {...}
+
+	// Read a value.
+	void read(
+		ValueType & value,
+		const rapidjson::Value & from) const {...}
+
+	// Write a key.
+	void write(
+		const json_dto::const_map_key_t<KeyType> & key,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator) const {...}
+
+	// Write a value.
+	void write(
+		const ValueType & value,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator) const {...}
+};
+```
+
+Please note that a references to instances of `mutable_map_key_t`/`const_map_key_t` are passed to `read`/`write` methods.
+
+[See full example with overloading of Reader_Writer for mutable/const_map_key_t](./dev/sample/tutorial19.1/main.cpp)
 
 # License
 
