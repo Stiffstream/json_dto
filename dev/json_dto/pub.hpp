@@ -805,11 +805,11 @@ write_json_value(
 template< typename Field_Type >
 struct nullable_t
 {
-	nullable_t()
+	nullable_t() noexcept
 		:	m_has_value{ false }
 	{}
 
-	nullable_t( std::nullptr_t )
+	nullable_t( std::nullptr_t ) noexcept
 		:	m_has_value{ false }
 	{}
 
@@ -846,12 +846,12 @@ struct nullable_t
 	}
 
 	bool
-	has_value() const
+	has_value() const noexcept
 	{
 		return m_has_value;
 	}
 
-	operator bool () const
+	operator bool () const noexcept
 	{
 		return has_value();
 	}
@@ -913,32 +913,32 @@ struct nullable_t
 	}
 
 	nullable_t &
-	operator = ( std::nullptr_t )
+	operator = ( std::nullptr_t ) noexcept
 	{
 		reset();
 		return *this;
 	}
 
 	const Field_Type*
-	operator -> () const
+	operator -> () const noexcept
 	{
 		return field_ptr();
 	}
 
 	Field_Type*
-	operator -> ()
+	operator -> () noexcept
 	{
 		return field_ptr();
 	}
 
 	const Field_Type &
-	operator * () const
+	operator * () const noexcept
 	{
 		return field_ref();
 	}
 
 	Field_Type&
-	operator * ()
+	operator * () noexcept
 	{
 		return field_ref();
 	}
@@ -965,7 +965,7 @@ struct nullable_t
 	}
 
 	void
-	reset()
+	reset() noexcept
 	{
 		if( has_value() )
 		{
@@ -979,25 +979,25 @@ struct nullable_t
 		bool m_has_value{ false };
 
 		Field_Type *
-		field_ptr()
+		field_ptr() noexcept
 		{
 			return reinterpret_cast< Field_Type * >( m_image_space );
 		}
 
 		const Field_Type *
-		field_ptr() const
+		field_ptr() const noexcept
 		{
 			return reinterpret_cast< const Field_Type * >( m_image_space );
 		}
 
 		Field_Type &
-		field_ref()
+		field_ref() noexcept
 		{
 			return *field_ptr();
 		}
 
 		const Field_Type &
-		field_ref() const
+		field_ref() const noexcept
 		{
 			return *field_ptr();
 		}
@@ -1444,7 +1444,7 @@ struct mandatory_attr_t
 
 	template< typename Field_Type >
 	constexpr bool
-	is_default_value( Field_Type & ) const
+	is_default_value( Field_Type & ) const noexcept
 	{
 		return false;
 	}
@@ -1495,14 +1495,14 @@ struct optional_attr_null_t
 {
 	template< typename Field_Type >
 	void
-	on_field_not_defined( nullable_t< Field_Type > & f ) const
+	on_field_not_defined( nullable_t< Field_Type > & f ) const noexcept
 	{
 		f.reset();
 	}
 
 	template< typename Field_Type >
 	bool
-	is_default_value( nullable_t< Field_Type > & f ) const
+	is_default_value( nullable_t< Field_Type > & f ) const noexcept
 	{
 		return !f.has_value();
 	}
@@ -1517,12 +1517,12 @@ struct optional_nodefault_attr_t
 {
 	template< typename Field_Type >
 	constexpr void
-	on_field_not_defined( Field_Type & ) const
+	on_field_not_defined( Field_Type & ) const noexcept
 	{}
 
 	template< typename Field_Type >
 	constexpr bool
-	is_default_value( Field_Type & ) const
+	is_default_value( Field_Type & ) const noexcept
 	{
 		return false;
 	}
@@ -1535,7 +1535,7 @@ using string_ref_t = rapidjson::Value::StringRefType;
  * @since v.0.2.9
  */
 inline string_ref_t
-make_string_ref( const char * src, std::size_t length )
+make_string_ref( const char * src, std::size_t length ) noexcept
 {
 	return { src, static_cast<rapidjson::SizeType>(length) };
 }
@@ -1545,7 +1545,7 @@ make_string_ref( const char * src, std::size_t length )
  * @since v.0.2.9
  */
 inline string_ref_t
-make_string_ref( const std::string & src )
+make_string_ref( const std::string & src ) noexcept
 {
 	return make_string_ref( src.data(), src.size() );
 }
@@ -1555,7 +1555,7 @@ make_string_ref( const std::string & src )
  * @since v.0.2.9
  */
 inline string_ref_t
-make_string_ref( const char * src )
+make_string_ref( const char * src ) noexcept
 {
 	return make_string_ref( src, std::strlen(src) );
 }
@@ -1568,7 +1568,7 @@ struct empty_validator_t
 {
 	template< typename Field_Type >
 	constexpr void
-	operator () ( const Field_Type & ) const
+	operator () ( const Field_Type & ) const noexcept
 	{}
 };
 
