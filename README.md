@@ -1612,6 +1612,118 @@ struct struct_with_floats_t
 
 Note also that `read` and `write` methods of Reader_Writer class can be template methods.
 
+#### Custom Reader_Writer with containers and nullable_t, and std::optional
+
+If a custom Reader_Writer is used then a reference to the whole field is passed to Reader_Writer's methods. For example:
+
+```cpp
+struct my_int_reader_writer
+{
+	void read(int & v, ...) const {...} // Custom read procedure for an int.
+
+	void write(const int & v, ...) const {...} // Custom write procedure for int.
+};
+
+...
+
+struct my_data
+{
+	int field_;
+	...
+	template<typename Io> void json_io(Io & io)
+	{
+		io & json_dto::mandatory(my_int_reader_writer{},
+				"field", field_)
+			...
+			;
+	}
+};
+```
+
+In that case a reference to an `int` will be passed to `my_int_reader_writer`'s `read` and `write` methods.
+
+But if `my_data` isn't `int` but a `std::vector<int>` then a reference to `std::vector<int>` instance will be passed to `read`/`write`. And there will be a compiler error because `read`/`write` expects a reference to an `int`.
+
+If we want to apply our custom Reader_Writer be applied for every member of a container then `json_dto::apply_to_content_t` proxy should be used as Reader_Writer type:
+
+```cpp
+struct my_complex_data
+{
+	std::vector<int> field_;
+	...
+	template<typename Io> void json_io(Io & io)
+	{
+		io & json_dto::mandatory(
+				json_dto::apply_to_content_t<my_int_reader_writer>{},
+				"field", field_)
+			...
+			;
+	}
+};
+```
+
+The `apply_to_content_t` proxy works very simple way: it holds an instance of an actual Reader_Writer and applies that actual Reader_Writer to every member of a container (or to the content of `json_dto::nullable_t` and `std::optional`, see bellow).
+
+The same rule is applied to `nullable_t` and `std::optional`:
+
+```cpp
+struct my_data
+{
+	std::optional<int> field_;
+	...
+	template<typename Io> void json_io(Io & io)
+	{
+		io & json_dto::optional(my_int_reader_writer{},
+				"field", field_, std::nullopt)
+			...
+			;
+	}
+};
+```
+
+Such code leads to compiler error because `my_int_reader_writer`'s `read` and `write` methods expect a reference to `int`, not to `std::optional<int>`. So we have to use `apply_to_content_t` here too:
+
+```cpp
+struct my_data
+{
+	std::optional<int> field_;
+	...
+	template<typename Io> void json_io(Io & io)
+	{
+		io & json_dto::optional(
+				// Now my_int_reader_writer will be applied to the content
+				// of std::optional<int>, not to std::optional<int> itself.
+				json_dto::apply_to_content_t<my_int_reader_writer>{},
+				"field", field_, std::nullopt)
+			...
+			;
+	}
+};
+```
+
+Note that `apply_to_content_t` can be nested:
+
+```cpp
+struct my_complex_data {
+	json_dto::nullable_t< std::vector<int> > params_;
+	...
+	template<typename Io> void json_io(Io & io) {
+		io & json_dto::mandatory(
+				// The first occurence of apply_to_content_t is for nullable_t.
+				json_dto::apply_to_content_t<
+					// The second occurence of apply_to_content_t is for std::vector.
+					json_dto::apply_to_content_t<
+						// This is for the content of std::vector.
+						my_int_reader_writer
+					>
+				>{},
+				"params", params_)
+			...
+			;
+	}
+};
+```
+
 # License
 
 *json_dto* is distributed under
