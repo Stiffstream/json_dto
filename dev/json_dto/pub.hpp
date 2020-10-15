@@ -658,18 +658,20 @@ write_json_value(
 //
 // std::optional
 //
-template< typename T >
+template< typename T, typename Reader_Writer = default_reader_writer_t >
 inline void
 read_json_value(
 	cpp17::optional<T> & v,
-	const rapidjson::Value & object );
+	const rapidjson::Value & object,
+	Reader_Writer reader_writer = Reader_Writer{} );
 
-template< typename T >
+template< typename T, typename Reader_Writer = default_reader_writer_t >
 inline void
 write_json_value(
 	const cpp17::optional<T> & v,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator );
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	Reader_Writer reader_writer = Reader_Writer{} );
 #endif
 
 //
@@ -1046,26 +1048,28 @@ write_json_value(
 //
 // std::optional
 //
-template< typename T >
+template< typename T, typename Reader_Writer >
 inline void
 read_json_value(
 	cpp17::optional<T> & v,
-	const rapidjson::Value & object )
+	const rapidjson::Value & object,
+	Reader_Writer reader_writer )
 {
 	T value_from_stream;
-	read_json_value( value_from_stream, object );
+	reader_writer.read( value_from_stream, object );
 	v = std::move(value_from_stream);
 }
 
-template< typename T >
+template< typename T, typename Reader_Writer >
 inline void
 write_json_value(
 	const cpp17::optional<T> & v,
 	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator )
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	Reader_Writer reader_writer )
 {
 	if( v )
-		write_json_value( *v, object, allocator );
+		reader_writer.write( *v, object, allocator );
 }
 #endif
 
