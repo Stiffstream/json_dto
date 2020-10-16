@@ -1633,9 +1633,7 @@ struct my_int_reader_writer
 
 	void write(const int & v, ...) const {...} // Custom write procedure for int.
 };
-
 ...
-
 struct my_data
 {
 	int field_;
@@ -1652,9 +1650,9 @@ struct my_data
 
 In that case a reference to an `int` will be passed to `my_int_reader_writer`'s `read` and `write` methods.
 
-But if `my_data` isn't `int` but a `std::vector<int>` then a reference to `std::vector<int>` instance will be passed to `read`/`write`. And there will be a compiler error because `read`/`write` expects a reference to an `int`.
+In the case when `my_data` isn't `int` but a `std::vector<int>` then a reference to `std::vector<int>` instance will be passed to `read`/`write`. And there will be a compiler error because `read`/`write` expects a reference to an `int`.
 
-If we want to apply our custom Reader_Writer be applied for every member of a container then `json_dto::apply_to_content_t` proxy should be used as Reader_Writer type:
+If we want our custom Reader_Writer to be applied for every member of a container then `json_dto::apply_to_content_t` proxy should be used as Reader_Writer type:
 
 ```cpp
 struct my_complex_data
@@ -1736,13 +1734,13 @@ struct my_complex_data {
 
 ### Overloading of read_json_value/write_json_value for const_map_key_t/mutable_map_key_t
 
-Since v.0.2.11 json_dto (de)serializes keys of map-like containers (like `std::map`, `std::multimap`, `std::unordered_map` and so on) by using new proxy types `const_map_key_t` and `mutable_map_key_t`.
+Since v.0.2.11 json_dto (de)serializes keys of map-like containers (`std::map`, `std::multimap`, `std::unordered_map` and so on) by using new proxy types `const_map_key_t` and `mutable_map_key_t`.
 
 A new type `const_map_key_t<T>` is used for serializing a key of type T.
 
 A new type `mutable_map_key_t<T>` is used for deserializing a key of type T.
 
-It means that if someone wants to make overloads of `read_json_value` and `write_json_value` for types that used as keys in map-like structures, then such overloads should be placed into `json_dto` namespace and should have the following prototypes:
+It means that if someone wants to make overloads of `read_json_value` and `write_json_value` for types that are used as keys in map-like structures, then such overloads should be placed into `json_dto` namespace and should have the following prototypes:
 
 ```cpp
 namespace json_dto {
