@@ -514,6 +514,39 @@ struct default_reader_writer_t
 };
 
 //
+// readonly_writer_t
+//
+// NOTE: implementation is going below.
+/*!
+ * @brief The implementation of Reader_Writer that only writes JSON
+ *
+ * This implementation only calls write_json_value and ignores
+ * read calls completely.
+ *
+ * @since v0.2.12
+ */
+template< typename wrapped_writer>
+struct readonly_writer_t
+{
+    template< typename... arguments >
+    readonly_writer_t(arguments&&... parameters);
+
+	template< typename Field_Type >
+	inline void
+	read( Field_Type & v, const rapidjson::Value & from ) const
+	{}
+
+	template< typename Field_Type >
+	void
+	write(
+		const Field_Type & v,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const;
+
+    wrapped_writer writer;
+};
+
+//
 // reader functions.
 //
 
@@ -1451,6 +1484,26 @@ struct mandatory_attr_t
 };
 
 //
+// readonly_attr_t
+//
+
+//! Field set/notset attribute checker for readonly case.
+struct readonly_attr_t
+{
+	template< typename Field_Type >
+	void
+	on_field_not_defined( Field_Type & ) const noexcept
+	{}
+
+	template< typename Field_Type >
+	constexpr bool
+	is_default_value( Field_Type & ) const noexcept
+	{
+		return false;
+	}
+};
+
+//
 // optional_attr_t
 //
 
@@ -1592,6 +1645,27 @@ default_reader_writer_t::write(
 	rapidjson::MemoryPoolAllocator<> & allocator ) const
 {
 	write_json_value( v, to, allocator );
+}
+
+//
+// the implementation of readonly_writer_t
+//
+
+template< typename wrapped_writer >
+template< typename... arguments >
+readonly_writer_t<wrapped_writer>::readonly_writer_t(arguments&&... parameters) :
+    writer{ std::forward< arguments >( parameters )... }
+{}
+
+template< typename wrapped_writer >
+template< typename Field_Type >
+void
+readonly_writer_t<wrapped_writer>::write(
+    const Field_Type & v,
+    rapidjson::Value & to,
+    rapidjson::MemoryPoolAllocator<> & allocator ) const
+{
+    writer.write( v, to, allocator );
 }
 
 /*!
@@ -1934,6 +2008,55 @@ mandatory(
 			field,
 			mandatory_attr_t{},
 			std::move( validator ) };
+}
+
+//
+// readonly
+//
+
+//! Create bind for a readonly JSON field.
+template<
+		typename Field_Type >
+auto
+readonly(
+    string_ref_t field_name,
+    const Field_Type & field )
+{
+    using binder_type_t = binder_t<
+        readonly_writer_t<default_reader_writer_t>,
+        const Field_Type,
+        readonly_attr_t,
+        empty_validator_t >;
+
+    return binder_type_t{
+        readonly_writer_t<default_reader_writer_t>{},
+        field_name,
+        field,
+        readonly_attr_t{},
+        empty_validator_t{} };
+}
+
+//! Create bind for a readonly JSON field.
+template<
+		typename Reader_Writer,
+		typename Field_Type>
+auto readonly(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	const Field_Type & field )
+{
+    using binder_type_t = binder_t<
+        readonly_writer_t<Reader_Writer>,
+        const Field_Type,
+        readonly_attr_t,
+        empty_validator_t >;
+
+    return binder_type_t{
+        readonly_writer_t<Reader_Writer>{},
+        field_name,
+        field,
+        readonly_attr_t{},
+        empty_validator_t{} };
 }
 
 //

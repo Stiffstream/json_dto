@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.12](#v0212)
       * [v.0.2.11](#v0211)
       * [v.0.2.10](#v0210)
       * [v.0.2.9](#v029)
@@ -63,6 +64,10 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.2.12
+
+Added new `readonly` function which works like `optional_no_default`, but it only ever writes the field to JSON, and completely ignores it when reading JSON. Supports `const` fields.
 
 ## v.0.2.11
 
