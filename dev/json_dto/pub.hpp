@@ -273,6 +273,59 @@ struct is_stl_like_container
 				is_stl_like_associative_container<T>::value;
 	};
 
+//
+// field_type_from_reference_impl
+//
+// Since v.0.2.12.
+// Helper metafunction for detection of type to be used as
+// Field_Type template parameter for binder_t class template.
+// If usual reference to a field is passed to
+// mandatory/optional/optional_no_default helper functions then
+// Field_Type should be a type of the field.
+// If const- or rvalue reference is passed then Field_Type should
+// be const type (e.g. const T instead of just T).
+template< typename T >
+struct field_type_from_reference_impl;
+
+template< typename T >
+struct field_type_from_reference_impl<T&>
+{
+	using type = T;
+};
+
+template< typename T >
+struct field_type_from_reference_impl<const T&>
+{
+	using type = const T;
+};
+
+template< typename T >
+struct field_type_from_reference_impl<T&&>
+{
+	using type = const T;
+};
+
+//
+// field_type_from_reference_t
+//
+// Since v.0.2.12.
+//
+// Usage example:
+//
+// template<typename Field_Type>
+// auto binder_maker(Field_Type && field) {
+// 	using binder_type_t = binder_t{
+// 		default_reader_writer_t,
+// 		details::meta::field_type_from_reference_t<decltype(field)>,
+// 		...
+// 	};
+// 	...
+// }
+//
+template< typename T >
+using field_type_from_reference_t =
+	typename field_type_from_reference_impl<T>::type;
+
 } /* namespace meta */
 
 namespace sequence_containers
@@ -1788,6 +1841,11 @@ class binder_t
 		void
 		read_from( const rapidjson::Value & object ) const
 		{
+			// NOTE: since v.0.2.12 we check for cases when a value has
+			// to be deserialized into a const-object.
+			static_assert( !std::is_const<Field_Type>::value,
+					"read_from can't be applied to const objects" );
+
 			try
 			{
 				read_from_impl( object );
@@ -1893,12 +1951,14 @@ template<
 auto
 mandatory(
 	string_ref_t field_name,
-	Field_Type & field,
+	Field_Type && field,
 	Validator validator = Validator{} )
 {
 	using binder_type_t = binder_t<
 			default_reader_writer_t,
-			Field_Type,
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype(field) >,
 			mandatory_attr_t,
 			Validator >;
 
@@ -1919,12 +1979,14 @@ auto
 mandatory(
 	Reader_Writer reader_writer,
 	string_ref_t field_name,
-	Field_Type & field,
+	Field_Type && field,
 	Validator validator = Validator{} )
 {
 	using binder_type_t = binder_t<
 			Reader_Writer,
-			Field_Type,
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype(field) >,
 			mandatory_attr_t,
 			Validator >;
 
@@ -1948,14 +2010,16 @@ template<
 auto
 optional(
 	string_ref_t field_name,
-	Field_Type & field,
+	Field_Type && field,
 	Field_Default_Value_Type default_value,
 	Validator validator = Validator{} )
 {
 	using opt_attr_t = optional_attr_t< Field_Default_Value_Type >;
 	using binder_type_t = binder_t<
 			default_reader_writer_t,
-			Field_Type,
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype(field) >,
 			opt_attr_t,
 			Validator >;
 
@@ -1977,14 +2041,16 @@ auto
 optional(
 	Reader_Writer reader_writer,
 	string_ref_t field_name,
-	Field_Type & field,
+	Field_Type && field,
 	Field_Default_Value_Type default_value,
 	Validator validator = Validator{} )
 {
 	using opt_attr_t = optional_attr_t< Field_Default_Value_Type >;
 	using binder_type_t = binder_t<
 			Reader_Writer,
-			Field_Type,
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype(field) >,
 			opt_attr_t,
 			Validator >;
 
@@ -2007,12 +2073,14 @@ template<
 auto
 optional_null(
 	string_ref_t field_name,
-	Field_Type & field,
+	Field_Type && field,
 	Validator validator = Validator{} )
 {
 	using binder_type_t = binder_t<
 			default_reader_writer_t,
-			Field_Type,
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype(field) >,
 			optional_attr_null_t,
 			Validator >;
 
@@ -2033,12 +2101,14 @@ auto
 optional_null(
 	Reader_Writer reader_writer,
 	string_ref_t field_name,
-	Field_Type & field,
+	Field_Type && field,
 	Validator validator = Validator{} )
 {
 	using binder_type_t = binder_t<
 			Reader_Writer,
-			Field_Type,
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype(field) >,
 			optional_attr_null_t,
 			Validator >;
 
@@ -2099,12 +2169,14 @@ template<
 auto
 optional_no_default(
 	string_ref_t field_name,
-	Field_Type & field,
+	Field_Type && field,
 	Validator validator = Validator{} )
 {
 	using binder_type_t = binder_t<
 			default_reader_writer_t,
-			Field_Type,
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype(field) >,
 			optional_nodefault_attr_t,
 			Validator >;
 
@@ -2125,12 +2197,14 @@ auto
 optional_no_default(
 	Reader_Writer reader_writer,
 	string_ref_t field_name,
-	Field_Type & field,
+	Field_Type && field,
 	Validator validator = Validator{} )
 {
 	using binder_type_t = binder_t<
 			Reader_Writer,
-			Field_Type,
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype(field) >,
 			optional_nodefault_attr_t,
 			Validator >;
 
@@ -2205,7 +2279,7 @@ from_json( const rapidjson::Value & json )
 {
 	json_input_t jin{ json };
 
-	Type result;
+	Type result{};
 
 	jin >> result;
 

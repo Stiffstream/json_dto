@@ -18,4 +18,5 @@ add_subdirectory(user_defined_io_2)
 add_subdirectory(validators)
 add_subdirectory(ensure_object)
 add_subdirectory(from_string_ref)
+add_subdirectory(write_const_objects)
 
