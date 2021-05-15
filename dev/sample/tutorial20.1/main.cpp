@@ -108,6 +108,10 @@ struct example_data
 {
 	std::vector< std::uint32_t > ids() const { return { 1u, 2u, 3u, 4u }; }
 	std::uint32_t m_payload{};
+	std::uint32_t m_priority{};
+
+	int m_version_base{ 18 };
+	int version() const noexcept { return m_version_base + 2; }
 
 	example_data() = default;
 	example_data( std::uint32_t payload ) : m_payload{ payload } {}
@@ -119,7 +123,13 @@ struct example_data
 		io
 			& json_dto::mandatory( "ids",
 					tutorial_20_1::serialize_only( ids() ) )
-			& json_dto::mandatory( "payload", m_payload );
+			& json_dto::mandatory( "payload", m_payload )
+			& json_dto::optional( "priority",
+					tutorial_20_1::serialize_only( m_priority ),
+					0u )
+			& json_dto::optional( "version",
+					tutorial_20_1::serialize_only( version() ),
+					18 );
 	}
 };
 
@@ -129,7 +139,9 @@ operator<<( std::ostream & to, const example_data & what )
 	to << "(ids: (";
 	const auto & ids = what.ids();
 	for( const auto id : ids ) to << id << " ";
-	to << "), payload: " << what.m_payload << ")";
+	to << "), payload: " << what.m_payload << ", priority: "
+			<< what.m_priority << ", version: "
+			<< what.version() << ")";
 	return to;
 }
 
@@ -153,7 +165,16 @@ main( int , char *[] )
 		}
 
 		{
-			const example_data data{ 42 };
+			const example_data data{ 42u };
+			std::cout
+				<< "\nSerialized to JSON:\n"
+				<< json_dto::to_json( data ) << std::endl;
+		}
+
+		{
+			example_data data{ 42u };
+			data.m_priority = 15u;
+			data.m_version_base = 16;
 			std::cout
 				<< "\nSerialized to JSON:\n"
 				<< json_dto::to_json( data ) << std::endl;
