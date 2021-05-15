@@ -1803,6 +1803,152 @@ struct apply_to_content_t
 };
 
 //
+// binder_data_holder_t
+//
+//FIXME: document this!
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Manopt_Policy,
+		typename Validator >
+class binder_data_holder_t
+{
+		Reader_Writer m_reader_writer;
+		string_ref_t m_field_name;
+		Field_Type & m_field;
+		Manopt_Policy m_manopt_policy;
+		Validator m_validator;
+
+	public:
+		binder_data_holder_t(
+			Reader_Writer && reader_writer,
+			string_ref_t field_name,
+			Field_Type & field,
+			Manopt_Policy && manopt_policy,
+			Validator && validator )
+			:	m_reader_writer{ std::move(reader_writer) }
+			,	m_field_name{ field_name }
+			,	m_field{ field }
+			,	m_manopt_policy{ std::move( manopt_policy ) }
+			,	m_validator{ std::move( validator ) }
+		{}
+
+		const Reader_Writer &
+		reader_writer() const noexcept { return m_reader_writer; }
+
+		const string_ref_t &
+		field_name() const noexcept { return m_field_name; }
+
+		Field_Type &
+		field() const noexcept { return m_field; }
+
+		const Manopt_Policy &
+		manopt_policy() const noexcept { return m_manopt_policy; }
+
+		const Validator &
+		validator() const noexcept { return m_validator; }
+};
+
+//
+// binder_read_from_implementation_t
+//
+//FIXME: document this!
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Manopt_Policy,
+		typename Validator >
+struct binder_read_from_implementation_t
+{
+	using data_holder_t = binder_data_holder_t<
+			Reader_Writer,
+			Field_Type,
+			Manopt_Policy,
+			Validator >;
+
+	static void
+	read_from(
+		const data_holder_t & binder_data,
+		const rapidjson::Value & object )
+	{
+		//FIXME: static_assert for checking that Field_Type isn't const?
+
+		if( !object.IsObject() )
+		{
+			throw ex_t{
+				"unable to extract field \"" +
+				std::string{ binder_data.field_name().s } + "\": "
+				"parent json type must be object" };
+		}
+
+		const auto it = object.FindMember( binder_data.field_name() );
+
+		if( object.MemberEnd() != it )
+		{
+			const auto & value = it->value;
+
+			if( !value.IsNull() )
+			{
+				binder_data.reader_writer().read( binder_data.field(), value );
+			}
+			else
+			{
+				set_value_null_attr( binder_data.field() );
+			}
+		}
+		else
+		{
+			binder_data.manopt_policy().on_field_not_defined(
+					binder_data.field() );
+		}
+
+		binder_data.validator()( binder_data.field() ); // validate value.
+	}
+};
+
+//
+// binder_write_to_implementation_t
+//
+//FIXME: document this!
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Manopt_Policy,
+		typename Validator >
+struct binder_write_to_implementation_t
+{
+	using data_holder_t = binder_data_holder_t<
+			Reader_Writer,
+			Field_Type,
+			Manopt_Policy,
+			Validator >;
+
+	static void
+	write_to(
+		const data_holder_t & binder_data,
+		rapidjson::Value & object,
+		rapidjson::MemoryPoolAllocator<> & allocator )
+	{
+		binder_data.validator()( binder_data.field() ); // validate value.
+
+		if( !binder_data.manopt_policy().is_default_value( binder_data.field() ) )
+		{
+			rapidjson::Value value;
+
+			binder_data.reader_writer().write(
+					binder_data.field(),
+					value,
+					allocator );
+
+			object.AddMember(
+					binder_data.field_name(),
+					value,
+					allocator );
+		}
+	}
+};
+
+//
 // binder_t
 //
 
@@ -1823,6 +1969,24 @@ template<
 		typename Validator >
 class binder_t
 {
+		using data_holder_t = binder_data_holder_t<
+				Reader_Writer,
+				Field_Type,
+				Manopt_Policy,
+				Validator >;
+
+		using read_from_impl_t = binder_read_from_implementation_t<
+				Reader_Writer,
+				Field_Type,
+				Manopt_Policy,
+				Validator >;
+
+		using write_to_impl_t = binder_write_to_implementation_t<
+				Reader_Writer,
+				Field_Type,
+				Manopt_Policy,
+				Validator >;
+
 	public:
 		binder_t(
 			Reader_Writer && reader_writer,
@@ -1830,30 +1994,29 @@ class binder_t
 			Field_Type & field,
 			Manopt_Policy && manopt_policy,
 			Validator && validator )
-			:	m_reader_writer{ std::move(reader_writer) }
-			,	m_field_name{ field_name }
-			,	m_field{ field }
-			,	m_manopt_policy{ std::move( manopt_policy ) }
-			,	m_validator{ std::move( validator ) }
+			:	m_data_holder{
+					std::move(reader_writer),
+					field_name,
+					field,
+					std::move( manopt_policy ),
+					std::move( validator )
+				}
 		{}
 
 		//! Run read operation for value.
 		void
 		read_from( const rapidjson::Value & object ) const
 		{
-			// NOTE: since v.0.2.12 we check for cases when a value has
-			// to be deserialized into a const-object.
-			static_assert( !std::is_const<Field_Type>::value,
-					"read_from can't be applied to const objects" );
-
 			try
 			{
-				read_from_impl( object );
+				read_from_impl_t::read_from( m_data_holder, object );
 			}
 			catch( const std::exception & ex )
 			{
 				throw ex_t{
-					"error reading field \"" + std::string{ m_field_name.s } + "\": " +
+						"error reading field \"" +
+						std::string{ m_data_holder.field_name().s } +
+						"\": " +
 						ex.what() };
 			}
 		}
@@ -1866,78 +2029,23 @@ class binder_t
 		{
 			try
 			{
-				write_to_impl(
-					object,
-					allocator );
+				write_to_impl_t::write_to(
+						m_data_holder,
+						object,
+						allocator );
 			}
 			catch( const std::exception & ex )
 			{
 				throw ex_t{
-					"error writing field \"" + std::string{ m_field_name.s } + "\": " +
+						"error writing field \"" +
+						std::string{ m_data_holder.field_name().s } +
+						"\": " +
 						ex.what() };
 			}
 		}
 
 	private:
-		void
-		read_from_impl(
-			const rapidjson::Value & object ) const
-		{
-			if( !object.IsObject() )
-			{
-				throw ex_t{
-					"unable to extract field \"" + std::string{ m_field_name.s } + "\": "
-					"parent json type must be object" };
-			}
-
-			const auto it = object.FindMember( m_field_name );
-
-			if( object.MemberEnd() != it )
-			{
-				const auto & value = it->value;
-
-				if( !value.IsNull() )
-				{
-					m_reader_writer.read( m_field, value );
-				}
-				else
-				{
-					set_value_null_attr( m_field );
-				}
-			}
-			else
-			{
-				m_manopt_policy.on_field_not_defined( m_field );
-			}
-
-			m_validator( m_field ); // validate value.
-		}
-
-		void
-		write_to_impl(
-			rapidjson::Value & object,
-			rapidjson::MemoryPoolAllocator<> & allocator ) const
-		{
-			m_validator( m_field ); // validate value.
-
-			if( !m_manopt_policy.is_default_value( m_field ) )
-			{
-				rapidjson::Value value;
-
-				m_reader_writer.write( m_field, value, allocator );
-
-				object.AddMember(
-					m_field_name,
-					value,
-					allocator );
-			}
-		}
-
-		Reader_Writer m_reader_writer;
-		string_ref_t m_field_name;
-		Field_Type & m_field;
-		Manopt_Policy m_manopt_policy;
-		Validator m_validator;
+		data_holder_t m_data_holder;
 };
 
 //
