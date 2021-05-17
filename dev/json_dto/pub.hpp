@@ -1805,12 +1805,143 @@ struct apply_to_content_t
 //
 // binder_data_holder_t
 //
-//FIXME: document this!
+/*!
+ * @brief Type of holder of data required for field binder.
+ *
+ * This type was introduced in v.0.2.12 as a part of the new customization
+ * points for binder_t class. In previous versions of json-dto binder_t hold
+ * all required data as direct members of binder_t template class. Since
+ * v.0.2.12 all that data is moved into binder_data_holder_t template and
+ * binder_t now just owns an instance of binder_data_holder_t. It allows a user
+ * to make a specialization of binder_data_holder_t template for his/her own
+ * data types.
+ *
+ * For example:
+ * @code
+namespace some_project
+{
+
+// A special proxy for field that can only be serialized, but not deserialized.
+template< typename F >
+struct serialize_only_proxy_t
+{
+	using field_type = const F;
+
+	const F * m_field;
+};
+
+// Usage example:
+//
+// template< typename Json_Io >
+// void my_type::json_io(Json_Io & io) {
+// 	io & json_dto::mandatory("attr", some_project::serialize_only(attr_))
+// 		& ...
+// 		;
+// }
+template< typename F >
+serialize_only_proxy_t<F> serialize_only( const F & field ) noexcept
+{
+	return { &field };
+}
+
+} // namespace some_project
+
+// We have to specialize json_dto::binder_data_holder_t to store
+// the content of some_project::serialize_only_proxy_t instead of
+// a reference to serialize_only_proxy_t.
+namespace json_dto
+{
+
 template<
-		typename Reader_Writer,
-		typename Field_Type,
-		typename Manopt_Policy,
-		typename Validator >
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Manopt_Policy,
+	typename Validator >
+class binder_data_holder_t<
+		Reader_Writer,
+		// NOTE the usage of `const serialize_only_proxy_t`.
+		const some_project::serialize_only_proxy_t<Field_Type>,
+		Manopt_Policy,
+		Validator >
+	:	public binder_data_holder_t<
+			Reader_Writer,
+			typename some_project::serialize_only_proxy_t<Field_Type>::field_type,
+			Manopt_Policy,
+			Validator >
+{
+	using serialize_only_proxy =
+			some_project::serialize_only_proxy_t<Field_Type>;
+
+	using actual_field_type = typename serialize_only_proxy::field_type;
+
+	using base_type = binder_data_holder_t<
+			Reader_Writer,
+			actual_field_type,
+			Manopt_Policy,
+			Validator >;
+
+public:
+	binder_data_holder_t(
+		Reader_Writer && reader_writer,
+		string_ref_t field_name,
+		const serialize_only_proxy & proxy,
+		Manopt_Policy && manopt_policy,
+		Validator && validator )
+		:	base_type{
+				std::move(reader_writer),
+				field_name,
+				// Passing an actual reference to the field.
+				*(proxy.m_field),
+				std::move(manopt_policy),
+				std::move(validator)
+			}
+	{} // The `proxy` parameter is no more needed and isn't used any more.
+};
+
+} // namespace json_dto
+
+struct my_data
+{
+	const int version_{1};
+	...
+	template<typename Json_Io>
+	void json_io(Json_Io & io)
+	{
+		io
+			// Now binder_t for `version_` field will contain
+			// a specialized version of binder_data_holder_t.
+			& json_dto::mandatory("version",
+					some_project::serialize_only(version_))
+			& ...
+			;
+	}
+};
+ * @endcode
+ *
+ * @note
+ * All getters are const-methods because binder_t access them via
+ * a const reference to binder_data_holder_t instance.
+ *
+ * @tparam Reader_Writer type of reader_writer object to be used for
+ * serializing/deserializing the field.
+ *
+ * @tparam Field_Type type of the field to be (de)serialized.
+ *
+ * @tparam Manopt_Policy type of object for handling mandatory/optional
+ * policy for the field. It is expected to be mandatory_attr_t,
+ * optional_attr_t, optional_attr_null_t, or optional_nodefault_attr_t.
+ *
+ * @tparam Validator type of object for checking the validity of
+ * the field valued (check is performed before serialization and just
+ * after deserialization).
+ *
+ * @since v.0.2.12
+ */
+template<
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Manopt_Policy,
+	typename Validator >
 class binder_data_holder_t
 {
 		Reader_Writer m_reader_writer;
@@ -1852,12 +1983,25 @@ class binder_data_holder_t
 //
 // binder_read_from_implementation_t
 //
+/*!
+ * @brief Type that provides the default implementation of read_from
+ * operation for a binder.
+ *
+ * This type was introduced in v.0.2.12 as a part of the new customization
+ * points for binder_t class. In previous versions of json-dto binder_t
+ * performed read_from operation by itself. Now it delegates this operation
+ * to static method of binder_read_from_implementation_t template.
+ * It allows a user to write own specialization of
+ * binder_read_from_implementation_t template for his/her types.
+ *
+ * @since v.0.2.12
+ */
 //FIXME: document this!
 template<
-		typename Reader_Writer,
-		typename Field_Type,
-		typename Manopt_Policy,
-		typename Validator >
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Manopt_Policy,
+	typename Validator >
 struct binder_read_from_implementation_t
 {
 	using data_holder_t = binder_data_holder_t<
