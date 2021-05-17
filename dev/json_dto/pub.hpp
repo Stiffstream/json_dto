@@ -2325,6 +2325,48 @@ struct binder_write_to_implementation_t
 
 //! JSON IO binder_t for a field.
 /*!
+ * @attention
+ * Since v.0.2.12, additional care should be taken when working with instances
+ * of binder_t. An instance of binder_t can hold a reference to a temporary
+ * object. For example, in such a case:
+ * @code
+ * struct demo {
+ * 	std::vector<int> keys() const { return { 1, 2, 3 }; }
+ * 	...
+ * 	// NOTE: this code is intended for serializing only!
+ * 	template< typename Json_Io >
+ * 	void json_io(Json_Io & io) {
+ * 		// NOTE: binder object returned by mandatory() function
+ * 		// will contain a reference to a temporary std::vector<int>.
+ * 		io & json_dto::mandatory("keys", keys());
+ * 		...
+ * 	}
+ * };
+ * @endcode
+ * So it's safe to pass binder_t object directly to `operator&`, but
+ * it can be unsafe to store binder_t object to be used later. Don't do
+ * that:
+ * @code
+ * struct demo {
+ * 	std::vector<int> keys() const { return { 1, 2, 3 }; }
+ * 	...
+ * 	// NOTE: this code is intended for serializing only!
+ * 	template< typename Json_Io >
+ * 	void json_io(Json_Io & io) {
+ * 		// NOTE: binder object returned by mandatory() function
+ * 		// will contain a reference to a temporary std::vector<int>.
+ * 		// This reference become invalid just after the completion
+ * 		// of line (1).
+ * 		//
+ * 		// DON'T USE binder_t THIS WAY!
+ * 		const auto keys_binder = json_dto::mandatory("keys", keys()); // (1)
+ * 		...
+ * 		io & keys_binder; // An invalid reference will be used here!!!
+ * 		...
+ * 	}
+ * };
+ * @endcode
+ *
  * @note
  * This template was extended in v.0.2.10 by a new template parameter
  * Reader_Writer. This parameter specifies a type of object with
