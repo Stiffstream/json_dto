@@ -1994,9 +1994,135 @@ class binder_data_holder_t
  * It allows a user to write own specialization of
  * binder_read_from_implementation_t template for his/her types.
  *
+ * For example:
+ * @code
+namespace some_project
+{
+
+template< typename F >
+struct ignore_after_deserialization_proxy_t
+{
+	using field_type = const F;
+
+	const F * m_field;
+};
+
+template< typename F >
+ignore_after_deserialization_proxy_t<F>
+ignore_after_deserialization( const F & field ) noexcept
+{
+	return { &field };
+}
+
+} // namespace some_project
+
+// We have to specialize json_dto::binder_data_holder_t to store
+// the content of some_project::ignore_after_deserialization_proxy_t instead of
+// a reference to serialize_only_proxy_t.
+// We also have to specialize json_dto::binder_read_from_implementation_t
+// for right handling of some_project::ignore_after_deserialization_proxy_t.
+namespace json_dto
+{
+} // namespace json_dto
+
+template<
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Manopt_Policy,
+	typename Validator >
+class binder_data_holder_t<
+		Reader_Writer,
+		const some_project::ignore_after_deserialization_proxy_t<Field_Type>,
+		Manopt_Policy,
+		Validator >
+{
+	...
+};
+
+template<
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Manopt_Policy,
+	typename Validator >
+struct binder_read_from_implementation_t<
+		Reader_Writer,
+		const some_project::ignore_after_deserialization_proxy_t<Field_Type>,
+		Manopt_Policy,
+		Validator >
+{
+	using proxy_type = some_project::ignore_after_deserialization_proxy_t<Field_Type>;
+
+	using data_holder_t = binder_data_holder_t<
+			Reader_Writer,
+			const proxy_type,
+			Manopt_Policy,
+			Validator >;
+
+	static void
+	read_from(
+		const data_holder_t & binder_data,
+		const rapidjson::Value & object )
+	{
+		if( !object.IsObject() )
+		{
+			throw ex_t{
+				"unable to extract field \"" +
+				std::string{ binder_data.field_name().s } + "\": "
+				"parent json type must be object" };
+		}
+
+		// Temporary object for holding deserialized value.
+		Field_Type tmp_object{};
+
+		const auto it = object.FindMember( binder_data.field_name() );
+
+		if( object.MemberEnd() != it )
+		{
+			const auto & value = it->value;
+
+			if( !value.IsNull() )
+			{
+				binder_data.reader_writer().read( tmp_object, value );
+			}
+			else
+			{
+				set_value_null_attr( tmp_object );
+			}
+		}
+		else
+		{
+			binder_data.manopt_policy().on_field_not_defined( tmp_object );
+		}
+
+		binder_data.validator()( tmp_object ); // validate value.
+
+		// NOTE: the value from tmp_object will be lost.
+	}
+};
+
+// Now we can use some_project::ignore_after_deserialization() in json_io().
+struct my_data
+{
+	const int version_{1};
+	...
+	template<typename Json_Io>
+	void json_io(Json_Io & io)
+	{
+		io
+			// Now binder_t for `version_` field will contain
+			// a specialized version of binder_data_holder_t.
+			& json_dto::mandatory("version",
+					some_project::ignore_after_deserialization(version_),
+					// NOTE: validators will be applied to deserialized value.
+					json_dto::min_max_constraint(1,3))
+			& ...
+			;
+	}
+};
+ * @endcode
+ *
  * @since v.0.2.12
  */
-//FIXME: document this!
 template<
 	typename Reader_Writer,
 	typename Field_Type,
