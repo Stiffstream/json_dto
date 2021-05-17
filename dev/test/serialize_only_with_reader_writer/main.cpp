@@ -76,15 +76,18 @@ public:
 };
 
 template<
-		typename Reader_Writer,
-		typename Field_Type,
-		typename Manopt_Policy,
-		typename Validator >
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Manopt_Policy,
+	typename Validator >
 struct binder_read_from_implementation_t<
-		Reader_Writer,
-		const test_stuff::serialize_only_proxy_t<Field_Type>,
-		Manopt_Policy,
-		Validator >
+			binder_data_holder_t<
+				Reader_Writer,
+				const test_stuff::serialize_only_proxy_t<Field_Type>,
+				Manopt_Policy,
+				Validator
+			>
+		>
 {
 	using data_holder_t = binder_data_holder_t<
 			Reader_Writer,

@@ -1918,6 +1918,10 @@ struct my_data
 };
  * @endcode
  *
+ * @attention
+ * A specialization of binder_data_holder_t should define type name
+ * `field_t` (see example in the code of binder_data_holder_t template).
+ *
  * @note
  * All getters are const-methods because binder_t access them via
  * a const reference to binder_data_holder_t instance.
@@ -1951,6 +1955,8 @@ class binder_data_holder_t
 		Validator m_validator;
 
 	public:
+		using field_t = Field_Type;
+
 		binder_data_holder_t(
 			Reader_Writer && reader_writer,
 			string_ref_t field_name,
@@ -2018,13 +2024,11 @@ ignore_after_deserialization( const F & field ) noexcept
 
 // We have to specialize json_dto::binder_data_holder_t to store
 // the content of some_project::ignore_after_deserialization_proxy_t instead of
-// a reference to serialize_only_proxy_t.
+// a reference to ignore_after_deserialization_proxy_t.
 // We also have to specialize json_dto::binder_read_from_implementation_t
 // for right handling of some_project::ignore_after_deserialization_proxy_t.
 namespace json_dto
 {
-} // namespace json_dto
-
 template<
 	typename Reader_Writer,
 	typename Field_Type,
@@ -2045,10 +2049,13 @@ template<
 	typename Manopt_Policy,
 	typename Validator >
 struct binder_read_from_implementation_t<
-		Reader_Writer,
-		const some_project::ignore_after_deserialization_proxy_t<Field_Type>,
-		Manopt_Policy,
-		Validator >
+		binder_data_holder_t<
+			Reader_Writer,
+			const some_project::ignore_after_deserialization_proxy_t<Field_Type>,
+			Manopt_Policy,
+			Validator
+		>
+	>
 {
 	using proxy_type = some_project::ignore_after_deserialization_proxy_t<Field_Type>;
 
@@ -2100,6 +2107,8 @@ struct binder_read_from_implementation_t<
 	}
 };
 
+} // namespace json_dto
+
 // Now we can use some_project::ignore_after_deserialization() in json_io().
 struct my_data
 {
@@ -2123,25 +2132,17 @@ struct my_data
  *
  * @since v.0.2.12
  */
-template<
-	typename Reader_Writer,
-	typename Field_Type,
-	typename Manopt_Policy,
-	typename Validator >
+template< typename Binder_Data_Holder >
 struct binder_read_from_implementation_t
 {
-	using data_holder_t = binder_data_holder_t<
-			Reader_Writer,
-			Field_Type,
-			Manopt_Policy,
-			Validator >;
-
 	static void
 	read_from(
-		const data_holder_t & binder_data,
+		const Binder_Data_Holder & binder_data,
 		const rapidjson::Value & object )
 	{
-		//FIXME: static_assert for checking that Field_Type isn't const?
+		static_assert(
+				!std::is_const<typename Binder_Data_Holder::field_t>::value,
+				"const object can't be deserialized" );
 
 		if( !object.IsObject() )
 		{
@@ -2179,23 +2180,123 @@ struct binder_read_from_implementation_t
 //
 // binder_write_to_implementation_t
 //
-//FIXME: document this!
+/*!
+ * @brief Type that provides the default implementation of write_to
+ * operation for a binder.
+ *
+ * This type was introduced in v.0.2.12 as a part of the new customization
+ * points for binder_t class. In previous versions of json-dto binder_t
+ * performed write_to operation by itself. Now it delegates this operation
+ * to static method of binder_write_to_implementation_t template.
+ * It allows a user to write own specialization of
+ * binder_write_to_implementation_t template for his/her types.
+ *
+ * For example:
+ * @code
+namespace some_project
+{
+
+template< typename F >
+struct deserialize_only_proxy_t
+{
+	using field_type = F;
+
+	F * m_field;
+};
+
+template< typename F >
+deserialize_only_proxy_t<F> deserialize_only( F & field ) noexcept
+{
+	static_assert( !std::is_const<F>::value,
+			"deserialize_only can't be used with const objects" );
+
+	return { &field };
+}
+
+} // namespace some_project
+
+// We have to specialize json_dto::binder_data_holder_t to store
+// the content of some_project::deserialize_only_proxy_t instead of
+// a reference to deserialize_only_proxy_t.
+// We also have to specialize json_dto::binder_write_to_implementation_t
+// for right handling of some_project::deserialize_only_proxy_t.
+namespace json_dto
+{
+
 template<
-		typename Reader_Writer,
-		typename Field_Type,
-		typename Manopt_Policy,
-		typename Validator >
-struct binder_write_to_implementation_t
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Manopt_Policy,
+	typename Validator >
+class binder_data_holder_t<
+		Reader_Writer,
+		const some_project::deserialize_only_proxy_t<Field_Type>,
+		Manopt_Policy,
+		Validator >
+{
+	...
+};
+
+template<
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Manopt_Policy,
+	typename Validator >
+struct binder_write_to_implementation_t<
+		binder_data_holder_t<
+			Reader_Writer,
+			const some_project::deserialize_only_proxy_t<Field_Type>,
+			Manopt_Policy,
+			Validator
+		>
+	>
 {
 	using data_holder_t = binder_data_holder_t<
 			Reader_Writer,
-			Field_Type,
+			const some_project::deserialize_only_proxy_t<Field_Type>,
 			Manopt_Policy,
 			Validator >;
 
 	static void
 	write_to(
-		const data_holder_t & binder_data,
+		const data_holder_t &,
+		rapidjson::Value &,
+		rapidjson::MemoryPoolAllocator<> & )
+	{
+		// Nothing to do.
+	}
+
+};
+
+// Now we can use some_project::deserialize_only() in json_io().
+struct my_data
+{
+	int obsolete_priority_{1};
+	...
+	template<typename Json_Io>
+	void json_io(Json_Io & io)
+	{
+		io
+			// Now binder_t for `priority` field will contain
+			// a specialized version of binder_data_holder_t.
+			& json_dto::mandatory("priority",
+					some_project::deserialize_only(obsolete_priority_),
+					// NOTE: validators will be applied to deserialized value.
+					json_dto::min_max_constraint(1,9))
+			& ...
+			;
+	}
+};
+ * @endcode
+ *
+ * @since v.0.2.12
+ */
+template< typename Binder_Data_Holder >
+struct binder_write_to_implementation_t
+{
+	static void
+	write_to(
+		const Binder_Data_Holder & binder_data,
 		rapidjson::Value & object,
 		rapidjson::MemoryPoolAllocator<> & allocator )
 	{
@@ -2246,16 +2347,10 @@ class binder_t
 				Validator >;
 
 		using read_from_impl_t = binder_read_from_implementation_t<
-				Reader_Writer,
-				Field_Type,
-				Manopt_Policy,
-				Validator >;
+				data_holder_t >;
 
 		using write_to_impl_t = binder_write_to_implementation_t<
-				Reader_Writer,
-				Field_Type,
-				Manopt_Policy,
-				Validator >;
+				data_holder_t >;
 
 	public:
 		binder_t(

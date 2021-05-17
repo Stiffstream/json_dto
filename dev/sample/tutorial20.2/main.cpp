@@ -35,10 +35,10 @@ namespace json_dto
 {
 
 template<
-		typename Reader_Writer,
-		typename Field_Type,
-		typename Manopt_Policy,
-		typename Validator >
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Manopt_Policy,
+	typename Validator >
 class binder_data_holder_t<
 		Reader_Writer,
 		const tutorial_20_2::deserialize_only_proxy_t<Field_Type>,
@@ -79,15 +79,18 @@ public:
 };
 
 template<
-		typename Reader_Writer,
-		typename Field_Type,
-		typename Manopt_Policy,
-		typename Validator >
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Manopt_Policy,
+	typename Validator >
 struct binder_write_to_implementation_t<
-		Reader_Writer,
-		const tutorial_20_2::deserialize_only_proxy_t<Field_Type>,
-		Manopt_Policy,
-		Validator >
+		binder_data_holder_t<
+			Reader_Writer,
+			const tutorial_20_2::deserialize_only_proxy_t<Field_Type>,
+			Manopt_Policy,
+			Validator
+		>
+	>
 {
 	using data_holder_t = binder_data_holder_t<
 			Reader_Writer,

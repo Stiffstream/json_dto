@@ -83,10 +83,13 @@ template<
 	typename Manopt_Policy,
 	typename Validator >
 struct binder_read_from_implementation_t<
-		Reader_Writer,
-		const tutorial_20_3::ignore_after_deserialization_proxy_t<Field_Type>,
-		Manopt_Policy,
-		Validator >
+		binder_data_holder_t<
+			Reader_Writer,
+			const tutorial_20_3::ignore_after_deserialization_proxy_t<Field_Type>,
+			Manopt_Policy,
+			Validator
+		>
+	>
 {
 	using proxy_type = tutorial_20_3::ignore_after_deserialization_proxy_t<Field_Type>;
 
