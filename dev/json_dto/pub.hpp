@@ -1926,6 +1926,14 @@ struct my_data
  * All getters are const-methods because binder_t access them via
  * a const reference to binder_data_holder_t instance.
  *
+ * @note
+ * Methods field_for_serialization() and field_for_deserialization()
+ * return just `Field_Type &` because the current versions of
+ * Manopt_Policy implementations (like mandatory_attr_t, optional_attr_t,
+ * and so on) accept `Field_Type &`. Some future versions of json-dto
+ * can get different return types for field_for_serialization() and
+ * field_for_deserialization().
+ *
  * @tparam Reader_Writer type of reader_writer object to be used for
  * serializing/deserializing the field.
  *
@@ -1977,7 +1985,10 @@ class binder_data_holder_t
 		field_name() const noexcept { return m_field_name; }
 
 		Field_Type &
-		field() const noexcept { return m_field; }
+		field_for_serialization() const noexcept { return m_field; }
+
+		Field_Type &
+		field_for_deserialization() const noexcept { return m_field; }
 
 		const Manopt_Policy &
 		manopt_policy() const noexcept { return m_manopt_policy; }
@@ -2160,20 +2171,23 @@ struct binder_read_from_implementation_t
 
 			if( !value.IsNull() )
 			{
-				binder_data.reader_writer().read( binder_data.field(), value );
+				binder_data.reader_writer().read(
+						binder_data.field_for_deserialization(), value );
 			}
 			else
 			{
-				set_value_null_attr( binder_data.field() );
+				set_value_null_attr(
+						binder_data.field_for_deserialization() );
 			}
 		}
 		else
 		{
 			binder_data.manopt_policy().on_field_not_defined(
-					binder_data.field() );
+					binder_data.field_for_deserialization() );
 		}
 
-		binder_data.validator()( binder_data.field() ); // validate value.
+		binder_data.validator()(
+				binder_data.field_for_deserialization() ); // validate value.
 	}
 };
 
@@ -2300,14 +2314,16 @@ struct binder_write_to_implementation_t
 		rapidjson::Value & object,
 		rapidjson::MemoryPoolAllocator<> & allocator )
 	{
-		binder_data.validator()( binder_data.field() ); // validate value.
+		binder_data.validator()(
+				binder_data.field_for_serialization() ); // validate value.
 
-		if( !binder_data.manopt_policy().is_default_value( binder_data.field() ) )
+		if( !binder_data.manopt_policy().is_default_value(
+				binder_data.field_for_serialization() ) )
 		{
 			rapidjson::Value value;
 
 			binder_data.reader_writer().write(
-					binder_data.field(),
+					binder_data.field_for_serialization(),
 					value,
 					allocator );
 
