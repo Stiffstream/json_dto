@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.12](#v0212)
       * [v.0.2.11](#v0211)
       * [v.0.2.10](#v0210)
       * [v.0.2.9](#v029)
@@ -63,6 +64,91 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.2.12
+
+Functions `mandatory`, `optional`, `optional_no_default`, and `optional_null` now accepts const- and rvalue references. That can be useful for types that have to be only serializable. For example:
+
+```cpp
+struct demo {
+	const int priority_;
+
+	std::vector<int> version() const { return { 1, 2, 3 }; }
+
+	const std::string payload_;
+
+	demo(int priority, std::string payload)
+		:	priority_{priority}, payload_{std::move(payload)}
+	{}
+
+	template<typename Json_Io>
+	void json_io(Json_Io & io) {
+		io & json_dto::mandatory("priority", priority_)
+			& json_dto::mandatory("version", version())
+			& json_dto::mandatory("payload", payload_)
+			;
+	}
+};
+```
+
+Please note that this code will lead to a compilation error in an attempt to deserialize an instance of `demo` type.
+
+The class template `json_dto::binder_t` was refactored and now it uses several new customization points in the implementation: `binder_data_holder_t`, `binder_read_from_implementation_t` and `binder_write_to_implementation_t`. Those customization points allow to add a new functionality without modifying the json-dto source code.
+
+For example, a user now can do something like:
+
+```cpp
+namespace tricky_stuff {
+
+template<typename F> struct serialize_only_proxy {...};
+
+template<typename F> serialize_only_proxy<F> serialize_only(const F & f) {...}
+
+template<typename F> struct deserialize_only_proxy {...};
+
+template<typename F> deserialize_only_proxy<F> deserialize_only(F & f) {...}
+
+} // namespace tricky_stuff
+
+namespace json_dto {
+
+... // Several partial specializations of binder_data_holder_t,
+    // binder_read_from_implementation_t and binder_write_to_implementation_t
+	 // for tricky_stuff::serialize_only_proxy and tricky_stuff::deserialize_only_proxy.
+
+} // namespace json_dto
+
+
+struct demo {
+	const int priority_;
+
+	std::vector<int> version() const { return { 1, 2, 3 }; }
+
+	const std::string payload_;
+
+	std::vector<std::string> obsolete_properties_;
+
+	demo(int priority, std::string payload)
+		:	priority_{priority}, payload_{std::move(payload)}
+	{}
+
+	template<typename Json_Io>
+	void json_io(Json_Io & io) {
+		io & json_dto::mandatory("priority",
+					tricky_stuff::serialize_only(priority_))
+			& json_dto::mandatory("version",
+					tricky_stuff::serialize_only(version()))
+			& json_dto::mandatory("payload", payload_)
+			& json_dto::optional_no_default("properties",
+					tricky_stuff::deserialize_only(obsolete_properties_)
+			;
+	}
+};
+```
+
+Several examples of how stuff like that can be implemented are shown in json_dto's `samples` folder: [serialize_only implementation](./dev/sample/tutorial20.1/main.cpp), [deserialize_only implementation](./dev/sample/tutorial20.2/main.cpp), [ignore_after_deserialization implementation](./dev/sample/tutorial20.3/main.cpp).
+
+Such functions like `serialize_only` and `deserialize_only` can be useful in data-transformation code. For example, when we have to read some old data in JSON format, modify the data read and write it in a slightly different JSON.
 
 ## v.0.2.11
 
