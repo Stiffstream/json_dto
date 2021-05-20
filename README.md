@@ -114,7 +114,7 @@ namespace json_dto {
 
 ... // Several partial specializations of binder_data_holder_t,
     // binder_read_from_implementation_t and binder_write_to_implementation_t
-	 // for tricky_stuff::serialize_only_proxy and tricky_stuff::deserialize_only_proxy.
+    // for tricky_stuff::serialize_only_proxy and tricky_stuff::deserialize_only_proxy.
 
 } // namespace json_dto
 
