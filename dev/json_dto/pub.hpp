@@ -12,6 +12,7 @@
 #include <rapidjson/error/error.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/writer.h>
+#include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/istreamwrapper.h>
@@ -2779,6 +2780,38 @@ to_json( const Dto & dto )
 
 	rapidjson::StringBuffer buffer;
 	rapidjson::Writer< rapidjson::StringBuffer > writer( buffer );
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_json: output_doc.Accept(writer) returns false" };
+
+	return { buffer.GetString(), buffer.GetSize() };
+}
+
+struct JsonFormat
+{
+	char indentChar = ' ';
+	uint8_t indentCharCount = 4;
+	enum class FormatOptions
+	{
+		Default = rapidjson::kFormatDefault,
+		SingleLineArray = rapidjson::kFormatSingleLineArray
+	} options = FormatOptions::Default;
+};
+
+template< typename Dto >
+std::string
+to_json( const Dto & dto, const JsonFormat& format )
+{
+	rapidjson::Document output_doc;
+	json_output_t jout{
+		output_doc, output_doc.GetAllocator() };
+
+	jout << dto;
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::PrettyWriter< rapidjson::StringBuffer > writer( buffer );
+	writer.SetFormatOptions( (rapidjson::PrettyFormatOptions) format.options );
+	writer.SetIndent( format.indentChar, format.indentCharCount );
 	const bool result = output_doc.Accept( writer );
 	if( !result )
 		throw ex_t{ "to_json: output_doc.Accept(writer) returns false" };
