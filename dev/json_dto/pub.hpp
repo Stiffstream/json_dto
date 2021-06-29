@@ -12,6 +12,7 @@
 #include <rapidjson/error/error.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/writer.h>
+#include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/istreamwrapper.h>
@@ -2779,6 +2780,87 @@ to_json( const Dto & dto )
 
 	rapidjson::StringBuffer buffer;
 	rapidjson::Writer< rapidjson::StringBuffer > writer( buffer );
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_json: output_doc.Accept(writer) returns false" };
+
+	return { buffer.GetString(), buffer.GetSize() };
+}
+
+//
+// to_json with PrettyWriter
+//
+
+struct pretty_writer_params_t
+{
+	char m_indent_char{ ' ' };
+	unsigned m_indent_char_count{ 4u };
+	rapidjson::PrettyFormatOptions m_format_options{ rapidjson::kFormatDefault };
+
+	//
+	// Setters
+	//
+	pretty_writer_params_t &
+	indent_char( char ch ) &
+	{
+		m_indent_char = ch;
+		return *this;
+	}
+
+	pretty_writer_params_t &&
+	indent_char( char ch ) &&
+	{
+		return std::move(this->indent_char(ch));
+	}
+	
+	pretty_writer_params_t &
+	indent_char_count( unsigned count ) &
+	{
+		if( !count ) count = 1u;
+
+		m_indent_char_count = count;
+		return *this;
+	}
+
+	pretty_writer_params_t &&
+	indent_char_count( unsigned count ) &&
+	{
+		return std::move(this->indent_char_count(count));
+	}
+
+	pretty_writer_params_t &
+	format_options( rapidjson::PrettyFormatOptions opt ) &
+	{
+		m_format_options = opt;
+		return *this;
+	}
+
+	pretty_writer_params_t &&
+	format_options( rapidjson::PrettyFormatOptions opt ) &&
+	{
+		return std::move(this->format_options(opt));
+	}
+};
+
+template< typename Dto >
+std::string
+to_json( const Dto & dto, pretty_writer_params_t writer_params )
+{
+	rapidjson::Document output_doc;
+	json_output_t jout{
+		output_doc, output_doc.GetAllocator() };
+
+	jout << dto;
+
+	rapidjson::StringBuffer buffer;
+
+	rapidjson::PrettyWriter< rapidjson::StringBuffer > writer( buffer );
+	writer.SetIndent(
+			writer_params.m_indent_char, 
+			writer_params.m_indent_char_count );
+	writer.SetFormatOptions(
+			writer_params.m_format_options );
+
 	const bool result = output_doc.Accept( writer );
 	if( !result )
 		throw ex_t{ "to_json: output_doc.Accept(writer) returns false" };

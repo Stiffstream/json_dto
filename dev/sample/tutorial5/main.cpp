@@ -125,8 +125,20 @@ main( int , char *[] )
 			obj.m_string.emplace_back( "9" );
 
 			std::cout
-				<< "\nSerialized to JSON:\n"
-				<< json_dto::to_json( obj ) << std::endl;
+				<< "\nSerialized to JSON (default):\n"
+				<< json_dto::to_json( obj )
+				<< "\n\nSerialized to JSON (pretty-writer #1):\n"
+				<< json_dto::to_json( obj,
+						json_dto::pretty_writer_params_t{}
+								.indent_char_count( 2u ) )
+				<< "\n\nSerialized to JSON (pretty-writer #2):\n"
+				<< json_dto::to_json( obj,
+						json_dto::pretty_writer_params_t{}
+								.indent_char( '\t' )
+								.indent_char_count( 1u )
+								.format_options( rapidjson::kFormatSingleLineArray ) )
+				<< std::endl;
+
 		}
 	}
 	catch( const std::exception & ex )
