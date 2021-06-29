@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.2.13](#v0213)
       * [v.0.2.12](#v0212)
       * [v.0.2.11](#v0211)
       * [v.0.2.10](#v0210)
@@ -64,6 +65,24 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.2.13
+
+A new overload `to_json` added that receives an instance of `pretty_writer_params_t` with parameters for RapidJSON's PrettyWriter:
+
+```cpp
+my_data my_obj;
+...
+// Make default serialization, without pretty-writer:
+std::string my_obj_image = json_dto::to_json(my_obj);
+
+// Make serialization with pretty-writer:
+std::string my_obj_pretty_image = json_dto::to_json(my_obj,
+		json_dto::pretty_writer_params_t{}
+				.indent_char(' ')
+				.indent_char_count(3u)
+				.format_options(rapidjson::kFormatSingleLineArray));
+```
 
 ## v.0.2.12
 
