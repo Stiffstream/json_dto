@@ -2856,7 +2856,7 @@ to_json( const Dto & dto, pretty_writer_params_t writer_params )
 
 	rapidjson::PrettyWriter< rapidjson::StringBuffer > writer( buffer );
 	writer.SetIndent(
-			writer_params.m_indent_char, 
+			writer_params.m_indent_char,
 			writer_params.m_indent_char_count );
 	writer.SetFormatOptions(
 			writer_params.m_format_options );
@@ -2991,6 +2991,13 @@ from_json( const char * json, Type & o )
 	from_json< Type, Rapidjson_Parseflags >( make_string_ref(json), o );
 }
 
+/*!
+ * @brief Serialize an object into specified stream.
+ *
+ * @note
+ * Default formatting will be used. If one needs pretty-formatted
+ * output then another overload has to be used.
+ */
 template< typename Type >
 void
 to_stream( std::ostream & to, const Type & type )
@@ -3003,7 +3010,44 @@ to_stream( std::ostream & to, const Type & type )
 
 	rapidjson::OStreamWrapper wrapper{ to };
 	rapidjson::Writer< rapidjson::OStreamWrapper > writer{ wrapper };
-	output_doc.Accept( writer );
+
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_stream: output_doc.Accept(writer) returns false" };
+}
+
+/*!
+ * @brief Serialize an object into specified stream with using pretty-writer.
+ *
+ * @since v.0.2.14
+ */
+template< typename Type >
+void
+to_stream(
+	//! The target stream.
+	std::ostream & to,
+	//! Object to be serialized.
+	const Type & type,
+	//! Parameters for pretty-writer.
+	pretty_writer_params_t writer_params )
+{
+	rapidjson::Document output_doc;
+	json_dto::json_output_t jout{
+		output_doc, output_doc.GetAllocator() };
+
+	jout << type;
+
+	rapidjson::OStreamWrapper wrapper{ to };
+	rapidjson::PrettyWriter< rapidjson::OStreamWrapper > writer{ wrapper };
+	writer.SetIndent(
+			writer_params.m_indent_char,
+			writer_params.m_indent_char_count );
+	writer.SetFormatOptions(
+			writer_params.m_format_options );
+
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_stream: output_doc.Accept(writer) returns false" };
 }
 
 template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >

@@ -235,4 +235,41 @@ TEST_CASE( "ostringstream" , "[write]" )
 
 		REQUIRE( sout.str() == result_json_data );
 	}
+
+	SECTION( "write with pretty-print" )
+	{
+		std::ostringstream sout;
+
+		to_stream(
+			sout,
+			supported_types_t{
+				true,
+				-10,
+				20,
+				-40,
+				80,
+				-160,
+				320,
+				3.14,
+				"TEST STRING" },
+			pretty_writer_params_t{}
+				.indent_char( '\t' )
+				.indent_char_count( 1u ) );
+
+		const std::string expected{
+			"{\n"
+			"\t\"bool\": true,\n"
+			"\t\"int16\": -10,\n"
+			"\t\"uint16\": 20,\n"
+			"\t\"int32\": -40,\n"
+			"\t\"uint32\": 80,\n"
+			"\t\"int64\": -160,\n"
+			"\t\"uint64\": 320,\n"
+			"\t\"double\": 3.14,\n"
+			"\t\"string\": \"TEST STRING\"\n"
+			"}"
+		};
+
+		REQUIRE( sout.str() == expected );
+	}
 }
