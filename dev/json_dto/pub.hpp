@@ -1058,6 +1058,62 @@ struct nullable_t
 };
 
 //
+// maybe_null_field_wrapper_t
+//
+
+/**
+ * A wrapper type that tell json_dto that it is ok for a given field to
+ * have a `null` value in JSON representation when reading from JSON.
+ * Null values should be treated as default constructed.
+ */
+template< typename Field_Type >
+struct maybe_null_field_wrapper_t
+{
+	explicit maybe_null_field_wrapper_t( Field_Type & value )
+		:	m_value{ &value }
+	{
+	}
+
+	Field_Type &
+	value() noexcept { return *m_value; };
+
+	bool
+	operator == ( const Field_Type & f ) const
+	{
+		return value() == f;
+	}
+
+	void
+	operator = ( const Field_Type & f )
+	{
+		value() = f;
+	}
+
+	void
+	operator = ( Field_Type && f )
+	{
+		value() = std::move( f );
+	}
+
+	private:
+		Field_Type * m_value{};
+};
+
+//
+// maybe_null()
+//
+
+/**
+ * @brief Creates a maybe null field wrapper.
+ */
+template< typename Field_Type >
+maybe_null_field_wrapper_t< Field_Type >
+maybe_null( Field_Type & field )
+{
+	return maybe_null_field_wrapper_t< Field_Type >{ field };
+}
+
+//
 // json_io
 //
 
@@ -1466,6 +1522,12 @@ set_value_null_attr( nullable_t< Field_Type > & f )
 	f.reset();
 }
 
+template< typename Field_Type >
+void
+set_value_null_attr( maybe_null_field_wrapper_t< Field_Type > & )
+{
+}
+
 template< typename Field_Type, typename Field_Default_Value_Type >
 void
 set_default_value( Field_Type & f, Field_Default_Value_Type && default_value )
@@ -1483,11 +1545,59 @@ set_default_value(
 }
 
 //
+// default_value_is_null_handler_t
+//
+
+/**
+ * The handler regarding how to treat `null` value when reading
+ * fields from JSON.
+ */
+struct default_value_is_null_handler_t
+{
+	template< typename Field_Type, typename... Args >
+	void
+	on_field_is_null( Field_Type & f, Args &&...  ) const
+	{
+		set_value_null_attr( f );
+	}
+};
+
+//
+// maybe_null_value_handler_t
+//
+
+/**
+ * The handler regarding how to treat `null` value when reading
+ * fields from JSON when null value should be treqated as
+ * default (the default one if it is provided by the policy
+ * or default constructed otherwise).
+ */
+struct maybe_null_value_handler_t
+{
+	template< typename Field_Type, typename... Args >
+	void
+	on_field_is_null( Field_Type & f ) const
+	{
+		f = Field_Type{};
+	}
+
+	template< typename Field_Type, typename Field_Default_Value_Type >
+	void
+	on_field_is_null(
+		Field_Type & f,
+		Field_Default_Value_Type & default_value ) const
+	{
+		f = std::move( default_value );
+	}
+};
+
+//
 // mandtatory_attr_t
 //
 
 //! Field set/notset attribute ckecker for mandatory case.
-struct mandatory_attr_t
+template< typename Null_Value_Handler = default_value_is_null_handler_t >
+struct mandatory_attr_t : public Null_Value_Handler
 {
 	template< typename Field_Type >
 	void
@@ -1509,8 +1619,10 @@ struct mandatory_attr_t
 //
 
 //! Field set/notset attribute ckecker for optional case with default value.
-template< typename Field_Default_Value_Type >
-struct optional_attr_t
+template<
+		typename Field_Default_Value_Type,
+		typename Null_Value_Handler = default_value_is_null_handler_t >
+struct optional_attr_t : public Null_Value_Handler
 {
 	optional_attr_t( Field_Default_Value_Type default_value )
 		:	m_default_value{ std::move( default_value ) }
@@ -1537,6 +1649,13 @@ struct optional_attr_t
 		return f == m_default_value;
 	}
 
+	template< typename Field_Type, typename... Args >
+	void
+	on_field_is_null( Field_Type & f ) const
+	{
+		Null_Value_Handler::on_field_is_null( f, m_default_value );
+	}
+
 	Field_Default_Value_Type m_default_value;
 };
 
@@ -1545,7 +1664,8 @@ struct optional_attr_t
 //
 
 //! Field set/notset attribute ckecker for optional case with default value.
-struct optional_attr_null_t
+template< typename Null_Value_Handler = default_value_is_null_handler_t >
+struct optional_attr_null_t : public Null_Value_Handler
 {
 	template< typename Field_Type >
 	void
@@ -1567,7 +1687,8 @@ struct optional_attr_null_t
 //
 
 //! Field set/notset attribute ckecker for optional case without default value.
-struct optional_nodefault_attr_t
+template< typename Null_Value_Handler = default_value_is_null_handler_t >
+struct optional_nodefault_attr_t : public Null_Value_Handler
 {
 	template< typename Field_Type >
 	constexpr void
@@ -2177,8 +2298,8 @@ struct binder_read_from_implementation_t
 			}
 			else
 			{
-				set_value_null_attr(
-						binder_data.field_for_deserialization() );
+				binder_data.manopt_policy().on_field_is_null(
+					binder_data.field_for_deserialization() );
 			}
 		}
 		else
@@ -2486,19 +2607,20 @@ mandatory(
 	Field_Type && field,
 	Validator validator = Validator{} )
 {
+	using opt_attr_t = mandatory_attr_t<>;
 	using binder_type_t = binder_t<
 			default_reader_writer_t,
 			// NOTE: since v.0.2.12 this way of detection of Field_Type
 			// for binder_t must be used.
 			details::meta::field_type_from_reference_t< decltype(field) >,
-			mandatory_attr_t,
+			opt_attr_t,
 			Validator >;
 
 	return binder_type_t{
 			default_reader_writer_t{},
 			field_name,
 			field,
-			mandatory_attr_t{},
+			opt_attr_t{},
 			std::move( validator ) };
 }
 
@@ -2514,20 +2636,67 @@ mandatory(
 	Field_Type && field,
 	Validator validator = Validator{} )
 {
+	using opt_attr_t = mandatory_attr_t<>;
 	using binder_type_t = binder_t<
 			Reader_Writer,
 			// NOTE: since v.0.2.12 this way of detection of Field_Type
 			// for binder_t must be used.
 			details::meta::field_type_from_reference_t< decltype(field) >,
-			mandatory_attr_t,
+			opt_attr_t,
 			Validator >;
 
 	return binder_type_t{
 			std::move(reader_writer),
 			field_name,
 			field,
-			mandatory_attr_t{},
+			opt_attr_t{},
 			std::move( validator ) };
+}
+
+//! Create bind for a mandatory JSON field that can be null as input with validator.
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Validator = empty_validator_t >
+auto
+mandatory(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	maybe_null_field_wrapper_t< Field_Type > field,
+	Validator validator = Validator{} )
+{
+	using opt_attr_t = mandatory_attr_t< maybe_null_value_handler_t >;
+	using binder_type_t = binder_t<
+			Reader_Writer,
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype( field.value() ) >,
+			opt_attr_t,
+			Validator >;
+
+	return binder_type_t{
+			std::move( reader_writer ),
+			field_name,
+			field.value(),
+			opt_attr_t{},
+			std::move( validator ) };
+}
+
+//! Create bind for a mandatory JSON field that can be null as input with validator.
+template<
+		typename Field_Type,
+		typename Validator = empty_validator_t >
+auto
+mandatory(
+	string_ref_t field_name,
+	maybe_null_field_wrapper_t< Field_Type > field,
+	Validator validator = Validator{} )
+{
+	return mandatory(
+			default_reader_writer_t{},
+			field_name,
+			field,
+			std::move( validator ) );
 }
 
 //
@@ -2594,6 +2763,54 @@ optional(
 			std::move( validator ) };
 }
 
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Field_Default_Value_Type,
+		typename Validator = empty_validator_t >
+auto
+optional(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	maybe_null_field_wrapper_t< Field_Type > field,
+	Field_Default_Value_Type default_value,
+	Validator validator = Validator{} )
+{
+	using opt_attr_t =
+		optional_attr_t< Field_Default_Value_Type,  maybe_null_value_handler_t >;
+	using binder_type_t = binder_t<
+			default_reader_writer_t,
+			details::meta::field_type_from_reference_t< decltype( field.value() ) >,
+			opt_attr_t,
+			Validator >;
+
+	return binder_type_t{
+			std::move( reader_writer ),
+			field_name,
+			field.value(),
+			opt_attr_t{ std::move( default_value ) },
+			std::move( validator ) };
+}
+
+template<
+		typename Field_Type,
+		typename Field_Default_Value_Type,
+		typename Validator = empty_validator_t >
+auto
+optional(
+	string_ref_t field_name,
+	maybe_null_field_wrapper_t< Field_Type > field,
+	Field_Default_Value_Type default_value,
+	Validator validator = Validator{} )
+{
+	return optional(
+			default_reader_writer_t{},
+			field_name,
+			field,
+			std::move( default_value ),
+			std::move( validator ) );
+}
+
 //
 // optional_null
 //
@@ -2608,19 +2825,20 @@ optional_null(
 	Field_Type && field,
 	Validator validator = Validator{} )
 {
+	using opt_attr_t = optional_attr_null_t<>;
 	using binder_type_t = binder_t<
 			default_reader_writer_t,
 			// NOTE: since v.0.2.12 this way of detection of Field_Type
 			// for binder_t must be used.
 			details::meta::field_type_from_reference_t< decltype(field) >,
-			optional_attr_null_t,
+			opt_attr_t,
 			Validator >;
 
 	return binder_type_t{
 			default_reader_writer_t{},
 			field_name,
 			field,
-			optional_attr_null_t{},
+			opt_attr_t{},
 			std::move( validator ) };
 }
 
@@ -2636,19 +2854,20 @@ optional_null(
 	Field_Type && field,
 	Validator validator = Validator{} )
 {
+	using opt_attr_t = optional_attr_null_t<>;
 	using binder_type_t = binder_t<
 			Reader_Writer,
 			// NOTE: since v.0.2.12 this way of detection of Field_Type
 			// for binder_t must be used.
 			details::meta::field_type_from_reference_t< decltype(field) >,
-			optional_attr_null_t,
+			opt_attr_t,
 			Validator >;
 
 	return binder_type_t{
 			std::move(reader_writer),
 			field_name,
 			field,
-			optional_attr_null_t{},
+			opt_attr_t{},
 			std::move( validator ) };
 }
 
@@ -2704,19 +2923,20 @@ optional_no_default(
 	Field_Type && field,
 	Validator validator = Validator{} )
 {
+	using opt_attr_t = optional_nodefault_attr_t<>;
 	using binder_type_t = binder_t<
 			default_reader_writer_t,
 			// NOTE: since v.0.2.12 this way of detection of Field_Type
 			// for binder_t must be used.
 			details::meta::field_type_from_reference_t< decltype(field) >,
-			optional_nodefault_attr_t,
+			opt_attr_t,
 			Validator >;
 
 	return binder_type_t{
 			default_reader_writer_t{},
 			field_name,
 			field,
-			optional_nodefault_attr_t{},
+			opt_attr_t{},
 			std::move( validator ) };
 }
 
@@ -2732,20 +2952,63 @@ optional_no_default(
 	Field_Type && field,
 	Validator validator = Validator{} )
 {
+	using opt_attr_t = optional_nodefault_attr_t<>;
 	using binder_type_t = binder_t<
 			Reader_Writer,
 			// NOTE: since v.0.2.12 this way of detection of Field_Type
 			// for binder_t must be used.
 			details::meta::field_type_from_reference_t< decltype(field) >,
-			optional_nodefault_attr_t,
+			opt_attr_t,
 			Validator >;
 
 	return binder_type_t{
 			std::move(reader_writer),
 			field_name,
 			field,
-			optional_nodefault_attr_t{},
+			opt_attr_t{},
 			std::move( validator ) };
+}
+
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Validator = empty_validator_t >
+auto
+optional_no_default(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	maybe_null_field_wrapper_t< Field_Type > field,
+	Validator validator = Validator{} )
+{
+	using opt_attr_t = optional_nodefault_attr_t<  maybe_null_value_handler_t >;
+	using binder_type_t = binder_t<
+			Reader_Writer,
+			details::meta::field_type_from_reference_t< decltype( field.value() ) >,
+			opt_attr_t,
+			Validator >;
+
+	return binder_type_t{
+			std::move( reader_writer ),
+			field_name,
+			field.value(),
+			opt_attr_t{},
+			std::move( validator ) };
+}
+
+template<
+		typename Field_Type,
+		typename Validator = empty_validator_t >
+auto
+optional_no_default(
+	string_ref_t field_name,
+	maybe_null_field_wrapper_t< Field_Type > field,
+	Validator validator = Validator{} )
+{
+	return optional_no_default(
+			default_reader_writer_t{},
+			field_name,
+			field,
+			std::move( validator ) );
 }
 
 template< typename Dto >

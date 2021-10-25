@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 
+project(json_dto_root CXX)
+
 SET(CMAKE_CXX_STANDARD 14)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Determine if RESTinio is built as a subproject (using add_subdirectory)
 # or if it is the master project.
