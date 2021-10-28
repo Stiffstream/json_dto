@@ -542,6 +542,20 @@ mutable_map_key_t<T>
 mutable_map_key( T & v ) noexcept { return { v }; };
 
 //
+// maybe_null_field_marker_t
+//
+//FIXME: document this!
+template< typename Field_Type >
+struct maybe_null_field_marker_t
+{
+	Field_Type & m_field;
+
+	explicit maybe_null_field_marker_t( Field_Type & field )
+		:	m_field{ field }
+	{}
+};
+
+//
 // default_reader_writer_t
 //
 // NOTE: implementation is going below.
@@ -765,6 +779,24 @@ write_json_value(
 	rapidjson::MemoryPoolAllocator<> & allocator,
 	Reader_Writer reader_writer = Reader_Writer{} );
 #endif
+
+//
+// maybe_null_field_marker
+//
+template< typename T, typename Reader_Writer = default_reader_writer_t >
+inline void
+read_json_value(
+	maybe_null_field_marker_t<T> v,
+	const rapidjson::Value & object,
+	Reader_Writer reader_writer = Reader_Writer{} );
+
+template< typename T, typename Reader_Writer = default_reader_writer_t >
+inline void
+write_json_value(
+	maybe_null_field_marker_t<T> v,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	Reader_Writer reader_writer = Reader_Writer{} );
 
 //
 // ARRAY
@@ -1449,6 +1481,30 @@ json_io( json_output_t & from, C & what )
 }
 
 //
+// maybe_null_field_marker
+//
+template< typename T, typename Reader_Writer >
+inline void
+read_json_value(
+	maybe_null_field_marker_t<T> v,
+	const rapidjson::Value & object,
+	Reader_Writer reader_writer )
+{
+	read_json_value( v.m_field, object, std::move(reader_writer) );
+}
+
+template< typename T, typename Reader_Writer >
+inline void
+write_json_value(
+	maybe_null_field_marker_t<T> v,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator,
+	Reader_Writer reader_writer )
+{
+	write_json_value( v.m_field, object, allocator, std::move(reader_writer) );
+}
+
+//
 // Funcs for handling nullable property.
 //
 
@@ -1464,6 +1520,13 @@ void
 set_value_null_attr( nullable_t< Field_Type > & f )
 {
 	f.reset();
+}
+
+template< typename Field_Type >
+void
+set_value_null_attr( maybe_null_field_marker_t<Field_Type> marker )
+{
+	marker.m_field = Field_Type{};
 }
 
 template< typename Field_Type, typename Field_Default_Value_Type >
@@ -1998,6 +2061,53 @@ class binder_data_holder_t
 		validator() const noexcept { return m_validator; }
 };
 
+template<
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Manopt_Policy,
+	typename Validator >
+class binder_data_holder_t<
+		Reader_Writer,
+		maybe_null_field_marker_t<Field_Type>,
+		Manopt_Policy,
+		Validator >
+	:	public binder_data_holder_t<
+				Reader_Writer, Field_Type, Manopt_Policy, Validator >
+{
+	using base_type_t = binder_data_holder_t<
+			Reader_Writer, Field_Type, Manopt_Policy, Validator >;
+
+	public:
+		using marker_type_t = maybe_null_field_marker_t<Field_Type>;
+
+		binder_data_holder_t(
+			Reader_Writer && reader_writer,
+			string_ref_t field_name,
+			marker_type_t field_wrapper,
+			Manopt_Policy && manopt_policy,
+			Validator && validator )
+			:	base_type_t{
+					std::move(reader_writer),
+					field_name,
+					field_wrapper.m_field,
+					std::move( manopt_policy ),
+					std::move( validator )
+				}
+		{}
+
+		marker_type_t
+		field_for_serialization() const noexcept
+		{
+			return marker_type_t{ base_type_t::field_for_serialization() };
+		}
+
+		marker_type_t
+		field_for_deserialization() const noexcept
+		{
+			return marker_type_t{ base_type_t::field_for_deserialization() };
+		}
+};
+
 //
 // binder_read_from_implementation_t
 //
@@ -2526,6 +2636,42 @@ mandatory(
 			std::move(reader_writer),
 			field_name,
 			field,
+			mandatory_attr_t{},
+			std::move( validator ) };
+}
+
+//
+// mandatory_maybe_null
+//
+
+//FIXME: document this!
+template<
+		typename Field_Type,
+		typename Validator = empty_validator_t >
+auto
+mandatory_maybe_null(
+	string_ref_t field_name,
+	Field_Type && field,
+	Validator validator = Validator{} )
+{
+	using maybe_wrapper_t = maybe_null_field_marker_t<
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype(field) > >;
+
+	using binder_type_t = binder_t<
+			default_reader_writer_t,
+			maybe_wrapper_t,
+			mandatory_attr_t,
+			Validator >;
+
+	// Wrapper has to be created as local variable because
+	// binder_t's constructor requires lvalue.
+	maybe_wrapper_t field_wrapper{ field };
+	return binder_type_t{
+			default_reader_writer_t{},
+			field_name,
+			field_wrapper,
 			mandatory_attr_t{},
 			std::move( validator ) };
 }

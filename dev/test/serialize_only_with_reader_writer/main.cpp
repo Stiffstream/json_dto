@@ -206,3 +206,54 @@ TEST_CASE("nullable vector with custom hex_writer",
 	}
 }
 
+struct maybe_null_vector_of_ints_t
+{
+	std::vector<int> m_values;
+
+	maybe_null_vector_of_ints_t() = default;
+	maybe_null_vector_of_ints_t( std::vector<int> values )
+		:	m_values{ std::move(values) }
+	{}
+
+	template< typename Io >
+	void json_io( Io & io )
+	{
+		io & json_dto::mandatory_maybe_null(
+				json_dto::apply_to_content_t<
+					json_dto::apply_to_content_t<hex_writer_t> >{},
+				"values",
+				test_stuff::serialize_only( m_values ) );
+	}
+};
+
+TEST_CASE("maybe_null vector with custom hex_writer",
+		"[vector][maybe_null][hex_writer]")
+{
+	SECTION("empty vector")
+	{
+		const std::string json_str =
+				R"JSON({"values":[]})JSON";
+
+		nullable_vector_of_ints_t dto{
+				std::vector<int>{}
+		};
+
+		REQUIRE( json_str == to_json( dto ) );
+	}
+
+	SECTION("not-empty vector")
+	{
+		const std::string json_str =
+				R"JSON({"values":["0","1","a","f","10","20"]})JSON";
+
+		nullable_vector_of_ints_t dto{
+				std::vector<int>{0, 1, 10, 15, 16, 32}
+		};
+
+		REQUIRE( json_str == to_json( dto ) );
+
+		auto deserialized_dto = from_json<nullable_vector_of_ints_t>( json_str );
+		REQUIRE( !deserialized_dto.m_values );
+	}
+}
+
