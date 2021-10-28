@@ -1490,7 +1490,7 @@ read_json_value(
 	const rapidjson::Value & object,
 	Reader_Writer reader_writer )
 {
-	read_json_value( v.m_field, object, std::move(reader_writer) );
+	reader_writer.read( v.m_field, object );
 }
 
 template< typename T, typename Reader_Writer >
@@ -1501,7 +1501,7 @@ write_json_value(
 	rapidjson::MemoryPoolAllocator<> & allocator,
 	Reader_Writer reader_writer )
 {
-	write_json_value( v.m_field, object, allocator, std::move(reader_writer) );
+	reader_writer.write( v.m_field, object, allocator );
 }
 
 //
@@ -2078,12 +2078,10 @@ class binder_data_holder_t<
 			Reader_Writer, Field_Type, Manopt_Policy, Validator >;
 
 	public:
-		using marker_type_t = maybe_null_field_marker_t<Field_Type>;
-
 		binder_data_holder_t(
 			Reader_Writer && reader_writer,
 			string_ref_t field_name,
-			marker_type_t field_wrapper,
+			maybe_null_field_marker_t<Field_Type> field_wrapper,
 			Manopt_Policy && manopt_policy,
 			Validator && validator )
 			:	base_type_t{
@@ -2095,16 +2093,20 @@ class binder_data_holder_t<
 				}
 		{}
 
-		marker_type_t
+		auto
 		field_for_serialization() const noexcept
 		{
-			return marker_type_t{ base_type_t::field_for_serialization() };
+			return maybe_null_field_marker_t< base_type_t::field_t >{
+					base_type_t::field_for_serialization()
+				};
 		}
 
-		marker_type_t
+		auto
 		field_for_deserialization() const noexcept
 		{
-			return marker_type_t{ base_type_t::field_for_deserialization() };
+			return maybe_null_field_marker_t< base_type_t::field_t >{
+					base_type_t::field_for_deserialization()
+				};
 		}
 };
 
