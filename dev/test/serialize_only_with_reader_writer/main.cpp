@@ -234,7 +234,7 @@ TEST_CASE("maybe_null vector with custom hex_writer",
 		const std::string json_str =
 				R"JSON({"values":[]})JSON";
 
-		nullable_vector_of_ints_t dto{
+		maybe_null_vector_of_ints_t dto{
 				std::vector<int>{}
 		};
 
@@ -246,14 +246,14 @@ TEST_CASE("maybe_null vector with custom hex_writer",
 		const std::string json_str =
 				R"JSON({"values":["0","1","a","f","10","20"]})JSON";
 
-		nullable_vector_of_ints_t dto{
+		maybe_null_vector_of_ints_t dto{
 				std::vector<int>{0, 1, 10, 15, 16, 32}
 		};
 
 		REQUIRE( json_str == to_json( dto ) );
 
-		auto deserialized_dto = from_json<nullable_vector_of_ints_t>( json_str );
-		REQUIRE( !deserialized_dto.m_values );
+		auto deserialized_dto = from_json<maybe_null_vector_of_ints_t>( json_str );
+		REQUIRE( deserialized_dto.m_values.empty() );
 	}
 }
 

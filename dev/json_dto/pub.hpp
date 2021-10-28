@@ -2676,6 +2676,39 @@ mandatory_maybe_null(
 			std::move( validator ) };
 }
 
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Validator = empty_validator_t >
+auto
+mandatory_maybe_null(
+	Reader_Writer reader_writer,
+	string_ref_t field_name,
+	Field_Type && field,
+	Validator validator = Validator{} )
+{
+	using maybe_wrapper_t = maybe_null_field_marker_t<
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype(field) > >;
+
+	using binder_type_t = binder_t<
+			Reader_Writer,
+			maybe_wrapper_t,
+			mandatory_attr_t,
+			Validator >;
+
+	// Wrapper has to be created as local variable because
+	// binder_t's constructor requires lvalue.
+	maybe_wrapper_t field_wrapper{ field };
+	return binder_type_t{
+			std::move(reader_writer),
+			field_name,
+			field_wrapper,
+			mandatory_attr_t{},
+			std::move( validator ) };
+}
+
 //
 // optional
 //
