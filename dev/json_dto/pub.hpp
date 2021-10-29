@@ -2078,6 +2078,9 @@ class binder_data_holder_t<
 			Reader_Writer, Field_Type, Manopt_Policy, Validator >;
 
 	public:
+		using marker_for_actual_field_t =
+				maybe_null_field_marker_t< typename base_type_t::field_t >;
+
 		binder_data_holder_t(
 			Reader_Writer && reader_writer,
 			string_ref_t field_name,
@@ -2093,18 +2096,18 @@ class binder_data_holder_t<
 				}
 		{}
 
-		auto
+		marker_for_actual_field_t
 		field_for_serialization() const noexcept
 		{
-			return maybe_null_field_marker_t< base_type_t::field_t >{
+			return marker_for_actual_field_t{
 					base_type_t::field_for_serialization()
 				};
 		}
 
-		auto
+		marker_for_actual_field_t
 		field_for_deserialization() const noexcept
 		{
-			return maybe_null_field_marker_t< base_type_t::field_t >{
+			return marker_for_actual_field_t{
 					base_type_t::field_for_deserialization()
 				};
 		}
@@ -2278,29 +2281,27 @@ struct binder_read_from_implementation_t
 
 		const auto it = object.FindMember( binder_data.field_name() );
 
+		auto && field = binder_data.field_for_deserialization();
+
 		if( object.MemberEnd() != it )
 		{
 			const auto & value = it->value;
 
 			if( !value.IsNull() )
 			{
-				binder_data.reader_writer().read(
-						binder_data.field_for_deserialization(), value );
+				binder_data.reader_writer().read( field, value );
 			}
 			else
 			{
-				set_value_null_attr(
-						binder_data.field_for_deserialization() );
+				set_value_null_attr( field );
 			}
 		}
 		else
 		{
-			binder_data.manopt_policy().on_field_not_defined(
-					binder_data.field_for_deserialization() );
+			binder_data.manopt_policy().on_field_not_defined( field );
 		}
 
-		binder_data.validator()(
-				binder_data.field_for_deserialization() ); // validate value.
+		binder_data.validator()( field ); // validate value.
 	}
 };
 
@@ -2427,16 +2428,17 @@ struct binder_write_to_implementation_t
 		rapidjson::Value & object,
 		rapidjson::MemoryPoolAllocator<> & allocator )
 	{
+		auto && field = binder_data.field_for_serialization();
 		binder_data.validator()(
-				binder_data.field_for_serialization() ); // validate value.
+				field ); // validate value.
 
 		if( !binder_data.manopt_policy().is_default_value(
-				binder_data.field_for_serialization() ) )
+				field ) )
 		{
 			rapidjson::Value value;
 
 			binder_data.reader_writer().write(
-					binder_data.field_for_serialization(),
+					field,
 					value,
 					allocator );
 
