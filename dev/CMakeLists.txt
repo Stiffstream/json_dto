@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
+project(json_dto_root CXX)
+
 SET(CMAKE_CXX_STANDARD 14)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
