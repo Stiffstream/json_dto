@@ -369,7 +369,7 @@ class container_filler_impl_t< C, true > final
 	typename C::iterator m_it;
 
 public :
-	container_filler_impl_t<C, true>( C & cnt )
+	container_filler_impl_t( C & cnt )
 		: m_cnt{ cnt }, m_it{ cnt.before_begin() }
 	{}
 
