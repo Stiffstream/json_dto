@@ -1452,16 +1452,30 @@ json_io( json_output_t & from, C & what )
 // Funcs for handling nullable property.
 //
 
+/*!
+ * @brief Default handler of null value for non-nullable attribute.
+ *
+ * Throws an exception because non-nullable attribute can't receive null value.
+ *
+ * Is has name `default_on_null` since v.0.3.0.
+ */
 template< typename Field_Type >
 void
-set_value_null_attr( Field_Type & )
+default_on_null( Field_Type & )
 {
 	throw ex_t{ "non nullable field is null" };
 }
 
+/*!
+ * @brief Default handler of null value for nullable attribute.
+ *
+ * Calls `reset` for @a f.
+ *
+ * Is has name `default_on_null` since v.0.3.0.
+ */
 template< typename Field_Type >
 void
-set_value_null_attr( nullable_t< Field_Type > & f )
+default_on_null( nullable_t< Field_Type > & f )
 {
 	f.reset();
 }
@@ -1496,6 +1510,19 @@ struct mandatory_attr_t
 		throw ex_t{ "mandatory field doesn't exist" };
 	}
 
+	/*!
+	 * @note
+	 * Since v.0.3.0.
+	 */
+	template< typename Field_Type >
+	void
+	on_null( Field_Type & f ) const
+	{
+		// NOTE: directly use 'default_on_null' from json_dto namespace
+		// to avoid surprises with ADL.
+		json_dto::default_on_null( f );
+	}
+
 	template< typename Field_Type >
 	constexpr bool
 	is_default_value( Field_Type & ) const noexcept
@@ -1521,6 +1548,19 @@ struct optional_attr_t
 	on_field_not_defined( Field_Type & f ) const
 	{
 		set_default_value( f, std::move( m_default_value ) );
+	}
+
+	/*!
+	 * @note
+	 * Since v.0.3.0.
+	 */
+	template< typename Field_Type >
+	void
+	on_null( Field_Type & f ) const
+	{
+		// NOTE: directly use 'default_on_null' from json_dto namespace
+		// to avoid surprises with ADL.
+		json_dto::default_on_null( f );
 	}
 
 	template< typename Field_Type >
@@ -1554,6 +1594,19 @@ struct optional_attr_null_t
 		f.reset();
 	}
 
+	/*!
+	 * @note
+	 * Since v.0.3.0.
+	 */
+	template< typename Field_Type >
+	void
+	on_null( Field_Type & f ) const
+	{
+		// NOTE: directly use 'default_on_null' from json_dto namespace
+		// to avoid surprises with ADL.
+		json_dto::default_on_null( f );
+	}
+
 	template< typename Field_Type >
 	bool
 	is_default_value( nullable_t< Field_Type > & f ) const noexcept
@@ -1573,6 +1626,19 @@ struct optional_nodefault_attr_t
 	constexpr void
 	on_field_not_defined( Field_Type & ) const noexcept
 	{}
+
+	/*!
+	 * @note
+	 * Since v.0.3.0.
+	 */
+	template< typename Field_Type >
+	void
+	on_null( Field_Type & f ) const
+	{
+		// NOTE: directly use 'default_on_null' from json_dto namespace
+		// to avoid surprises with ADL.
+		json_dto::default_on_null( f );
+	}
 
 	template< typename Field_Type >
 	constexpr bool
@@ -2105,7 +2171,7 @@ struct binder_read_from_implementation_t<
 			}
 			else
 			{
-				set_value_null_attr( tmp_object );
+				binder_data.manopt_policy.on_null( tmp_object );
 			}
 		}
 		else
@@ -2177,7 +2243,7 @@ struct binder_read_from_implementation_t
 			}
 			else
 			{
-				set_value_null_attr(
+				binder_data.manopt_policy().on_null(
 						binder_data.field_for_deserialization() );
 			}
 		}

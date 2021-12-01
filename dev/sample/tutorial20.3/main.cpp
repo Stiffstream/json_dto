@@ -127,7 +127,7 @@ struct binder_read_from_implementation_t<
 			}
 			else
 			{
-				set_value_null_attr( tmp_object );
+				binder_data.manopt_policy().on_null( tmp_object );
 			}
 		}
 		else
