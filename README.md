@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.3.0](#v030)
       * [v.0.2.14](#v0214)
       * [v.0.2.13](#v0213)
       * [v.0.2.12](#v0212)
@@ -66,6 +67,53 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.3.0
+
+Version 0.3.0 introduces a couple of breaking changes that can affect some users.
+
+Previous versions of json-dto called `set_attr_null_value` function when 'null'
+value was found during deserialization. There were two overloads for
+`set_attr_null_value`: one for `nullable_t<T>` and another for all other cases.
+The overload for `nullable_t<T>` reset the nullable field. The overload for all
+other cases threw an exception.
+
+It's important to note that the manopt_policy trait wasn't used for handling
+'null' values.
+
+Since v.0.3.0 an updated approach of dealing with 'null' values is used. Now
+the manopt_policy is used when 'null' is found during deserialization:
+`on_null` method from manopt_policy is now called when 'null' is found.
+
+Function templates `set_attr_null_value` were removed. They were replaced by
+new function templates `default_on_null` that have the same logic (but under
+the new names).
+
+This change means that if you have your own implementation of manopt_policy
+then you have to add the `on_null` template method to it. For example:
+
+```cpp
+struct my_manopt_policy
+{
+	template< typename Field_Type >
+	void on_field_not_defined( Field_Type & ) const { ... }
+
+	template< typename Field_Type >
+	bool
+	is_default_value( Field_Type & ) const { ... }
+
+	template< typename Field_Type >
+	void on_null( Field_Type & f ) const
+	{
+		json_dto::default_on_null( f );
+	}
+}
+```
+
+Also it means that if you have your own specialization for
+`binder_read_from_implementation_t` class template then you have to replace a
+call to `set_attr_null_value` by a call to manopt_policy's `on_null` method
+(see the description of `binder_read_from_implementation_t` for more info).
 
 ## v.0.2.14
 
