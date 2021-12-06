@@ -1501,6 +1501,10 @@ set_default_value(
 //
 
 //! Field set/notset attribute ckecker for mandatory case.
+/*!
+ * This class is intended to be used as Manopt_Policy trait
+ * for field binders.
+ */
 struct mandatory_attr_t
 {
 	template< typename Field_Type >
@@ -1531,6 +1535,39 @@ struct mandatory_attr_t
 	}
 };
 
+//! Field set/notset attribute ckecker for mandatory field.
+/*!
+ * It field value is 'null' in JSON then field will receive
+ * default value.
+ *
+ * This class is intended to be used as Manopt_Policy trait
+ * for field binders.
+ *
+ * @since v.0.3.0
+ */
+struct mandatory_attr_with_null_as_default_t
+{
+	template< typename Field_Type >
+	void
+	on_field_not_defined( Field_Type & ) const
+	{
+		throw json_dto::ex_t{ "mandatory field doesn't exist" };
+	}
+
+	template< typename Field_Type >
+	void
+	on_null( Field_Type & f ) const
+	{
+		f = Field_Type{};
+	}
+
+	template< typename Field_Type >
+	constexpr bool
+	is_default_value( Field_Type & ) const noexcept
+	{
+		return false;
+	}
+};
 //
 // optional_attr_t
 //
@@ -1584,7 +1621,7 @@ struct optional_attr_t
 // optional_attr_null_t
 //
 
-//! Field set/notset attribute ckecker for optional case with default value.
+//! Field set/notset attribute checker for optional case with default value.
 struct optional_attr_null_t
 {
 	template< typename Field_Type >
@@ -2594,6 +2631,107 @@ mandatory(
 			field,
 			mandatory_attr_t{},
 			std::move( validator ) };
+}
+
+//! Create bind for a mandatory JSON field with validator.
+/*!
+ * This binder has to be used in case when 'null' is allowed
+ * for mandatory attr and should be treated as default field value.
+ *
+ * For example:
+ * @code
+ * struct my_header_reader_writer
+ * {
+ * 	void read( std::string & v, ... ) const { ... }
+ * 	void write( const std::string & v, ... ) const { ... }
+ * };
+ *
+ * struct my_data
+ * {
+ * 	std::vector< std::string > headers_;
+ * 	...
+ * 	template< typename Json_Io >
+ * 	void json_io( Json_Io & io )
+ * 	{
+ * 		// headers_ receives std::vector<std::string>{} in case of 'null'.
+ * 		io & json_dto::mandatory_with_null_as_default(
+ * 				// Use a custom reader-writer for that field.
+ * 				json_dto::apply_to_content_t< my_header_reader_writer >{},
+ * 				"headers", headers_ )
+ * 			...
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ *
+ * @since v.0.3.0
+ */
+template<
+		typename Reader_Writer,
+		typename Field_Type,
+		typename Validator = json_dto::empty_validator_t >
+auto
+mandatory_with_null_as_default(
+	Reader_Writer reader_writer,
+	json_dto::string_ref_t field_name,
+	Field_Type && field,
+	Validator validator = Validator{} )
+{
+	using binder_type_t = json_dto::binder_t<
+			Reader_Writer,
+			// NOTE: since v.0.2.12 this way of detection of Field_Type
+			// for binder_t must be used.
+			details::meta::field_type_from_reference_t< decltype(field) >,
+			mandatory_attr_with_null_as_default_t,
+			Validator >;
+
+	return binder_type_t{
+			std::move(reader_writer),
+			field_name,
+			field,
+			mandatory_attr_with_null_as_default_t{},
+			std::move( validator ) };
+}
+
+//! Create bind for a mandatory JSON field with validator.
+/*!
+ * This binder has to be used in case when 'null' is allowed
+ * for mandatory attr and should be treated as default field value.
+ *
+ * For example:
+ * @code
+ * struct my_data 
+ * {
+ * 	std::vector< std::string > headers_;
+ * 	...
+ * 	template< typename Json_Io >
+ * 	void json_io( Json_Io & io )
+ * 	{
+ * 		// headers_ receives std::vector<std::string>{} in case of 'null'.
+ * 		io & json_dto::mandatory_with_null_as_default(
+ * 				"headers", headers_ )
+ * 			...
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ *
+ * @since v.0.3.0
+ */
+template<
+		typename Field_Type,
+		typename Validator = json_dto::empty_validator_t >
+auto
+mandatory_with_null_as_default(
+	json_dto::string_ref_t field_name,
+	Field_Type && field,
+	Validator validator = Validator{} )
+{
+	return mandatory_with_null_as_default(
+			default_reader_writer_t{},
+			field_name,
+			std::forward<Field_Type>(field),
+			std::move(validator) );
 }
 
 //

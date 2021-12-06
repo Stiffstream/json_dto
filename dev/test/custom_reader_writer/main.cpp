@@ -79,6 +79,7 @@ struct hex_writer_t
 struct simple_types_dto_t
 {
 	std::int32_t m_num{ -1 };
+	std::int32_t m_num_2{ -1 };
 	std::int32_t m_num_opt{ -1 };
 	std::int32_t m_num_opt_no_default{ -1 };
 
@@ -91,6 +92,8 @@ struct simple_types_dto_t
 	{
 		io
 			& mandatory( custom_reader_writer_t{}, "num", m_num )
+			& mandatory_with_null_as_default(
+					custom_reader_writer_t{}, "num_2", m_num_2 )
 			& optional(
 					custom_reader_writer_t{},
 					"num_opt", m_num_opt, 0 )
@@ -111,6 +114,7 @@ struct simple_types_dto_t
 	{
 		return
 			eq( m_num, other.m_num ) &&
+			eq( m_num_2, other.m_num_2 ) &&
 			eq( m_num_opt, other.m_num_opt ) &&
 			eq( m_num_opt_no_default, other.m_num_opt_no_default ) &&
 			eq( m_num_opt_nullable, other.m_num_opt_nullable ) &&
@@ -157,9 +161,23 @@ TEST_CASE("simple-types", "[simple]" )
 	SECTION( "read empty" )
 	{
 		auto dto = json_dto::from_json< simple_types_dto_t >(
-				R"({"num":1})" );
+				R"({"num":1, "num_2":3})" );
 
 		REQUIRE( dto.m_num == 1 );
+		REQUIRE( dto.m_num_2 == 3 );
+		REQUIRE( dto.m_num_opt == 0 );
+		REQUIRE( dto.m_num_opt_no_default == -1 );
+		REQUIRE_FALSE( dto.m_num_opt_nullable );
+		REQUIRE_FALSE( dto.m_num_opt_no_default_nullable );
+	}
+
+	SECTION( "read with null" )
+	{
+		auto dto = json_dto::from_json< simple_types_dto_t >(
+				R"({"num":1, "num_2":null})" );
+
+		REQUIRE( dto.m_num == 1 );
+		REQUIRE( dto.m_num_2 == 0 );
 		REQUIRE( dto.m_num_opt == 0 );
 		REQUIRE( dto.m_num_opt_no_default == -1 );
 		REQUIRE_FALSE( dto.m_num_opt_nullable );
@@ -172,6 +190,7 @@ TEST_CASE("simple-types", "[simple]" )
 			zip_json_str(
 				R"JSON({
 					"num":-1,
+					"num_2":-1,
 					"num_opt":-1,
 					"num_opt_no_default":-1,
 					"num_opt_no_default_nullable":null
@@ -188,6 +207,7 @@ TEST_CASE("simple-types", "[simple]" )
 			zip_json_str(
 				R"JSON({
 					"num":-1,
+					"num_2":-1,
 					"num_opt_no_default":-1,
 					"num_opt_no_default_nullable":null
 				})JSON" );
@@ -202,6 +222,7 @@ TEST_CASE("simple-types", "[simple]" )
 		zip_json_str(
 			R"JSON({
 				"num":333,
+				"num_2":777,
 				"num_opt":42,
 				"num_opt_no_default":-99999,
 				"num_opt_nullable":999,
@@ -213,6 +234,7 @@ TEST_CASE("simple-types", "[simple]" )
 		auto dto = json_dto::from_json< simple_types_dto_t >( all_defined_json );
 
 		REQUIRE( dto.m_num == 333 );
+		REQUIRE( dto.m_num_2 == 777 );
 		REQUIRE( dto.m_num_opt == 42 );
 		REQUIRE( dto.m_num_opt_no_default == -99999 );
 		REQUIRE( dto.m_num_opt_nullable );
@@ -225,6 +247,7 @@ TEST_CASE("simple-types", "[simple]" )
 	{
 		simple_types_dto_t dto{};
 		dto.m_num = 333;
+		dto.m_num_2 = 777;
 		dto.m_num_opt = 42;
 		dto.m_num_opt_no_default = -99999;
 		dto.m_num_opt_nullable.emplace( 999 );
