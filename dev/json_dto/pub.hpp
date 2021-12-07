@@ -1543,6 +1543,9 @@ struct mandatory_attr_t
  * This class is intended to be used as Manopt_Policy trait
  * for field binders.
  *
+ * @note
+ * Type \a Field_Type has to be DefaultConstructible.
+ *
  * @since v.0.3.0
  */
 struct mandatory_attr_with_null_as_default_t
@@ -1558,6 +1561,9 @@ struct mandatory_attr_with_null_as_default_t
 	void
 	on_null( Field_Type & f ) const
 	{
+		static_assert( std::is_default_constructible<Field_Type>::value,
+				"type Field_Type has to be DefaultConstructible" );
+
 		f = Field_Type{};
 	}
 
@@ -2664,6 +2670,9 @@ mandatory(
  * };
  * @endcode
  *
+ * @note
+ * Type \a Field_Type has to be DefaultConstructible.
+ *
  * @since v.0.3.0
  */
 template<
@@ -2715,6 +2724,9 @@ mandatory_with_null_as_default(
  * 	}
  * };
  * @endcode
+ *
+ * @note
+ * Type \a Field_Type has to be DefaultConstructible.
  *
  * @since v.0.3.0
  */

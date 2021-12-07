@@ -95,17 +95,17 @@ then you have to add the `on_null` template method to it. For example:
 ```cpp
 struct my_manopt_policy
 {
-	template< typename Field_Type >
-	void on_field_not_defined( Field_Type & ) const { ... }
+	template<typename Field_Type>
+	void on_field_not_defined(Field_Type &) const { ... }
 
-	template< typename Field_Type >
+	template<typename Field_Type>
 	bool
-	is_default_value( Field_Type & ) const { ... }
+	is_default_value(Field_Type &) const { ... }
 
-	template< typename Field_Type >
-	void on_null( Field_Type & f ) const
+	template<typename Field_Type>
+	void on_null(Field_Type & f) const
 	{
-		json_dto::default_on_null( f );
+		json_dto::default_on_null(f);
 	}
 }
 ```
@@ -114,6 +114,33 @@ Also it means that if you have your own specialization for
 `binder_read_from_implementation_t` class template then you have to replace a
 call to `set_attr_null_value` by a call to manopt_policy's `on_null` method
 (see the description of `binder_read_from_implementation_t` for more info).
+
+A new binder function `mandatory_with_null_as_default` introduced. It allows
+binding a mandatory attribute that allows 'null' value in JSON. If 'null' is
+found during deserialization then a field of type `T` will receive `T{}` as a
+value (it means that `T` has to be DefaultConstructible`). For example:
+
+```cpp
+struct my_data
+{
+	int type_{-1};
+	std::vector<std::string> headers_;
+	...
+
+	template<typename Json_Io>
+	void json_io(Json_Io & io)
+	{
+		io
+			// In case of 'null' type_ will receive 0 (because int{} produces 0).
+			& json_dto::mandatory_with_null_as_default( "type", type_ )
+			// In case of 'null' headers_ will be empty
+			// (because std::vector<std::string>{} produces empty vector).
+			& json_dto::mandatory_with_null_as_default( "headers", headers_ )
+			...
+			;
+	}
+};
+```
 
 ## v.0.2.14
 
