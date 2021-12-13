@@ -118,7 +118,7 @@ call to `set_attr_null_value` by a call to manopt_policy's `on_null` method
 A new binder function `mandatory_with_null_as_default` introduced. It allows
 binding a mandatory attribute that allows 'null' value in JSON. If 'null' is
 found during deserialization then a field of type `T` will receive `T{}` as a
-value (it means that `T` has to be DefaultConstructible`). For example:
+value (it means that `T` has to be DefaultConstructible). For example:
 
 ```cpp
 struct my_data
