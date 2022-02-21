@@ -752,6 +752,7 @@ Out of the box *json_dto* lib supports following types:
 
 * Bool: bool;
 * Numeric:
+	std::int8_t, std::uint8_t,
 	std::int16_t, std::uint16_t,
 	std::int32_t, std::uint32_t,
 	std::int64_t, std::uint64_t,
@@ -765,6 +766,9 @@ Example:
 struct supported_types_t
 {
 	bool m_bool{ false };
+
+	std::int8_t m_int8{};
+	std::uint8_t m_uint8{};
 
 	std::int16_t m_int16{};
 	std::uint16_t m_uint16{};
@@ -786,6 +790,8 @@ template<typename Json_Io>
 void json_io(Json_Io & io, supported_types_t & obj)
 {
 	io & json_dto::mandatory("bool", obj.m_bool)
+		& json_dto::mandatory("int8", obj.m_int8)
+		& json_dto::mandatory("uint8", obj.m_uint8)
 		& json_dto::mandatory("int16", obj.m_int16)
 		& json_dto::mandatory("uint16", obj.m_uint16)
 		& json_dto::mandatory("int32", obj.m_int32)
@@ -1000,6 +1006,9 @@ struct vector_types_t
 {
 	std::vector<bool> m_bool{};
 
+	std::vector<std::int8_t> m_int8{};
+	std::vector<std::uint8_t> m_uint8{};
+
 	std::vector<std::int16_t> m_int16{};
 	std::vector<std::uint16_t> m_uint16{};
 
@@ -1020,6 +1029,8 @@ template<typename Json_Io>
 void json_io(Json_Io & io, vector_types_t & obj)
 {
 	io & json_dto::mandatory("bool", obj.m_bool)
+		& json_dto::mandatory("int8", obj.m_int8)
+		& json_dto::mandatory("uint8", obj.m_uint8)
 		& json_dto::mandatory("int16", obj.m_int16)
 		& json_dto::mandatory("uint16", obj.m_uint16)
 		& json_dto::mandatory("int32", obj.m_int32)

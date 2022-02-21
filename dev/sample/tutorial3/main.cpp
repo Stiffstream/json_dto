@@ -9,6 +9,8 @@ struct supported_types_t
 
 	supported_types_t(
 		bool val_bool,
+		std::int8_t val_int8,
+		std::uint8_t val_uint8,
 		std::int16_t val_int16,
 		std::uint16_t val_uint16,
 		std::int32_t val_int32,
@@ -18,6 +20,8 @@ struct supported_types_t
 		double val_double,
 		std::string val_string )
 		:	m_bool{ val_bool }
+		,	m_int8{ val_int8 }
+		,	m_uint8{ val_uint8 }
 		,	m_int16{ val_int16 }
 		,	m_uint16{ val_uint16 }
 		,	m_int32{ val_int32 }
@@ -29,6 +33,9 @@ struct supported_types_t
 	{}
 
 	bool m_bool{ false };
+
+	std::int8_t m_int8{};
+	std::uint8_t m_uint8{};
 
 	std::int16_t m_int16{};
 	std::uint16_t m_uint16{};
@@ -50,6 +57,8 @@ template< typename Json_Io >
 void json_io( Json_Io & io, supported_types_t & obj )
 {
 	io & json_dto::mandatory( "bool", obj.m_bool )
+		& json_dto::mandatory( "int8", obj.m_int8 )
+		& json_dto::mandatory( "uint8", obj.m_uint8 )
 		& json_dto::mandatory( "int16", obj.m_int16 )
 		& json_dto::mandatory( "uint16", obj.m_uint16 )
 		& json_dto::mandatory( "int32", obj.m_int32 )
@@ -65,8 +74,10 @@ void json_io( Json_Io & io, supported_types_t & obj )
 const std::string json_data{
 R"JSON({
 	"bool" : true,
-	"int16" : -1,
-	"uint16" : 2,
+	"int8" : -1,
+	"uint8" : 2,
+	"int16" : -2,
+	"uint16" : 4,
 	"int32" : -4,
 	"uint32" : 8,
 	"int64" : -16,
@@ -86,6 +97,8 @@ main( int , char *[] )
 			std::cout
 				<< "Deserialized from JSON:\n"
 				<< "\tbool: " << obj.m_bool << "\n"
+				<< "\tint8: " << std::int16_t{obj.m_int8} << "\n"
+				<< "\tuint8: " << std::uint16_t{obj.m_uint8} << "\n"
 				<< "\tint16: " << obj.m_int16 << "\n"
 				<< "\tuint16: " << obj.m_uint16 << "\n"
 				<< "\tint32: " << obj.m_int32 << "\n"
@@ -100,10 +113,12 @@ main( int , char *[] )
 		{
 			const supported_types_t obj{
 				false,
+				-5,
+				0xFFu,
 				-10,
-				0xFFFF,
+				0xFFFFu,
 				-100,
-				0xFFFFFFFF,
+				0xFFFFFFFFu,
 				~10000,
 				0xFFFFFFFFFFFFFFFFul,
 				3.14,
@@ -122,3 +137,4 @@ main( int , char *[] )
 
 	return 0;
 }
+

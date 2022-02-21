@@ -7,6 +7,9 @@ struct vector_types_t
 {
 	std::vector< bool > m_bool{};
 
+	std::vector< std::int8_t > m_int8{};
+	std::vector< std::uint8_t > m_uint8{};
+
 	std::vector< std::int16_t > m_int16{};
 	std::vector< std::uint16_t > m_uint16{};
 
@@ -27,6 +30,8 @@ template< typename Json_Io >
 void json_io( Json_Io & io, vector_types_t & obj )
 {
 	io & json_dto::mandatory( "bool", obj.m_bool )
+		& json_dto::mandatory( "int8", obj.m_int8 )
+		& json_dto::mandatory( "uint8", obj.m_uint8 )
 		& json_dto::mandatory( "int16", obj.m_int16 )
 		& json_dto::mandatory( "uint16", obj.m_uint16 )
 		& json_dto::mandatory( "int32", obj.m_int32 )
@@ -42,6 +47,9 @@ void json_io( Json_Io & io, vector_types_t & obj )
 const std::string json_data{
 R"JSON({
 	"bool" : [true, true, false],
+	"int8" : [-8, -4, -2, -1, 0, 1, 2, 4, 8],
+	"uint8" : [0, 1, 2, 4, 8],
+	"uint16" : [2, 12, 42, 65000],
 	"int16" : [-1, 0, 1],
 	"uint16" : [2, 12, 42, 65000],
 	"int32" : [-4],
@@ -52,9 +60,8 @@ R"JSON({
 	"string" : [ "a", "bc", "def", "ghij", "klmno", "pqrstu", "vwxyz"]
 })JSON" };
 
-template < typename T >
-std::ostream &
-operator << ( std::ostream & o, const std::vector< T > & v )
+template< typename C, typename T >
+void dump_to( std::ostream & o, const std::vector< T > & v )
 {
 	o << "[";
 
@@ -63,11 +70,33 @@ operator << ( std::ostream & o, const std::vector< T > & v )
 		if( 0 < i )
 			o << ", ";
 
-		o << v[ i ];
+		o << C{ v[ i ] };
 	}
 
 	o << "]";
+}
 
+template < typename T >
+std::ostream &
+operator << ( std::ostream & o, const std::vector< T > & v )
+{
+	dump_to< T >( o, v );
+	return o;
+}
+
+// std::int8_t can be handled just as a char, so use a special version.
+std::ostream &
+operator << ( std::ostream & o, const std::vector< std::int8_t > & v )
+{
+	dump_to< std::int16_t >( o, v );
+	return o;
+}
+
+// std::int8_t can be handled just as a unsigned char, so use a special version.
+std::ostream &
+operator << ( std::ostream & o, const std::vector< std::uint8_t > & v )
+{
+	dump_to< std::uint16_t >( o, v );
 	return o;
 }
 
@@ -82,6 +111,8 @@ main( int , char *[] )
 			std::cout
 				<< "Deserialized from JSON:\n"
 				<< "\tbool: " << obj.m_bool << "\n"
+				<< "\tint8: " << obj.m_int8 << "\n"
+				<< "\tuint8: " << obj.m_uint8 << "\n"
 				<< "\tint16: " << obj.m_int16 << "\n"
 				<< "\tuint16: " << obj.m_uint16 << "\n"
 				<< "\tint32: " << obj.m_int32 << "\n"
@@ -98,6 +129,11 @@ main( int , char *[] )
 
 			obj.m_bool.emplace_back( true );
 			obj.m_bool.emplace_back( false );
+
+			obj.m_int8.emplace_back( -11 );
+			obj.m_int8.emplace_back( 11 );
+
+			obj.m_uint8.emplace_back( 129 );
 
 			obj.m_int16.emplace_back( 11 );
 			obj.m_int16.emplace_back( 987 );
