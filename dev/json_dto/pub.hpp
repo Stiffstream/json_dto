@@ -617,7 +617,7 @@ read_json_value(
 	std::uint32_t value;
 	read_json_value( value, object );
 
-	if( value <= std::numeric_limits< std::uint16_t >::max() )
+	if( value <= std::uint32_t(std::numeric_limits< std::uint16_t >::max()) )
 		v = std::uint16_t( value );
 	else
 		throw ex_t{ "value is out of uint16: " + std::to_string( value ) };
@@ -643,8 +643,8 @@ read_json_value( std::int16_t & v, const rapidjson::Value & object )
 	std::int32_t value;
 	read_json_value( value, object );
 
-	if( value <= std::numeric_limits< std::int16_t >::max() &&
-		value >= std::numeric_limits< std::int16_t >::min() )
+	if( value <= std::int32_t(std::numeric_limits< std::int16_t >::max()) &&
+		value >= std::int32_t(std::numeric_limits< std::int16_t >::min()) )
 		v = std::int16_t( value );
 	else
 		throw ex_t{ "value is out of int16: " + std::to_string( value ) };
@@ -653,6 +653,61 @@ read_json_value( std::int16_t & v, const rapidjson::Value & object )
 inline void
 write_json_value(
 	std::int16_t v,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	const std::int32_t value = v;
+	write_json_value( value, object, allocator );
+}
+
+//
+// uint8
+//
+
+inline void
+read_json_value(
+	std::uint8_t & v,
+	const rapidjson::Value & object )
+{
+	std::uint32_t value;
+	read_json_value( value, object );
+
+	if( value <= std::uint32_t(std::numeric_limits< std::uint8_t >::max()) )
+		v = std::uint8_t( value );
+	else
+		throw ex_t{ "value is out of uint8: " + std::to_string( value ) };
+}
+
+inline void
+write_json_value(
+	std::uint8_t v,
+	rapidjson::Value & object,
+	rapidjson::MemoryPoolAllocator<> & allocator )
+{
+	const std::uint32_t value = v;
+	write_json_value( value, object, allocator );
+}
+
+//
+// int8
+//
+
+inline void
+read_json_value( std::int8_t & v, const rapidjson::Value & object )
+{
+	std::int32_t value;
+	read_json_value( value, object );
+
+	if( value <= std::int32_t(std::numeric_limits< std::int8_t >::max()) &&
+		value >= std::int32_t(std::numeric_limits< std::int8_t >::min()) )
+		v = std::int8_t( value );
+	else
+		throw ex_t{ "value is out of int8: " + std::to_string( value ) };
+}
+
+inline void
+write_json_value(
+	std::int8_t v,
 	rapidjson::Value & object,
 	rapidjson::MemoryPoolAllocator<> & allocator )
 {

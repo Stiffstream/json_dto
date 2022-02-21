@@ -24,10 +24,12 @@ parse_object_from_string(
 
 struct nums_t
 {
+	std::int8_t m_num_int8;
 	std::int16_t m_num_int16;
 	std::int32_t m_num_int32;
 	std::int64_t m_num_int64;
 
+	std::uint8_t m_num_uint8;
 	std::uint16_t m_num_uint16;
 	std::uint32_t m_num_uint32;
 	std::uint64_t m_num_uint64;
@@ -37,10 +39,12 @@ struct nums_t
 	json_io( Json_Io & io )
 	{
 		io
+			& optional( "num_int8", m_num_int8, std::int8_t{ 0 } )
 			& optional( "num_int16", m_num_int16, std::int16_t{ 0 } )
 			& optional( "num_int32", m_num_int32, std::int32_t{ 0 } )
 			& optional( "num_int64", m_num_int64, std::int64_t{ 0 } )
 
+			& optional( "num_uint8", m_num_uint8, std::uint8_t{ 0 } )
 			& optional( "num_uint16", m_num_uint16, std::uint16_t{ 0 } )
 			& optional( "num_uint32", m_num_uint32, std::uint32_t{ 0 } )
 			& optional( "num_uint64", m_num_uint64, std::uint64_t{ 0 } );
@@ -128,6 +132,33 @@ check_out_of_range(
 	}
 }
 
+TEST_CASE( "limits-int8" , "[int8]" )
+{
+	SECTION( "min/max" )
+	{
+		check_min_max( "num_int8", &nums_t::m_num_int8 );
+	}
+
+	SECTION( "out of range" )
+	{
+
+		check_out_of_range< std::int32_t, std::int8_t >( "num_int8" );
+	}
+}
+
+TEST_CASE( "limits-uint8" , "[uint8]" )
+{
+	SECTION( "min/max" )
+	{
+		check_min_max( "num_uint8", &nums_t::m_num_uint8 );
+	}
+
+	SECTION( "out of range" )
+	{
+		check_out_of_range< std::uint32_t, std::uint8_t >( "num_uint8" );
+	}
+}
+
 TEST_CASE( "limits-int16" , "[int16]" )
 {
 	SECTION( "min/max" )
@@ -196,3 +227,4 @@ TEST_CASE( "limits-uint64" , "[uint64]" )
 		check_min_max( "num_uint64", &nums_t::m_num_uint64 );
 	}
 }
+
