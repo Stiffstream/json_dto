@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.3.1](#v031)
       * [v.0.3.0](#v030)
       * [v.0.2.14](#v0214)
       * [v.0.2.13](#v0213)
@@ -67,6 +68,10 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.3.1
+
+Support for `std::int8_t` and `std::uint8_t` added to json-dto.
 
 ## v.0.3.0
 
