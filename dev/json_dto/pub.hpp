@@ -3019,6 +3019,53 @@ optional_no_default(
 			std::move( validator ) };
 }
 
+//! Create bind for an optional array mapping to fields, without default value.
+template < typename... types >
+class optional_array
+{
+	std::tuple<types&...> fields;
+
+public :
+	optional_array( types&... fields ) : fields{ fields... } {}
+
+	void read_from( const rapidjson::Value& array ) const
+	{
+		if ( array.IsNull() )
+			return;
+
+		if ( !array.IsArray() )
+			throw json_dto::ex_t{ "parent json type must be array" };
+
+		if ( array.Size() != sizeof...( types ) )
+			throw json_dto::ex_t{ "incorrect number of elements in array" };
+
+		auto read = [ this, &array ]<std::size_t... i>( std::index_sequence<i...> ) {
+			( json_dto::read_json_value( std::get< i >( fields ), array[ i ] ), ... );
+		};
+
+		read( std::make_index_sequence< sizeof...( types ) >{} );
+	}
+
+	void write_to(rapidjson::Value& array, rapidjson::MemoryPoolAllocator<>& allocator) const
+	{
+		array.SetArray();
+		array.Reserve( sizeof...( types ), allocator );
+
+		auto write = [ this, &array, &allocator ]< std::size_t... i >( std::index_sequence< i... > ) {
+			// write out all values to an array
+			std::array< rapidjson::Value, sizeof...( types ) > values;
+			( json_dto::write_json_value( std::get< i >( fields ), values[ i ], allocator ), ... );
+
+			// add all fields to the json
+			for ( auto& value : values )
+				array.PushBack( value, allocator );
+		};
+
+		write( std::make_index_sequence< sizeof...( types ) >{} );
+	}
+
+};
+
 template< typename Dto >
 json_input_t &
 operator >> ( json_input_t & i, Dto & v )
