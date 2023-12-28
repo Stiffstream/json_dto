@@ -1887,7 +1887,7 @@ default_reader_writer_t::write(
  * reader_writer type and applies it to every item of container.
  *
  * @note
- * The template `apply_to_content_t` should also be used will
+ * The template `apply_to_content_t` should also be used with
  * `nullable_t` and `std::optional` if an actual reader_writer has
  * to be applied to the content of `nullable_t`/`std::optional`:
  * @code
