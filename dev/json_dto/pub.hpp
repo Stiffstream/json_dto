@@ -451,6 +451,9 @@ class json_input_t
 			return *this;
 		}
 
+//FIXME: just for a test!
+JSON_DTO_NODISCARD const rapidjson::Value & object() const noexcept{ return m_object; }
+
 	private:
 		const rapidjson::Value & m_object;
 };
@@ -479,6 +482,10 @@ class json_output_t
 			b.write_to( m_object, m_allocator );
 			return *this;
 		}
+
+//FIXME: just for a test!
+JSON_DTO_NODISCARD rapidjson::Value & object() const noexcept { return m_object; }
+JSON_DTO_NODISCARD rapidjson::MemoryPoolAllocator<> & allocator() const noexcept { return m_allocator; }
 
 	private:
 		rapidjson::Value & m_object;
@@ -1996,58 +2003,50 @@ public:
 	JSON_DTO_NODISCARD
 	virtual std::size_t
 	required_size() const noexcept = 0;
-};
 
-//FIXME: document this!
-template< typename Inside_Array_Performer >
-std::enable_if_t<
-		std::is_base_of< inside_array_performer_base_t, Inside_Array_Performer >::value,
-		void >
-read_json_value(
-	const Inside_Array_Performer & performer,
-	const rapidjson::Value & object )
-{
-	if( object.IsArray() )
+	void
+	json_io( json_input_t & input ) const
 	{
-		if( performer.required_size() != object.Size() )
+		const rapidjson::Value & object = input.object();
+
+		if( object.IsArray() )
 		{
-			throw ex_t{
-					"read_json_value(Inside_Array_Performer): required size "
-					"missmatch, required_size: "
-					+ std::to_string( performer.required_size() )
-					+ ", actual size: "
-					+ std::to_string( object.Size() )
-				};
+			if( this->required_size() != object.Size() )
+			{
+				throw ex_t{
+						"read_json_value(Inside_Array_Performer): required size "
+						"missmatch, required_size: "
+						+ std::to_string( this->required_size() )
+						+ ", actual size: "
+						+ std::to_string( object.Size() )
+					};
+			}
+
+			this->read_from( object );
 		}
-
-		performer.read_from( object );
+		else
+			throw ex_t{ "read_json_value(Inside_Array_Performer): value is not an array" };
 	}
-	else
-		throw ex_t{ "read_json_value(Inside_Array_Performer): value is not an array" };
-}
 
-//FIXME: document this!
-template< typename Inside_Array_Performer >
-std::enable_if_t<
-		std::is_base_of< inside_array_performer_base_t, Inside_Array_Performer >::value,
-		void >
-write_json_value(
-	const Inside_Array_Performer & performer,
-	rapidjson::Value & object,
-	rapidjson::MemoryPoolAllocator<> & allocator )
-{
-	object.SetArray();
-	const auto size = performer.required_size();
-	if( 0u != size )
+	void
+	json_io( json_output_t & output ) const
 	{
-		//FIXME: document this!
-		object.Reserve( size, allocator );
-		for( std::size_t i = 0u; i != size; ++i )
-			object.PushBask( rapidjson::Value{}, allocator );
+		rapidjson::Value & object = output.object();
+		rapidjson::MemoryPoolAllocator<> & allocator = output.allocator();
 
-		performer.write_to( object, allocator );
+		object.SetArray();
+		const auto size = this->required_size();
+		if( 0u != size )
+		{
+			//FIXME: document this!
+			object.Reserve( static_cast<rapidjson::SizeType>(size), allocator );
+			for( std::size_t i = 0u; i != size; ++i )
+				object.PushBack( rapidjson::Value{}, allocator );
+
+			this->write_to( object, allocator );
+		}
 	}
-}
+};
 
 //FIXME: document this!
 template<
@@ -2072,6 +2071,7 @@ public:
 		,	m_previous{ std::move(previous) }
 		{}
 
+protected:
 	void
 	read_from( const rapidjson::Value & object ) const override
 	{
@@ -2098,6 +2098,7 @@ public:
 		return Index + 1u;
 	}
 
+public:
 	template< typename Next_Field_Type >
 	JSON_DTO_NODISCARD
 	auto
@@ -2117,7 +2118,7 @@ public:
 	auto
 	with( Reader_Writer && reader_writer, Field_Type && field ) &&
 	{
-		using result_t = simple_inside_array_performer_t<
+		using result_t = inside_array_performer_t<
 				Index + 1u,
 				details::meta::field_type_from_reference_t< decltype(field) >,
 				Reader_Writer
@@ -2130,7 +2131,7 @@ public:
 //FIXME: document this!
 class terminal_array_performer_t final : public inside_array_performer_base_t
 {
-public:
+protected:
 	void
 	read_from( const rapidjson::Value & ) const override { /* Do nothing */ }
 
@@ -2145,6 +2146,7 @@ public:
 	std::size_t
 	required_size() const noexcept override { return 0u; }
 
+public:
 	template< typename Next_Field_Type >
 	JSON_DTO_NODISCARD
 	auto
@@ -2164,7 +2166,7 @@ public:
 	auto
 	with( Reader_Writer && reader_writer, Field_Type && field ) &&
 	{
-		using result_t = simple_inside_array_performer_t<
+		using result_t = inside_array_performer_t<
 				0u,
 				details::meta::field_type_from_reference_t< decltype(field) >,
 				Reader_Writer
