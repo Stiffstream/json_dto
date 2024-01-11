@@ -349,3 +349,27 @@ TEST_CASE("emplace", "[basic]" )
 	REQUIRE( sv->at( 3 ) == "ghij" );
 	REQUIRE( sv->at( 4 ) == "klmnop" );
 }
+
+TEST_CASE("nullable_t inside array", "[basic]" )
+{
+	{
+		std::vector< nullable_t<std::string> > v;
+		v.push_back( nullable_t<std::string>{} );
+
+		REQUIRE( 1u == v.size() );
+		REQUIRE_FALSE( v[0].has_value() );
+
+		v.push_back( nullable_t<std::string>{} );
+
+		REQUIRE( 2u == v.size() );
+		REQUIRE_FALSE( v[0].has_value() );
+		REQUIRE_FALSE( v[0].has_value() );
+
+		for( int i = 0; i < 14; ++i )
+			v.push_back( nullable_t<std::string>{} );
+
+		for( const auto & val : v )
+			REQUIRE_FALSE( val.has_value() );
+	}
+}
+

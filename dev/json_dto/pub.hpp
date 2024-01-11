@@ -327,6 +327,37 @@ template< typename T >
 using field_type_from_reference_t =
 	typename field_type_from_reference_impl<T>::type;
 
+// Implementation of helper metafunction to get the first type from a type
+// list.
+//
+// Since v.0.3.2
+template<typename T, typename... Rest>
+struct head_of
+{
+	using type = T;
+};
+
+template<typename T>
+struct head_of<T>
+{
+	using type = T;
+};
+
+// Helper metafunction to get the first type from a type list.
+//
+// Usage example:
+//
+// 	template<typename... Args>
+// 	class my_template
+// 	{
+// 		using head_type = details::meta::head_of_t<Args...>;
+// 		...
+// 	};
+//
+// Since v.0.3.2
+template< typename... Args >
+using head_of_t = typename head_of<Args...>::type;
+
 } /* namespace meta */
 
 namespace sequence_containers
@@ -923,12 +954,14 @@ struct nullable_t
 	{}
 
 	explicit nullable_t( Field_Type value )
+		noexcept( noexcept( Field_Type{std::move(value)} ) )
 		:	m_has_value{ true }
 	{
 		new( m_image_space ) Field_Type{ std::move( value ) };
 	}
 
 	nullable_t( const nullable_t & other )
+		noexcept( noexcept( Field_Type{other.field_ref()} ) )
 		:	m_has_value{ other.m_has_value }
 	{
 		if( has_value() )
@@ -936,14 +969,34 @@ struct nullable_t
 	}
 
 	nullable_t( nullable_t && other )
+		noexcept( noexcept( Field_Type{std::move(other.field_ref())} ) )
 		:	m_has_value{ other.m_has_value }
 	{
 		if( has_value() )
 			new( m_image_space ) Field_Type{ std::move( other.field_ref() ) };
 	}
 
-	template< typename... Args >
+	// Constructor to be used for initialization of the value.
+	//
+	// Usage example:
+	//
+	// 	const std::string base{ "0123456789xyz" };
+	// 	size_t pos = 5;
+	// 	size_t len = 4;
+	// 	json_dto::nullable_t< std::string > str{ base, pos, len };
+	//
+	template<
+		typename... Args,
+		// NOTE: to avoid calling of this constructor when Args is 'nullable_t &'.
+		typename T = std::enable_if_t<
+			!( 1u == sizeof...(Args) &&
+				std::is_same<
+					std::decay_t< details::meta::head_of_t<Args...> >,
+					nullable_t >::value )
+		>
+	>
 	explicit nullable_t( Args &&... args )
+		noexcept( noexcept( Field_Type{std::forward< Args >( args )...} ) )
 		:	m_has_value{ true }
 	{
 		new( m_image_space ) Field_Type{ std::forward< Args >( args )... };
@@ -967,6 +1020,7 @@ struct nullable_t
 
 	void
 	swap( nullable_t & other )
+		noexcept( noexcept( Field_Type{ std::move(other.field_ref()) } ) )
 	{
 		if( m_has_value && other.m_has_value )
 		{
@@ -996,6 +1050,9 @@ struct nullable_t
 
 	nullable_t &
 	operator = ( nullable_t && other )
+		noexcept(
+			noexcept( nullable_t{ std::move(other) } ) &&
+			noexcept( this->swap( other ) ) )
 	{
 		nullable_t temp{ std::move( other ) };
 		swap( temp );
@@ -1014,6 +1071,9 @@ struct nullable_t
 
 	nullable_t &
 	operator = ( Field_Type && value )
+		noexcept(
+			noexcept( nullable_t{ std::move(value) } ) &&
+			noexcept( this->swap( *this ) ) )
 	{
 		nullable_t temp{ std::move( value ) };
 		swap( temp );
@@ -1170,9 +1230,14 @@ read_json_value(
 	const rapidjson::Value & object,
 	Reader_Writer reader_writer = Reader_Writer{} )
 {
-	Field_Type value;
-	reader_writer.read( value, object );
-	f = std::move( value );
+	if( !object.IsNull() )
+	{
+		Field_Type value;
+		reader_writer.read( value, object );
+		f = std::move( value );
+	}
+	else
+		f.reset();
 }
 
 template<
@@ -1186,9 +1251,13 @@ write_json_value(
 	Reader_Writer reader_writer = Reader_Writer{} )
 {
 	if( f )
+	{
 		reader_writer.write( *f, object, allocator );
+	}
 	else
+	{
 		object.SetNull();
+	}
 }
 
 #if defined( JSON_DTO_SUPPORTS_STD_OPTIONAL )
@@ -1526,7 +1595,7 @@ default_on_null( Field_Type & )
  *
  * Calls `reset` for @a f.
  *
- * Is has name `default_on_null` since v.0.3.0.
+ * It has name `default_on_null` since v.0.3.0.
  */
 template< typename Field_Type >
 void

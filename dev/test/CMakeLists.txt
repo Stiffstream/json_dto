@@ -20,4 +20,5 @@ add_subdirectory(ensure_object)
 add_subdirectory(from_string_ref)
 add_subdirectory(write_const_objects)
 add_subdirectory(serialize_only_with_reader_writer)
+add_subdirectory(issue_20_vector_of_nullable)
 

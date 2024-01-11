@@ -22,5 +22,6 @@ MxxRu::Cpp::composite_target {
 	required_prj( "test/from_string_ref/prj.ut.rb" )
 	required_prj( "test/write_const_objects/prj.ut.rb" )
 	required_prj( "test/serialize_only_with_reader_writer/prj.ut.rb" )
+	required_prj( "test/issue_20_vector_of_nullable/prj.ut.rb" )
 }
 
