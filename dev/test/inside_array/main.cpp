@@ -27,11 +27,12 @@ struct simple_outer_t
 	json_io( Json_Io & io )
 	{
 		io
-			& json_dto::mandatory( "x",
-					json_dto::inside_array()
-						.with( m_x.m_a )
-						.with( m_x.m_b )
-						.with( m_x.m_c ) );
+			& json_dto::mandatory(
+					json_dto::inside_array<simple_nested_t>(
+						json_dto::array_member( &simple_nested_t::m_a ),
+						json_dto::array_member( &simple_nested_t::m_b ),
+						json_dto::array_member( &simple_nested_t::m_c ) ),
+					"x", m_x );
 	}
 };
 
@@ -60,11 +61,13 @@ struct outer_with_custom_reader_writer_t
 	json_io( Json_Io & io )
 	{
 		io
-			& json_dto::mandatory( "x",
-					json_dto::inside_array()
-						.with( simple_int_reader_writter_t{}, m_x.m_a )
-						.with( m_x.m_b )
-						.with( m_x.m_c ) );
+			& json_dto::mandatory(
+					json_dto::inside_array< simple_nested_t >(
+						json_dto::array_member(
+							simple_int_reader_writter_t{}, &simple_nested_t::m_a ),
+						json_dto::array_member( &simple_nested_t::m_b ),
+						json_dto::array_member( &simple_nested_t::m_c ) ),
+					"x", m_x );
 	}
 };
 

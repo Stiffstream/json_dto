@@ -17,6 +17,7 @@
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/istreamwrapper.h>
 
+#include <array>
 #include <cstdint>
 #include <vector>
 #include <memory>
@@ -1988,200 +1989,210 @@ struct apply_to_content_t
 // start of inside_array related stuff
 //
 
+namespace details
+{
+
 //FIXME: document this!
-class inside_array_performer_base_t
+template< typename Field_Type >
+class inside_array_member_processor_base_t
 {
 public:
 	virtual void
-	read_from( const rapidjson::Value & object ) const = 0;
+	read(
+		Field_Type & v,
+		std::size_t index,
+		const rapidjson::Value & from ) const = 0;
 
 	virtual void
-	write_to(
-		rapidjson::Value & object,
+	write(
+		const Field_Type & v,
+		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const = 0;
+};
 
-	JSON_DTO_NODISCARD
-	virtual std::size_t
-	required_size() const noexcept = 0;
+//FIXME: document this!
+template<
+	std::size_t Members_Count,
+	typename Field_Type >
+class inside_array_reader_writer_t
+{
+	using member_processor_ptr_t = const inside_array_member_processor_base_t<Field_Type>*;
 
-	void
-	json_io( json_input_t & input ) const
+	std::array< member_processor_ptr_t, Members_Count > m_member_processors;
+
+	template<
+		std::size_t Index,
+		typename Member_Processor >
+	static void
+	set_member_processor_pointer(
+		inside_array_reader_writer_t & self,
+		Member_Processor && current_processor )
 	{
-		const rapidjson::Value & object = input.object();
+		self.m_member_processors[ Index ] = std::addressof(current_processor);
+	}
 
-		if( object.IsArray() )
-		{
-			if( this->required_size() != object.Size() )
-			{
-				throw ex_t{
-						"read_json_value(Inside_Array_Performer): required size "
-						"missmatch, required_size: "
-						+ std::to_string( this->required_size() )
-						+ ", actual size: "
-						+ std::to_string( object.Size() )
-					};
-			}
+	template<
+		std::size_t Index,
+		typename Member_Processor,
+		typename... Tail >
+	static void
+	set_member_processor_pointer(
+		inside_array_reader_writer_t & self,
+		Member_Processor && current_processor,
+		Tail && ...tail )
+	{
+		self.m_member_processors[ Index ] = std::addressof(current_processor);
+		set_member_processor_pointer<Index + 1u>( self, std::forward<Tail>(tail)... );
+	}
 
-			this->read_from( object );
-		}
-		else
-			throw ex_t{ "read_json_value(Inside_Array_Performer): value is not an array" };
+public:
+	inside_array_reader_writer_t(
+		const inside_array_reader_writer_t & ) = default;
+	inside_array_reader_writer_t(
+		inside_array_reader_writer_t && ) = default;
+
+	inside_array_reader_writer_t &
+	operator=( const inside_array_reader_writer_t & ) = default;
+	inside_array_reader_writer_t &
+	operator=( inside_array_reader_writer_t && ) = default;
+
+	template< typename... Member_Processors >
+	inside_array_reader_writer_t( Member_Processors && ...processors )
+	{
+		static_assert( Members_Count == sizeof...(processors),
+				"Members_Count should be equal to sizeof...(processors)" );
+
+		set_member_processor_pointer< 0u >(
+				*this,
+				std::forward<Member_Processors>(processors)... );
 	}
 
 	void
-	json_io( json_output_t & output ) const
+	read( Field_Type & v, const rapidjson::Value & from ) const
 	{
-		rapidjson::Value & object = output.object();
-		rapidjson::MemoryPoolAllocator<> & allocator = output.allocator();
-
-		object.SetArray();
-		const auto size = this->required_size();
-		if( 0u != size )
+		if( from.IsArray() )
 		{
-			//FIXME: document this!
-			object.Reserve( static_cast<rapidjson::SizeType>(size), allocator );
-			for( std::size_t i = 0u; i != size; ++i )
-				object.PushBack( rapidjson::Value{}, allocator );
+			if( Members_Count != from.Size() )
+			{
+				throw ex_t{
+						"inside_array_reader_writer_t: required size "
+						"missmatch, required_size: "
+						+ std::to_string( Members_Count )
+						+ ", actual size: "
+						+ std::to_string( from.Size() )
+					};
+			}
 
-			this->write_to( object, allocator );
+			for( std::size_t i = 0u; i != Members_Count; ++i )
+				m_member_processors[ i ]->read( v, i, from );
 		}
+		else
+			throw ex_t{ "inside_array_reader_writer_t: value is not an array" };
+	}
+
+	void
+	write(
+		const Field_Type & v,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
+	{
+		to.SetArray();
+		to.Reserve( static_cast<rapidjson::SizeType>(Members_Count), allocator );
+		for( std::size_t i = 0u; i != Members_Count; ++i )
+			m_member_processors[ i ]->write( v, to, allocator );
 	}
 };
 
 //FIXME: document this!
 template<
-	std::size_t Index,
 	typename Field_Type,
+	typename Member_Type,
 	typename Reader_Writer >
-class inside_array_performer_t final : public inside_array_performer_base_t
+class inside_array_member_processor_t final
+	:	public inside_array_member_processor_base_t< Field_Type >
 {
-	Field_Type & m_field;
+public:
+	using member_ptr_t = Member_Type (Field_Type::*);
+
+private:
+	member_ptr_t m_member_ptr;
 
 	Reader_Writer m_reader_writer;
 
-	inside_array_performer_base_t && m_previous;
-
 public:
-	inside_array_performer_t(
-		Field_Type & field,
-		Reader_Writer reader_writer,
-		inside_array_performer_base_t && previous )
-		:	m_field{ field }
+	inside_array_member_processor_t(
+		member_ptr_t member_ptr,
+		Reader_Writer reader_writer )
+		:	m_member_ptr{ member_ptr }
 		,	m_reader_writer{ std::move(reader_writer) }
-		,	m_previous{ std::move(previous) }
-		{}
+	{}
 
-protected:
 	void
-	read_from( const rapidjson::Value & object ) const override
+	read(
+		Field_Type & v,
+		std::size_t index,
+		const rapidjson::Value & from ) const override
 	{
-		m_reader_writer.read( m_field, object[ Index ] );
-
-		m_previous.read_from( object );
+		m_reader_writer.read(
+				v.*m_member_ptr,
+				from[ static_cast<rapidjson::SizeType>(index) ] );
 	}
 
 	void
-	write_to(
-		rapidjson::Value & object,
+	write(
+		const Field_Type & v,
+		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const override
 	{
 		rapidjson::Value o;
-		m_reader_writer.write( m_field, o, allocator );
-		object[ Index ] = std::move(o);
-
-		m_previous.write_to( object, allocator );
-	}
-
-	std::size_t
-	required_size() const noexcept override
-	{
-		return Index + 1u;
-	}
-
-public:
-	template< typename Next_Field_Type >
-	JSON_DTO_NODISCARD
-	auto
-	with( Next_Field_Type && next_field ) &&
-	{
-		using result_t = inside_array_performer_t<
-				Index + 1u,
-				details::meta::field_type_from_reference_t< decltype(next_field) >,
-				default_reader_writer_t
-			>;
-
-		return result_t{ next_field, default_reader_writer_t{}, std::move(*this) };
-	}
-
-	template< typename Reader_Writer, typename Field_Type >
-	JSON_DTO_NODISCARD
-	auto
-	with( Reader_Writer && reader_writer, Field_Type && field ) &&
-	{
-		using result_t = inside_array_performer_t<
-				Index + 1u,
-				details::meta::field_type_from_reference_t< decltype(field) >,
-				Reader_Writer
-			>;
-
-		return result_t{ field, std::forward<Reader_Writer>(reader_writer), std::move(*this) };
+		m_reader_writer.write( v.*m_member_ptr, o, allocator );
+		to.PushBack( o.Move(), allocator );
 	}
 };
 
-//FIXME: document this!
-class terminal_array_performer_t final : public inside_array_performer_base_t
-{
-protected:
-	void
-	read_from( const rapidjson::Value & ) const override { /* Do nothing */ }
-
-	void
-	write_to(
-		rapidjson::Value & /*object*/,
-		rapidjson::MemoryPoolAllocator<> & /*allocator*/ ) const override
-	{
-		/* Do nothing */
-	}
-
-	std::size_t
-	required_size() const noexcept override { return 0u; }
-
-public:
-	template< typename Next_Field_Type >
-	JSON_DTO_NODISCARD
-	auto
-	with( Next_Field_Type && next_field ) &&
-	{
-		using result_t = inside_array_performer_t<
-				0u,
-				details::meta::field_type_from_reference_t< decltype(next_field) >,
-				default_reader_writer_t
-			>;
-
-		return result_t{ next_field, default_reader_writer_t{}, std::move(*this) };
-	}
-
-	template< typename Reader_Writer, typename Field_Type >
-	JSON_DTO_NODISCARD
-	auto
-	with( Reader_Writer && reader_writer, Field_Type && field ) &&
-	{
-		using result_t = inside_array_performer_t<
-				0u,
-				details::meta::field_type_from_reference_t< decltype(field) >,
-				Reader_Writer
-			>;
-
-		return result_t{ field, std::forward<Reader_Writer>(reader_writer), std::move(*this) };
-	}
-};
+} /* namespace details */
 
 //FIXME: document this!
+template< typename Field_Type, typename... Member_Processors >
 JSON_DTO_NODISCARD
-inline terminal_array_performer_t
-inside_array() noexcept
+auto
+inside_array( Member_Processors && ...processors )
 {
-	return {};
+	return details::inside_array_reader_writer_t<
+			sizeof...(Member_Processors),
+			Field_Type
+		>( std::forward<Member_Processors>(processors)... );
+}
+
+//FIXME: document this!
+template<
+	typename Field_Type,
+	typename Member_Type >
+JSON_DTO_NODISCARD
+auto
+array_member( Member_Type (Field_Type::*member_ptr) )
+{
+	return details::inside_array_member_processor_t<
+			Field_Type,
+			Member_Type,
+			default_reader_writer_t
+		>( member_ptr, default_reader_writer_t{} );
+}
+
+//FIXME: document this!
+template<
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Member_Type >
+JSON_DTO_NODISCARD
+auto
+array_member( Reader_Writer && reader_writer, Member_Type (Field_Type::*member_ptr) )
+{
+	return details::inside_array_member_processor_t<
+			Field_Type,
+			Member_Type,
+			Reader_Writer
+		>( member_ptr, std::forward<Reader_Writer>(reader_writer) );
 }
 
 //
