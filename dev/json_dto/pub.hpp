@@ -1989,7 +1989,7 @@ struct apply_to_content_t
 // start of inside_array related stuff
 //
 
-namespace details
+namespace inside_array_details
 {
 
 //FIXME: document this!
@@ -2008,10 +2008,28 @@ public:
 };
 
 //FIXME: document this!
+struct all_members_required_t
+{
+	//FIXME: document this!
+	template< std::size_t Members_Count >
+	struct is_valid_members_count
+	{
+		static constexpr bool value = true;
+	};
+
+	//FIXME: implement this!
+};
+
+//FIXME: document this!
 template<
-	std::size_t Members_Count >
+	//FIXME: maybe it has to be rapidjson::SizeType, but not std::size_t?
+	std::size_t Members_Count,
+	typename At_Least_Limiter >
 class inside_array_reader_writer_t
 {
+	static_assert( At_Least_Limiter::is_valid_members_count<Members_Count>::value,
+			"At_Least_Limiter has to allow at least Members_Count items in an array" );
+
 	using member_processor_ptr_t = const inside_array_member_processor_base_t*;
 
 	std::array< member_processor_ptr_t, Members_Count > m_member_processors;
@@ -2095,6 +2113,7 @@ public:
 		rapidjson::MemoryPoolAllocator<> & allocator ) const
 	{
 		to.SetArray();
+		//FIXME: a case when Members_Count is 0 has to be handled.
 		to.Reserve( static_cast<rapidjson::SizeType>(Members_Count), allocator );
 		for( std::size_t i = 0u; i != Members_Count; ++i )
 			m_member_processors[ i ]->write( to, allocator );
@@ -2142,16 +2161,19 @@ public:
 	}
 };
 
-} /* namespace details */
+} /* namespace inside_array_details */
 
 //FIXME: document this!
-template< typename... Member_Processors >
+template<
+	typename At_Least_Limiter = inside_array_details::all_members_required_t,
+	typename... Member_Processors >
 JSON_DTO_NODISCARD
 auto
 inside_array( Member_Processors && ...processors )
 {
-	return details::inside_array_reader_writer_t<
-			sizeof...(Member_Processors)
+	return inside_array_details::inside_array_reader_writer_t<
+			sizeof...(Member_Processors),
+			At_Least_Limiter
 		>( std::forward<Member_Processors>(processors)... );
 }
 
@@ -2161,7 +2183,7 @@ JSON_DTO_NODISCARD
 auto
 array_member( Field_Type & field )
 {
-	return details::inside_array_member_processor_t<
+	return inside_array_details::inside_array_member_processor_t<
 			Field_Type,
 			default_reader_writer_t
 		>( field, default_reader_writer_t{} );
@@ -2173,7 +2195,7 @@ JSON_DTO_NODISCARD
 auto
 array_member( Reader_Writer && reader_writer, Field_Type & field )
 {
-	return details::inside_array_member_processor_t<
+	return inside_array_details::inside_array_member_processor_t<
 			Field_Type,
 			Reader_Writer
 		>( field, std::forward<Reader_Writer>(reader_writer) );

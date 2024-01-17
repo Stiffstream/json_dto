@@ -96,6 +96,28 @@ struct tuple_holder_t
 	}
 };
 
+struct at_least_checker_one_t
+{
+	int m_x1{};
+	int m_x2{};
+	int m_x3{};
+	int m_x4{};
+
+	template< typename Json_Io >
+	void
+	json_io( Json_Io & io )
+	{
+		io
+			& json_dto::mandatory(
+					json_dto::inside_array< json_dto::inside_array_details::all_members_required_t >(
+						json_dto::array_member( m_x1 ),
+						json_dto::array_member( m_x2 ),
+						json_dto::array_member( m_x3 ),
+						json_dto::array_member( m_x4 ) ),
+					"x", *this );
+	}
+};
+
 } /* namespace test */
 
 using namespace test;
@@ -153,5 +175,20 @@ TEST_CASE( "inside-array-tuple-custom-reader-writer" , "[inside-array][tuple][re
 
 	const auto str = json_dto::to_json( r );
 	REQUIRE( R"json({"x":[-2,27,"nullptr",0]})json" == str );
+}
+
+TEST_CASE( "inside-array-at-least-limit-one" , "[inside-array][at-least][reader-writer]" )
+{
+	const char * json_str =
+		R"({
+			"x":[ 1, 2, 3, 4 ]
+		})";
+
+	auto r = json_dto::from_json<at_least_checker_one_t>( json_str );
+
+	REQUIRE( 1 == r.m_x1 );
+	REQUIRE( 2 == r.m_x2 );
+	REQUIRE( 3 == r.m_x3 );
+	REQUIRE( 4 == r.m_x4 );
 }
 
