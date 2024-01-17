@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <limits>
+#include <tuple>
 #include <type_traits>
 
 #include <rapidjson/document.h>
@@ -28,10 +29,10 @@ struct simple_outer_t
 	{
 		io
 			& json_dto::mandatory(
-					json_dto::inside_array<simple_nested_t>(
-						json_dto::array_member( &simple_nested_t::m_a ),
-						json_dto::array_member( &simple_nested_t::m_b ),
-						json_dto::array_member( &simple_nested_t::m_c ) ),
+					json_dto::inside_array(
+						json_dto::array_member( m_x.m_a ),
+						json_dto::array_member( m_x.m_b ),
+						json_dto::array_member( m_x.m_c ) ),
 					"x", m_x );
 	}
 };
@@ -62,11 +63,35 @@ struct outer_with_custom_reader_writer_t
 	{
 		io
 			& json_dto::mandatory(
-					json_dto::inside_array< simple_nested_t >(
+					json_dto::inside_array(
 						json_dto::array_member(
-							simple_int_reader_writter_t{}, &simple_nested_t::m_a ),
-						json_dto::array_member( &simple_nested_t::m_b ),
-						json_dto::array_member( &simple_nested_t::m_c ) ),
+							simple_int_reader_writter_t{}, m_x.m_a ),
+						json_dto::array_member( m_x.m_b ),
+						json_dto::array_member( m_x.m_c ) ),
+					"x", m_x );
+	}
+};
+
+struct tuple_holder_t
+{
+	std::tuple<int, int, std::string, int> m_x;
+
+	tuple_holder_t()
+		: m_x{ 0, 1, "zero", 2 }
+	{}
+
+	template< typename Json_Io >
+	void
+	json_io( Json_Io & io )
+	{
+		io
+			& json_dto::mandatory(
+					json_dto::inside_array(
+						json_dto::array_member( std::get<0>(m_x) ),
+						json_dto::array_member(
+							simple_int_reader_writter_t{}, std::get<1>(m_x) ),
+						json_dto::array_member( std::get<2>(m_x) ),
+						json_dto::array_member( std::get<3>(m_x) ) ),
 					"x", m_x );
 	}
 };
@@ -111,5 +136,22 @@ TEST_CASE( "inside-array-with-custom-reader-writer" , "[inside-array][reader-wri
 
 	const auto str = json_dto::to_json( r );
 	REQUIRE( R"json({"x":[-333,"nullptr",0]})json" == str );
+}
+
+TEST_CASE( "inside-array-tuple-custom-reader-writer" , "[inside-array][tuple][reader-writer]" )
+{
+	const char * json_str =
+		R"({
+			"x":[ 54, -1, "five", 24678 ]
+		})";
+
+	auto r = json_dto::from_json<tuple_holder_t>( json_str );
+
+	REQUIRE( std::make_tuple(54, -1, std::string{"five"}, 24678) == r.m_x );
+
+	r.m_x = std::make_tuple(-2, 27, std::string{"nullptr"}, 0);
+
+	const auto str = json_dto::to_json( r );
+	REQUIRE( R"json({"x":[-2,27,"nullptr",0]})json" == str );
 }
 

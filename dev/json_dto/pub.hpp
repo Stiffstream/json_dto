@@ -1993,30 +1993,26 @@ namespace details
 {
 
 //FIXME: document this!
-template< typename Field_Type >
 class inside_array_member_processor_base_t
 {
 public:
 	virtual void
 	read(
-		Field_Type & v,
 		std::size_t index,
 		const rapidjson::Value & from ) const = 0;
 
 	virtual void
 	write(
-		const Field_Type & v,
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const = 0;
 };
 
 //FIXME: document this!
 template<
-	std::size_t Members_Count,
-	typename Field_Type >
+	std::size_t Members_Count >
 class inside_array_reader_writer_t
 {
-	using member_processor_ptr_t = const inside_array_member_processor_base_t<Field_Type>*;
+	using member_processor_ptr_t = const inside_array_member_processor_base_t*;
 
 	std::array< member_processor_ptr_t, Members_Count > m_member_processors;
 
@@ -2067,8 +2063,9 @@ public:
 				std::forward<Member_Processors>(processors)... );
 	}
 
+	template< typename Field_Type >
 	void
-	read( Field_Type & v, const rapidjson::Value & from ) const
+	read( Field_Type & /*ignored*/, const rapidjson::Value & from ) const
 	{
 		if( from.IsArray() )
 		{
@@ -2084,68 +2081,63 @@ public:
 			}
 
 			for( std::size_t i = 0u; i != Members_Count; ++i )
-				m_member_processors[ i ]->read( v, i, from );
+				m_member_processors[ i ]->read( i, from );
 		}
 		else
 			throw ex_t{ "inside_array_reader_writer_t: value is not an array" };
 	}
 
+	template< typename Field_Type >
 	void
 	write(
-		const Field_Type & v,
+		const Field_Type & /*ignored*/,
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const
 	{
 		to.SetArray();
 		to.Reserve( static_cast<rapidjson::SizeType>(Members_Count), allocator );
 		for( std::size_t i = 0u; i != Members_Count; ++i )
-			m_member_processors[ i ]->write( v, to, allocator );
+			m_member_processors[ i ]->write( to, allocator );
 	}
 };
 
 //FIXME: document this!
 template<
 	typename Field_Type,
-	typename Member_Type,
 	typename Reader_Writer >
 class inside_array_member_processor_t final
-	:	public inside_array_member_processor_base_t< Field_Type >
+	:	public inside_array_member_processor_base_t
 {
-public:
-	using member_ptr_t = Member_Type (Field_Type::*);
-
 private:
-	member_ptr_t m_member_ptr;
+	Field_Type & m_field;
 
 	Reader_Writer m_reader_writer;
 
 public:
 	inside_array_member_processor_t(
-		member_ptr_t member_ptr,
+		Field_Type & field,
 		Reader_Writer reader_writer )
-		:	m_member_ptr{ member_ptr }
+		:	m_field{ field }
 		,	m_reader_writer{ std::move(reader_writer) }
 	{}
 
 	void
 	read(
-		Field_Type & v,
 		std::size_t index,
 		const rapidjson::Value & from ) const override
 	{
 		m_reader_writer.read(
-				v.*m_member_ptr,
+				m_field,
 				from[ static_cast<rapidjson::SizeType>(index) ] );
 	}
 
 	void
 	write(
-		const Field_Type & v,
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const override
 	{
 		rapidjson::Value o;
-		m_reader_writer.write( v.*m_member_ptr, o, allocator );
+		m_reader_writer.write( m_field, o, allocator );
 		to.PushBack( o.Move(), allocator );
 	}
 };
@@ -2153,46 +2145,38 @@ public:
 } /* namespace details */
 
 //FIXME: document this!
-template< typename Field_Type, typename... Member_Processors >
+template< typename... Member_Processors >
 JSON_DTO_NODISCARD
 auto
 inside_array( Member_Processors && ...processors )
 {
 	return details::inside_array_reader_writer_t<
-			sizeof...(Member_Processors),
-			Field_Type
+			sizeof...(Member_Processors)
 		>( std::forward<Member_Processors>(processors)... );
 }
 
 //FIXME: document this!
-template<
-	typename Field_Type,
-	typename Member_Type >
+template< typename Field_Type >
 JSON_DTO_NODISCARD
 auto
-array_member( Member_Type (Field_Type::*member_ptr) )
+array_member( Field_Type & field )
 {
 	return details::inside_array_member_processor_t<
 			Field_Type,
-			Member_Type,
 			default_reader_writer_t
-		>( member_ptr, default_reader_writer_t{} );
+		>( field, default_reader_writer_t{} );
 }
 
 //FIXME: document this!
-template<
-	typename Reader_Writer,
-	typename Field_Type,
-	typename Member_Type >
+template< typename Reader_Writer, typename Field_Type >
 JSON_DTO_NODISCARD
 auto
-array_member( Reader_Writer && reader_writer, Member_Type (Field_Type::*member_ptr) )
+array_member( Reader_Writer && reader_writer, Field_Type & field )
 {
 	return details::inside_array_member_processor_t<
 			Field_Type,
-			Member_Type,
 			Reader_Writer
-		>( member_ptr, std::forward<Reader_Writer>(reader_writer) );
+		>( field, std::forward<Reader_Writer>(reader_writer) );
 }
 
 //
