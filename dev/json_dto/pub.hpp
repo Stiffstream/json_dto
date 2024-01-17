@@ -1604,6 +1604,15 @@ default_on_null( nullable_t< Field_Type > & f )
 	f.reset();
 }
 
+#if defined( JSON_DTO_SUPPORTS_STD_OPTIONAL )
+template< typename FieldType >
+void
+default_on_null( std::optional< FieldType > & f )
+{
+    f.reset();
+}
+#endif
+
 template< typename Field_Type, typename Field_Default_Value_Type >
 void
 set_default_value( Field_Type & f, Field_Default_Value_Type && default_value )
