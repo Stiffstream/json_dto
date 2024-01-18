@@ -1996,7 +1996,7 @@ namespace details
 {
 
 //FIXME: document this!
-class inside_array_member_processor_base_t
+class member_processor_base_t
 {
 public:
 	virtual void
@@ -2053,7 +2053,7 @@ class reader_writer_t
 	static_assert( At_Least_Limiter::is_valid_members_count<Members_Count>::value,
 			"At_Least_Limiter has to allow at least Members_Count items in an array" );
 
-	using member_processor_ptr_t = const inside_array_member_processor_base_t*;
+	using member_processor_ptr_t = const member_processor_base_t*;
 
 	std::array< member_processor_ptr_t, Members_Count > m_member_processors;
 
@@ -2145,7 +2145,7 @@ template<
 	typename Field_Type,
 	typename Reader_Writer >
 class simplest_member_processor_t final
-	:	public inside_array_member_processor_base_t
+	:	public member_processor_base_t
 {
 private:
 	Field_Type & m_field;
