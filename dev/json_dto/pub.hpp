@@ -2143,21 +2143,27 @@ public:
 //FIXME: document this!
 template<
 	typename Field_Type,
-	typename Reader_Writer >
+	typename Reader_Writer,
+	typename Validator >
 class simplest_member_processor_t final
 	:	public member_processor_base_t
 {
 private:
 	Field_Type & m_field;
 
+	//FIXME: should it be const?
 	Reader_Writer m_reader_writer;
+
+	const Validator m_validator;
 
 public:
 	simplest_member_processor_t(
 		Field_Type & field,
-		Reader_Writer reader_writer )
+		Reader_Writer reader_writer,
+		Validator validator )
 		:	m_field{ field }
 		,	m_reader_writer{ std::move(reader_writer) }
+		,	m_validator{ std::move(validator) }
 	{}
 
 	void
@@ -2168,12 +2174,15 @@ public:
 		m_reader_writer.read(
 				m_field,
 				from[ static_cast<rapidjson::SizeType>(index) ] );
+		m_validator( m_field );
 	}
 
 	void
 	on_field_not_defined() const override
 	{
 		m_field = Field_Type{};
+		// The default value has to be passed to the validator too.
+		m_validator( m_field );
 	}
 
 	void
@@ -2181,6 +2190,10 @@ public:
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const override
 	{
+		// The value has to be passed to the validator before serialization.
+		m_validator( m_field );
+
+		// Now the field can be serialized.
 		rapidjson::Value o;
 		m_reader_writer.write( m_field, o, allocator );
 		to.PushBack( o.Move(), allocator );
@@ -2233,27 +2246,37 @@ reader_writer( Member_Processors && ...processors )
 }
 
 //FIXME: document this!
-template< typename Field_Type >
+template<
+	typename Field_Type,
+	typename Validator = empty_validator_t >
 JSON_DTO_NODISCARD
 auto
-member( Field_Type & field )
+member( Field_Type & field, Validator validator = Validator{} )
 {
 	return details::simplest_member_processor_t<
 			Field_Type,
-			default_reader_writer_t
-		>( field, default_reader_writer_t{} );
+			default_reader_writer_t,
+			Validator
+		>( field, default_reader_writer_t{}, std::move(validator) );
 }
 
 //FIXME: document this!
-template< typename Reader_Writer, typename Field_Type >
+template<
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Validator = empty_validator_t >
 JSON_DTO_NODISCARD
 auto
-member( Reader_Writer && reader_writer, Field_Type & field )
+member(
+	Reader_Writer && reader_writer,
+	Field_Type & field,
+	Validator validator = Validator{} )
 {
 	return details::simplest_member_processor_t<
 			Field_Type,
-			Reader_Writer
-		>( field, std::forward<Reader_Writer>(reader_writer) );
+			Reader_Writer,
+			Validator
+		>( field, std::forward<Reader_Writer>(reader_writer), std::move(validator) );
 }
 
 } /* namespace inside_array */

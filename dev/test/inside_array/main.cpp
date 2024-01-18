@@ -5,9 +5,8 @@
 #include <tuple>
 #include <type_traits>
 
-#include <rapidjson/document.h>
-
 #include <json_dto/pub.hpp>
+#include <json_dto/validators.hpp>
 
 namespace test
 {
@@ -138,6 +137,26 @@ struct at_least_checker_two_t
 						json_dto::inside_array::member( m_x2 ),
 						json_dto::inside_array::member( m_x3 ),
 						json_dto::inside_array::member( m_x4 ) ),
+					"x", *this );
+	}
+};
+
+struct constrained_values_t
+{
+	int m_a{};
+	int m_b{2};
+
+	template< typename Json_Io >
+	void
+	json_io( Json_Io & io )
+	{
+		io
+			& json_dto::mandatory(
+					json_dto::inside_array::reader_writer(
+						json_dto::inside_array::member( m_a,
+							json_dto::min_max_constraint( -10, 10 ) ),
+						json_dto::inside_array::member( m_b,
+							json_dto::one_of_constraint( {0, 2, 4, 6, 8, 10} ) ) ),
 					"x", *this );
 	}
 };
@@ -329,6 +348,61 @@ TEST_CASE( "inside-array-at-least-limit-zero" , "[inside-array][at-least][reader
 		REQUIRE( 0 == r.m_x4 );
 
 		REQUIRE( R"json({"x":[0,0,0,0]})json" == json_dto::to_json( r ) );
+	}
+}
+
+TEST_CASE( "inside-array-validators" , "[inside-array][validators][reader-writer]" )
+{
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 8 ]
+			})";
+
+		auto r = json_dto::from_json<constrained_values_t>( json_str );
+
+		REQUIRE( 1 == r.m_a );
+		REQUIRE( 8 == r.m_b );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ -11, 2 ]
+			})";
+
+		REQUIRE_THROWS( json_dto::from_json<constrained_values_t>( json_str ) );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 7 ]
+			})";
+
+		REQUIRE_THROWS( json_dto::from_json<constrained_values_t>( json_str ) );
+	}
+
+	{
+		constrained_values_t v;
+		v.m_a = 11;
+
+		REQUIRE_THROWS( json_dto::to_json( v ) );
+	}
+
+	{
+		constrained_values_t v;
+		v.m_b = 11;
+
+		REQUIRE_THROWS( json_dto::to_json( v ) );
+	}
+
+	{
+		constrained_values_t v;
+		v.m_a = -3;
+		v.m_b = 6;
+
+		REQUIRE( R"json({"x":[-3,6]})json" == json_dto::to_json( v ) );
 	}
 }
 
