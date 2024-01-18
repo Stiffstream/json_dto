@@ -2151,8 +2151,7 @@ class simplest_member_processor_t final
 private:
 	Field_Type & m_field;
 
-	//FIXME: should it be const?
-	Reader_Writer m_reader_writer;
+	const Reader_Writer m_reader_writer;
 
 	const Validator m_validator;
 
