@@ -96,7 +96,30 @@ struct tuple_holder_t
 	}
 };
 
-struct at_least_checker_one_t
+struct at_least_checker_zero_t
+{
+	int m_x1{};
+	int m_x2{};
+	int m_x3{};
+	int m_x4{};
+
+	template< typename Json_Io >
+	void
+	json_io( Json_Io & io )
+	{
+		io
+			& json_dto::mandatory(
+					json_dto::inside_array::reader_writer<
+							json_dto::inside_array::at_least<0> >(
+						json_dto::inside_array::member( m_x1 ),
+						json_dto::inside_array::member( m_x2 ),
+						json_dto::inside_array::member( m_x3 ),
+						json_dto::inside_array::member( m_x4 ) ),
+					"x", *this );
+	}
+};
+
+struct at_least_checker_two_t
 {
 	int m_x1{};
 	int m_x2{};
@@ -178,7 +201,7 @@ TEST_CASE( "inside-array-tuple-custom-reader-writer" , "[inside-array][tuple][re
 	REQUIRE( R"json({"x":[-2,27,"nullptr",0]})json" == str );
 }
 
-TEST_CASE( "inside-array-at-least-limit-one" , "[inside-array][at-least][reader-writer]" )
+TEST_CASE( "inside-array-at-least-limit-two" , "[inside-array][at-least][reader-writer]" )
 {
 	{
 		const char * json_str =
@@ -186,7 +209,7 @@ TEST_CASE( "inside-array-at-least-limit-one" , "[inside-array][at-least][reader-
 				"x":[ 1, 2, 3, 4 ]
 			})";
 
-		auto r = json_dto::from_json<at_least_checker_one_t>( json_str );
+		auto r = json_dto::from_json<at_least_checker_two_t>( json_str );
 
 		REQUIRE( 1 == r.m_x1 );
 		REQUIRE( 2 == r.m_x2 );
@@ -200,7 +223,7 @@ TEST_CASE( "inside-array-at-least-limit-one" , "[inside-array][at-least][reader-
 				"x":[ 1, 2 ]
 			})";
 
-		at_least_checker_one_t r;
+		at_least_checker_two_t r;
 		r.m_x1 = 33;
 		r.m_x2 = 34;
 		r.m_x3 = 35;
@@ -212,6 +235,8 @@ TEST_CASE( "inside-array-at-least-limit-one" , "[inside-array][at-least][reader-
 		REQUIRE( 2 == r.m_x2 );
 		REQUIRE( 0 == r.m_x3 );
 		REQUIRE( 0 == r.m_x4 );
+
+		REQUIRE( R"json({"x":[1,2,0,0]})json" == json_dto::to_json( r ) );
 	}
 
 	{
@@ -220,7 +245,90 @@ TEST_CASE( "inside-array-at-least-limit-one" , "[inside-array][at-least][reader-
 				"x":[1]
 			})";
 
-		REQUIRE_THROWS( json_dto::from_json<at_least_checker_one_t>( json_str ) );
+		REQUIRE_THROWS( json_dto::from_json<at_least_checker_two_t>( json_str ) );
+	}
+}
+
+TEST_CASE( "inside-array-at-least-limit-zero" , "[inside-array][at-least][reader-writer]" )
+{
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 2, 3, 4 ]
+			})";
+
+		auto r = json_dto::from_json<at_least_checker_zero_t>( json_str );
+
+		REQUIRE( 1 == r.m_x1 );
+		REQUIRE( 2 == r.m_x2 );
+		REQUIRE( 3 == r.m_x3 );
+		REQUIRE( 4 == r.m_x4 );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 2 ]
+			})";
+
+		at_least_checker_zero_t r;
+		r.m_x1 = 33;
+		r.m_x2 = 34;
+		r.m_x3 = 35;
+		r.m_x4 = 36;
+
+		json_dto::from_json( json_str, r );
+
+		REQUIRE( 1 == r.m_x1 );
+		REQUIRE( 2 == r.m_x2 );
+		REQUIRE( 0 == r.m_x3 );
+		REQUIRE( 0 == r.m_x4 );
+
+		REQUIRE( R"json({"x":[1,2,0,0]})json" == json_dto::to_json( r ) );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1 ]
+			})";
+
+		at_least_checker_zero_t r;
+		r.m_x1 = 33;
+		r.m_x2 = 34;
+		r.m_x3 = 35;
+		r.m_x4 = 36;
+
+		json_dto::from_json( json_str, r );
+
+		REQUIRE( 1 == r.m_x1 );
+		REQUIRE( 0 == r.m_x2 );
+		REQUIRE( 0 == r.m_x3 );
+		REQUIRE( 0 == r.m_x4 );
+
+		REQUIRE( R"json({"x":[1,0,0,0]})json" == json_dto::to_json( r ) );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[]
+			})";
+
+		at_least_checker_zero_t r;
+		r.m_x1 = 33;
+		r.m_x2 = 34;
+		r.m_x3 = 35;
+		r.m_x4 = 36;
+
+		json_dto::from_json( json_str, r );
+
+		REQUIRE( 0 == r.m_x1 );
+		REQUIRE( 0 == r.m_x2 );
+		REQUIRE( 0 == r.m_x3 );
+		REQUIRE( 0 == r.m_x4 );
+
+		REQUIRE( R"json({"x":[0,0,0,0]})json" == json_dto::to_json( r ) );
 	}
 }
 
