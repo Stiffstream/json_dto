@@ -2005,6 +2005,9 @@ public:
 		const rapidjson::Value & from ) const = 0;
 
 	virtual void
+	on_field_not_defined() const = 0;
+
+	virtual void
 	write(
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const = 0;
@@ -2019,6 +2022,23 @@ struct all_members_required_t
 	{
 		static constexpr bool value = true;
 	};
+
+	//FIXME: document this!
+	JSON_DTO_NODISCARD
+	static rapidjson::SizeType
+	handle_actual_members_count(
+		rapidjson::SizeType expected_members,
+		rapidjson::SizeType actual_members )
+	{
+		if( expected_members != actual_members )
+			throw ex_t{ "inside_array: actual members count ("
+					+ std::to_string(actual_members)
+					+ ") missmatches expected members count ("
+					+ std::to_string(expected_members) + ")"
+				};
+
+		return expected_members;
+	}
 
 	//FIXME: implement this!
 };
@@ -2090,19 +2110,16 @@ public:
 	{
 		if( from.IsArray() )
 		{
-			if( Members_Count != from.Size() )
-			{
-				throw ex_t{
-						"inside_array_reader_writer_t: required size "
-						"missmatch, required_size: "
-						+ std::to_string( Members_Count )
-						+ ", actual size: "
-						+ std::to_string( from.Size() )
-					};
-			}
+			const auto actual_members = from.Size();
+			const auto members_to_read =
+					At_Least_Limiter::handle_actual_members_count( Members_Count, from.Size() );
 
-			for( std::size_t i = 0u; i != Members_Count; ++i )
+			rapidjson::SizeType i = 0u;
+			for( ; i != members_to_read; ++i )
 				m_member_processors[ i ]->read( i, from );
+
+			for( ; i != Members_Count; ++i )
+				m_member_processors[ i ]->on_field_not_defined();
 		}
 		else
 			throw ex_t{ "inside_array_reader_writer_t: value is not an array" };
@@ -2154,6 +2171,12 @@ public:
 	}
 
 	void
+	on_field_not_defined() const override
+	{
+		m_field = Field_Type{};
+	}
+
+	void
 	write(
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const override
@@ -2166,6 +2189,34 @@ public:
 
 } /* namespace inside_array::details */
 
+//FIXME: document this!
+template< std::size_t Number >
+struct at_least
+{
+	//FIXME: document this!
+	template< std::size_t Members_Count >
+	struct is_valid_members_count
+	{
+		static constexpr bool value = (Number <= Members_Count);
+	};
+
+	//FIXME: document this!
+	JSON_DTO_NODISCARD
+	static rapidjson::SizeType
+	handle_actual_members_count(
+		rapidjson::SizeType /*expected_members*/,
+		rapidjson::SizeType actual_members )
+	{
+		if( actual_members < Number )
+			throw ex_t{ "inside_array: actual members count ("
+					+ std::to_string(actual_members)
+					+ ") is less than expected mandatory members count ("
+					+ std::to_string(Number) + ")"
+				};
+
+		return actual_members;
+	}
+};
 
 //FIXME: document this!
 template<
