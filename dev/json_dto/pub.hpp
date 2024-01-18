@@ -1989,7 +1989,10 @@ struct apply_to_content_t
 // start of inside_array related stuff
 //
 
-namespace inside_array_details
+namespace inside_array
+{
+
+namespace details
 {
 
 //FIXME: document this!
@@ -2161,17 +2164,18 @@ public:
 	}
 };
 
-} /* namespace inside_array_details */
+} /* namespace inside_array::details */
+
 
 //FIXME: document this!
 template<
-	typename At_Least_Limiter = inside_array_details::all_members_required_t,
+	typename At_Least_Limiter = inside_array::details::all_members_required_t,
 	typename... Member_Processors >
 JSON_DTO_NODISCARD
 auto
-inside_array( Member_Processors && ...processors )
+reader_writer( Member_Processors && ...processors )
 {
-	return inside_array_details::inside_array_reader_writer_t<
+	return details::inside_array_reader_writer_t<
 			sizeof...(Member_Processors),
 			At_Least_Limiter
 		>( std::forward<Member_Processors>(processors)... );
@@ -2181,9 +2185,9 @@ inside_array( Member_Processors && ...processors )
 template< typename Field_Type >
 JSON_DTO_NODISCARD
 auto
-array_member( Field_Type & field )
+member( Field_Type & field )
 {
-	return inside_array_details::inside_array_member_processor_t<
+	return details::inside_array_member_processor_t<
 			Field_Type,
 			default_reader_writer_t
 		>( field, default_reader_writer_t{} );
@@ -2193,13 +2197,15 @@ array_member( Field_Type & field )
 template< typename Reader_Writer, typename Field_Type >
 JSON_DTO_NODISCARD
 auto
-array_member( Reader_Writer && reader_writer, Field_Type & field )
+member( Reader_Writer && reader_writer, Field_Type & field )
 {
-	return inside_array_details::inside_array_member_processor_t<
+	return details::inside_array_member_processor_t<
 			Field_Type,
 			Reader_Writer
 		>( field, std::forward<Reader_Writer>(reader_writer) );
 }
+
+} /* namespace inside_array */
 
 //
 // end of inside_array related stuff

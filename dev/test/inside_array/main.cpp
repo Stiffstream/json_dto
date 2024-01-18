@@ -29,10 +29,10 @@ struct simple_outer_t
 	{
 		io
 			& json_dto::mandatory(
-					json_dto::inside_array(
-						json_dto::array_member( m_x.m_a ),
-						json_dto::array_member( m_x.m_b ),
-						json_dto::array_member( m_x.m_c ) ),
+					json_dto::inside_array::reader_writer(
+						json_dto::inside_array::member( m_x.m_a ),
+						json_dto::inside_array::member( m_x.m_b ),
+						json_dto::inside_array::member( m_x.m_c ) ),
 					"x", m_x );
 	}
 };
@@ -63,11 +63,11 @@ struct outer_with_custom_reader_writer_t
 	{
 		io
 			& json_dto::mandatory(
-					json_dto::inside_array(
-						json_dto::array_member(
+					json_dto::inside_array::reader_writer(
+						json_dto::inside_array::member(
 							simple_int_reader_writter_t{}, m_x.m_a ),
-						json_dto::array_member( m_x.m_b ),
-						json_dto::array_member( m_x.m_c ) ),
+						json_dto::inside_array::member( m_x.m_b ),
+						json_dto::inside_array::member( m_x.m_c ) ),
 					"x", m_x );
 	}
 };
@@ -86,12 +86,12 @@ struct tuple_holder_t
 	{
 		io
 			& json_dto::mandatory(
-					json_dto::inside_array(
-						json_dto::array_member( std::get<0>(m_x) ),
-						json_dto::array_member(
+					json_dto::inside_array::reader_writer(
+						json_dto::inside_array::member( std::get<0>(m_x) ),
+						json_dto::inside_array::member(
 							simple_int_reader_writter_t{}, std::get<1>(m_x) ),
-						json_dto::array_member( std::get<2>(m_x) ),
-						json_dto::array_member( std::get<3>(m_x) ) ),
+						json_dto::inside_array::member( std::get<2>(m_x) ),
+						json_dto::inside_array::member( std::get<3>(m_x) ) ),
 					"x", m_x );
 	}
 };
@@ -109,11 +109,12 @@ struct at_least_checker_one_t
 	{
 		io
 			& json_dto::mandatory(
-					json_dto::inside_array< json_dto::inside_array_details::all_members_required_t >(
-						json_dto::array_member( m_x1 ),
-						json_dto::array_member( m_x2 ),
-						json_dto::array_member( m_x3 ),
-						json_dto::array_member( m_x4 ) ),
+					json_dto::inside_array::reader_writer<
+							json_dto::inside_array::details::all_members_required_t >(
+						json_dto::inside_array::member( m_x1 ),
+						json_dto::inside_array::member( m_x2 ),
+						json_dto::inside_array::member( m_x3 ),
+						json_dto::inside_array::member( m_x4 ) ),
 					"x", *this );
 	}
 };
