@@ -2048,7 +2048,7 @@ template<
 	//FIXME: maybe it has to be rapidjson::SizeType, but not std::size_t?
 	std::size_t Members_Count,
 	typename At_Least_Limiter >
-class inside_array_reader_writer_t
+class reader_writer_t
 {
 	static_assert( At_Least_Limiter::is_valid_members_count<Members_Count>::value,
 			"At_Least_Limiter has to allow at least Members_Count items in an array" );
@@ -2062,7 +2062,7 @@ class inside_array_reader_writer_t
 		typename Member_Processor >
 	static void
 	set_member_processor_pointer(
-		inside_array_reader_writer_t & self,
+		reader_writer_t & self,
 		Member_Processor && current_processor )
 	{
 		self.m_member_processors[ Index ] = std::addressof(current_processor);
@@ -2074,7 +2074,7 @@ class inside_array_reader_writer_t
 		typename... Tail >
 	static void
 	set_member_processor_pointer(
-		inside_array_reader_writer_t & self,
+		reader_writer_t & self,
 		Member_Processor && current_processor,
 		Tail && ...tail )
 	{
@@ -2083,18 +2083,18 @@ class inside_array_reader_writer_t
 	}
 
 public:
-	inside_array_reader_writer_t(
-		const inside_array_reader_writer_t & ) = default;
-	inside_array_reader_writer_t(
-		inside_array_reader_writer_t && ) = default;
+	reader_writer_t(
+		const reader_writer_t & ) = default;
+	reader_writer_t(
+		reader_writer_t && ) = default;
 
-	inside_array_reader_writer_t &
-	operator=( const inside_array_reader_writer_t & ) = default;
-	inside_array_reader_writer_t &
-	operator=( inside_array_reader_writer_t && ) = default;
+	reader_writer_t &
+	operator=( const reader_writer_t & ) = default;
+	reader_writer_t &
+	operator=( reader_writer_t && ) = default;
 
 	template< typename... Member_Processors >
-	inside_array_reader_writer_t( Member_Processors && ...processors )
+	reader_writer_t( Member_Processors && ...processors )
 	{
 		static_assert( Members_Count == sizeof...(processors),
 				"Members_Count should be equal to sizeof...(processors)" );
@@ -2122,7 +2122,7 @@ public:
 				m_member_processors[ i ]->on_field_not_defined();
 		}
 		else
-			throw ex_t{ "inside_array_reader_writer_t: value is not an array" };
+			throw ex_t{ "reader_writer_t: value is not an array" };
 	}
 
 	template< typename Field_Type >
@@ -2144,7 +2144,7 @@ public:
 template<
 	typename Field_Type,
 	typename Reader_Writer >
-class inside_array_member_processor_t final
+class simplest_member_processor_t final
 	:	public inside_array_member_processor_base_t
 {
 private:
@@ -2153,7 +2153,7 @@ private:
 	Reader_Writer m_reader_writer;
 
 public:
-	inside_array_member_processor_t(
+	simplest_member_processor_t(
 		Field_Type & field,
 		Reader_Writer reader_writer )
 		:	m_field{ field }
@@ -2226,7 +2226,7 @@ JSON_DTO_NODISCARD
 auto
 reader_writer( Member_Processors && ...processors )
 {
-	return details::inside_array_reader_writer_t<
+	return details::reader_writer_t<
 			sizeof...(Member_Processors),
 			At_Least_Limiter
 		>( std::forward<Member_Processors>(processors)... );
@@ -2238,7 +2238,7 @@ JSON_DTO_NODISCARD
 auto
 member( Field_Type & field )
 {
-	return details::inside_array_member_processor_t<
+	return details::simplest_member_processor_t<
 			Field_Type,
 			default_reader_writer_t
 		>( field, default_reader_writer_t{} );
@@ -2250,7 +2250,7 @@ JSON_DTO_NODISCARD
 auto
 member( Reader_Writer && reader_writer, Field_Type & field )
 {
-	return details::inside_array_member_processor_t<
+	return details::simplest_member_processor_t<
 			Field_Type,
 			Reader_Writer
 		>( field, std::forward<Reader_Writer>(reader_writer) );
