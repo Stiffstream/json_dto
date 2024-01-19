@@ -2050,7 +2050,8 @@ template<
 	typename At_Least_Limiter >
 class reader_writer_t
 {
-	static_assert( At_Least_Limiter::is_valid_members_count<Members_Count>::value,
+	static_assert(
+			At_Least_Limiter::template is_valid_members_count<Members_Count>::value,
 			"At_Least_Limiter has to allow at least Members_Count items in an array" );
 
 	using member_processor_ptr_t = const member_processor_base_t*;
@@ -2110,7 +2111,6 @@ public:
 	{
 		if( from.IsArray() )
 		{
-			const auto actual_members = from.Size();
 			const auto members_to_read =
 					At_Least_Limiter::handle_actual_members_count( Members_Count, from.Size() );
 
