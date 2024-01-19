@@ -141,6 +141,199 @@ struct at_least_checker_two_t
 	}
 };
 
+struct copyable_but_not_movable_t
+{
+	int m_v{};
+
+	copyable_but_not_movable_t() = default;
+	copyable_but_not_movable_t(int v) : m_v{v} {}
+
+	copyable_but_not_movable_t(
+		const copyable_but_not_movable_t &) = default;
+	copyable_but_not_movable_t &
+	operator=(
+		const copyable_but_not_movable_t &) = default;
+
+	copyable_but_not_movable_t(
+		copyable_but_not_movable_t &&) = delete;
+	copyable_but_not_movable_t &
+	operator=(
+		copyable_but_not_movable_t &&) = delete;
+
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
+	{
+		io & json_dto::mandatory( "v", m_v );
+	}
+};
+
+struct moveable_with_move_flag_t
+{
+	int m_v{};
+	bool m_move_operator_used{ false };
+
+	moveable_with_move_flag_t() = default;
+	moveable_with_move_flag_t(int v) : m_v{v} {}
+
+	moveable_with_move_flag_t(
+		const moveable_with_move_flag_t & other)
+		:	m_v{ other.m_v }
+		,	m_move_operator_used{ false }
+	{}
+
+	moveable_with_move_flag_t &
+	operator=(
+		const moveable_with_move_flag_t & other)
+	{
+		m_v = other.m_v;
+		m_move_operator_used = false;
+
+		return *this;
+	}
+
+	moveable_with_move_flag_t(
+		moveable_with_move_flag_t && other) noexcept
+		:	m_v{ other.m_v }
+		,	m_move_operator_used{ false }
+	{}
+
+	moveable_with_move_flag_t &
+	operator=(
+		moveable_with_move_flag_t && other) noexcept
+	{
+		m_v = other.m_v;
+		m_move_operator_used = true;
+
+		return *this;
+	}
+
+	template< typename Json_Io >
+	void json_io( Json_Io & io )
+	{
+		io & json_dto::mandatory( "v", m_v );
+	}
+};
+
+struct at_least_checker_two_with_defaults_1_t
+{
+	int m_x1{};
+	int m_x2{};
+	copyable_but_not_movable_t m_x3;
+	copyable_but_not_movable_t m_x4;
+
+	template< typename Json_Io >
+	void
+	json_io( Json_Io & io )
+	{
+		const copyable_but_not_movable_t x3_default( 45 );
+		// Should be treated as const reference to the default value.
+		copyable_but_not_movable_t x4_default( 56 );
+
+		io
+			& json_dto::mandatory(
+					json_dto::inside_array::reader_writer<
+							json_dto::inside_array::at_least<2> >(
+						json_dto::inside_array::member( m_x1 ),
+						json_dto::inside_array::member( m_x2 ),
+						json_dto::inside_array::member_with_default_value( m_x3, x3_default ),
+						json_dto::inside_array::member_with_default_value( m_x4, x4_default ) ),
+					"x", *this );
+	}
+};
+
+struct at_least_checker_two_with_defaults_2_t
+{
+	struct custom_reader_writer_t
+		:	public json_dto::default_reader_writer_t
+	{
+	};
+
+	int m_x1{};
+	int m_x2{};
+	copyable_but_not_movable_t m_x3;
+	copyable_but_not_movable_t m_x4;
+
+	template< typename Json_Io >
+	void
+	json_io( Json_Io & io )
+	{
+		const copyable_but_not_movable_t x3_default( 45 );
+		// Should be treated as const reference to the default value.
+		copyable_but_not_movable_t x4_default( 56 );
+
+		io
+			& json_dto::mandatory(
+					json_dto::inside_array::reader_writer<
+							json_dto::inside_array::at_least<2> >(
+						json_dto::inside_array::member( m_x1 ),
+						json_dto::inside_array::member( m_x2 ),
+						json_dto::inside_array::member_with_default_value(
+								custom_reader_writer_t{}, m_x3, x3_default ),
+						json_dto::inside_array::member_with_default_value(
+								custom_reader_writer_t{}, m_x4, x4_default ) ),
+					"x", *this );
+	}
+};
+
+struct at_least_checker_two_with_defaults_3_t
+{
+	int m_x1{};
+	int m_x2{};
+	moveable_with_move_flag_t m_x3;
+	moveable_with_move_flag_t m_x4;
+
+	template< typename Json_Io >
+	void
+	json_io( Json_Io & io )
+	{
+		io
+			& json_dto::mandatory(
+					json_dto::inside_array::reader_writer<
+							json_dto::inside_array::at_least<2> >(
+						json_dto::inside_array::member( m_x1 ),
+						json_dto::inside_array::member( m_x2 ),
+						json_dto::inside_array::member_with_default_value( m_x3,
+								moveable_with_move_flag_t{ 45 } ),
+						json_dto::inside_array::member_with_default_value( m_x4,
+								moveable_with_move_flag_t{ 56 } ) ),
+					"x", *this );
+	}
+};
+
+struct at_least_checker_two_with_defaults_4_t
+{
+	struct custom_reader_writer_t
+		:	public json_dto::default_reader_writer_t
+	{
+	};
+
+	int m_x1{};
+	int m_x2{};
+	moveable_with_move_flag_t m_x3;
+	moveable_with_move_flag_t m_x4;
+
+	template< typename Json_Io >
+	void
+	json_io( Json_Io & io )
+	{
+		io
+			& json_dto::mandatory(
+					json_dto::inside_array::reader_writer<
+							json_dto::inside_array::at_least<2> >(
+						json_dto::inside_array::member( m_x1 ),
+						json_dto::inside_array::member( m_x2 ),
+						json_dto::inside_array::member_with_default_value(
+								custom_reader_writer_t{},
+								m_x3,
+								moveable_with_move_flag_t{ 45 } ),
+						json_dto::inside_array::member_with_default_value(
+								custom_reader_writer_t{},
+								m_x4,
+								moveable_with_move_flag_t{ 56 } ) ),
+					"x", *this );
+	}
+};
+
 struct constrained_values_t
 {
 	int m_a{};
@@ -265,6 +458,189 @@ TEST_CASE( "inside-array-at-least-limit-two" , "[inside-array][at-least][reader-
 			})";
 
 		REQUIRE_THROWS( json_dto::from_json<at_least_checker_two_t>( json_str ) );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 2, {"v":3}, {"v":4} ]
+			})";
+
+		at_least_checker_two_with_defaults_1_t r;
+		r.m_x1 = 33;
+		r.m_x2 = 34;
+		r.m_x3.m_v = 35;
+		r.m_x4.m_v = 36;
+
+		json_dto::from_json( json_str, r );
+
+		REQUIRE( 1 == r.m_x1 );
+		REQUIRE( 2 == r.m_x2 );
+		REQUIRE( 3 == r.m_x3.m_v );
+		REQUIRE( 4 == r.m_x4.m_v );
+
+		REQUIRE( R"json({"x":[1,2,{"v":3},{"v":4}]})json" == json_dto::to_json( r ) );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 2 ]
+			})";
+
+		at_least_checker_two_with_defaults_1_t r;
+		r.m_x1 = 33;
+		r.m_x2 = 34;
+		r.m_x3.m_v = 35;
+		r.m_x4.m_v = 36;
+
+		json_dto::from_json( json_str, r );
+
+		REQUIRE( 1 == r.m_x1 );
+		REQUIRE( 2 == r.m_x2 );
+		REQUIRE( 45 == r.m_x3.m_v );
+		REQUIRE( 56 == r.m_x4.m_v );
+
+		REQUIRE( R"json({"x":[1,2,{"v":45},{"v":56}]})json" == json_dto::to_json( r ) );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 2, {"v":3}, {"v":4} ]
+			})";
+
+		at_least_checker_two_with_defaults_2_t r;
+		r.m_x1 = 33;
+		r.m_x2 = 34;
+		r.m_x3.m_v = 35;
+		r.m_x4.m_v = 36;
+
+		json_dto::from_json( json_str, r );
+
+		REQUIRE( 1 == r.m_x1 );
+		REQUIRE( 2 == r.m_x2 );
+		REQUIRE( 3 == r.m_x3.m_v );
+		REQUIRE( 4 == r.m_x4.m_v );
+
+		REQUIRE( R"json({"x":[1,2,{"v":3},{"v":4}]})json" == json_dto::to_json( r ) );
+	}
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 2 ]
+			})";
+
+		at_least_checker_two_with_defaults_2_t r;
+		r.m_x1 = 33;
+		r.m_x2 = 34;
+		r.m_x3.m_v = 35;
+		r.m_x4.m_v = 36;
+
+		json_dto::from_json( json_str, r );
+
+		REQUIRE( 1 == r.m_x1 );
+		REQUIRE( 2 == r.m_x2 );
+		REQUIRE( 45 == r.m_x3.m_v );
+		REQUIRE( 56 == r.m_x4.m_v );
+
+		REQUIRE( R"json({"x":[1,2,{"v":45},{"v":56}]})json" == json_dto::to_json( r ) );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 2, {"v":3}, {"v":4} ]
+			})";
+
+		at_least_checker_two_with_defaults_3_t r;
+		r.m_x1 = 33;
+		r.m_x2 = 34;
+		r.m_x3.m_v = 35;
+		r.m_x4.m_v = 36;
+
+		json_dto::from_json( json_str, r );
+
+		REQUIRE( 1 == r.m_x1 );
+		REQUIRE( 2 == r.m_x2 );
+		REQUIRE( 3 == r.m_x3.m_v );
+		REQUIRE_FALSE( r.m_x3.m_move_operator_used );
+		REQUIRE( 4 == r.m_x4.m_v );
+		REQUIRE_FALSE( r.m_x4.m_move_operator_used );
+
+		REQUIRE( R"json({"x":[1,2,{"v":3},{"v":4}]})json" == json_dto::to_json( r ) );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 2 ]
+			})";
+
+		at_least_checker_two_with_defaults_3_t r;
+		r.m_x1 = 33;
+		r.m_x2 = 34;
+		r.m_x3.m_v = 35;
+		r.m_x4.m_v = 36;
+
+		json_dto::from_json( json_str, r );
+
+		REQUIRE( 1 == r.m_x1 );
+		REQUIRE( 2 == r.m_x2 );
+		REQUIRE( 45 == r.m_x3.m_v );
+		REQUIRE( r.m_x3.m_move_operator_used );
+		REQUIRE( 56 == r.m_x4.m_v );
+		REQUIRE( r.m_x4.m_move_operator_used );
+
+		REQUIRE( R"json({"x":[1,2,{"v":45},{"v":56}]})json" == json_dto::to_json( r ) );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 2, {"v":3}, {"v":4} ]
+			})";
+
+		at_least_checker_two_with_defaults_4_t r;
+		r.m_x1 = 33;
+		r.m_x2 = 34;
+		r.m_x3.m_v = 35;
+		r.m_x4.m_v = 36;
+
+		json_dto::from_json( json_str, r );
+
+		REQUIRE( 1 == r.m_x1 );
+		REQUIRE( 2 == r.m_x2 );
+		REQUIRE( 3 == r.m_x3.m_v );
+		REQUIRE_FALSE( r.m_x3.m_move_operator_used );
+		REQUIRE( 4 == r.m_x4.m_v );
+		REQUIRE_FALSE( r.m_x4.m_move_operator_used );
+
+		REQUIRE( R"json({"x":[1,2,{"v":3},{"v":4}]})json" == json_dto::to_json( r ) );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, 2 ]
+			})";
+
+		at_least_checker_two_with_defaults_4_t r;
+		r.m_x1 = 33;
+		r.m_x2 = 34;
+		r.m_x3.m_v = 35;
+		r.m_x4.m_v = 36;
+
+		json_dto::from_json( json_str, r );
+
+		REQUIRE( 1 == r.m_x1 );
+		REQUIRE( 2 == r.m_x2 );
+		REQUIRE( 45 == r.m_x3.m_v );
+		REQUIRE( r.m_x3.m_move_operator_used );
+		REQUIRE( 56 == r.m_x4.m_v );
+		REQUIRE( r.m_x4.m_move_operator_used );
+
+		REQUIRE( R"json({"x":[1,2,{"v":45},{"v":56}]})json" == json_dto::to_json( r ) );
 	}
 }
 

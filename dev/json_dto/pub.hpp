@@ -2145,10 +2145,9 @@ template<
 	typename Field_Type,
 	typename Reader_Writer,
 	typename Validator >
-class simplest_member_processor_t final
-	:	public member_processor_base_t
+class member_processor_common_impl_t
 {
-private:
+protected:
 	Field_Type & m_field;
 
 	const Reader_Writer m_reader_writer;
@@ -2156,7 +2155,7 @@ private:
 	const Validator m_validator;
 
 public:
-	simplest_member_processor_t(
+	member_processor_common_impl_t(
 		Field_Type & field,
 		Reader_Writer reader_writer,
 		Validator validator )
@@ -2166,9 +2165,9 @@ public:
 	{}
 
 	void
-	read(
+	read_impl(
 		std::size_t index,
-		const rapidjson::Value & from ) const override
+		const rapidjson::Value & from ) const
 	{
 		m_reader_writer.read(
 				m_field,
@@ -2177,17 +2176,9 @@ public:
 	}
 
 	void
-	on_field_not_defined() const override
-	{
-		m_field = Field_Type{};
-		// The default value has to be passed to the validator too.
-		m_validator( m_field );
-	}
-
-	void
-	write(
+	write_impl(
 		rapidjson::Value & to,
-		rapidjson::MemoryPoolAllocator<> & allocator ) const override
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
 	{
 		// The value has to be passed to the validator before serialization.
 		m_validator( m_field );
@@ -2197,6 +2188,135 @@ public:
 		m_reader_writer.write( m_field, o, allocator );
 		to.PushBack( o.Move(), allocator );
 	}
+};
+
+//FIXME: document this!
+template<
+	typename Field_Type,
+	typename Reader_Writer,
+	typename Validator >
+class simplest_member_processor_t final
+	:	public member_processor_base_t
+	,	protected member_processor_common_impl_t<Field_Type, Reader_Writer, Validator>
+{
+	using common_impl_t =
+			member_processor_common_impl_t<Field_Type, Reader_Writer, Validator>;
+
+public:
+	simplest_member_processor_t(
+		Field_Type & field,
+		Reader_Writer reader_writer,
+		Validator validator )
+		:	common_impl_t{ field, std::move(reader_writer), std::move(validator) }
+	{}
+
+	void
+	read(
+		std::size_t index,
+		const rapidjson::Value & from ) const override
+	{
+		this->read_impl( index, from );
+	}
+
+	void
+	on_field_not_defined() const override
+	{
+		this->m_field = Field_Type{};
+		// The default value has to be passed to the validator too.
+		this->m_validator( this->m_field );
+	}
+
+	void
+	write(
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const override
+	{
+		this->write_impl( to, allocator );
+	}
+};
+
+//FIXME: document this!
+template<
+	typename Field_Type,
+	typename Default_Value_Reference_Holder,
+	typename Reader_Writer,
+	typename Validator >
+class member_with_default_value_processor_t final
+	:	public member_processor_base_t
+	,	protected member_processor_common_impl_t<Field_Type, Reader_Writer, Validator>
+{
+	using common_impl_t =
+			member_processor_common_impl_t<Field_Type, Reader_Writer, Validator>;
+
+private:
+	Default_Value_Reference_Holder m_default_value_reference_holder;
+
+public:
+	member_with_default_value_processor_t(
+		Field_Type & field,
+		Default_Value_Reference_Holder default_value_reference_holder,
+		Reader_Writer reader_writer,
+		Validator validator )
+		:	common_impl_t{ field, std::move(reader_writer), std::move(validator) }
+		,	m_default_value_reference_holder{ default_value_reference_holder }
+	{}
+
+	void
+	read(
+		std::size_t index,
+		const rapidjson::Value & from ) const override
+	{
+		this->read_impl( index, from );
+	}
+
+	void
+	on_field_not_defined() const override
+	{
+		this->m_field = m_default_value_reference_holder.get();
+
+		// The default value has to be passed to the validator too.
+		this->m_validator( this->m_field );
+	}
+
+	void
+	write(
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const override
+	{
+		this->write_impl( to, allocator );
+	}
+};
+
+//FIXME: document this!
+template< typename Field_Type >
+class default_value_const_ref_holder_t
+{
+	const Field_Type * m_default_value;
+
+public:
+	explicit default_value_const_ref_holder_t( const Field_Type & default_value )
+		:	m_default_value{ std::addressof(default_value) }
+	{}
+
+	JSON_DTO_NODISCARD
+	const Field_Type &
+	get() const noexcept { return *m_default_value; }
+};
+
+//FIXME: document this!
+template< typename Field_Type >
+class default_value_rvalue_ref_holder_t
+{
+	Field_Type * m_default_value;
+
+public:
+	explicit default_value_rvalue_ref_holder_t( Field_Type && default_value )
+		:	m_default_value{ std::addressof(default_value) }
+	{}
+
+	JSON_DTO_NODISCARD
+	Field_Type &&
+	get() const noexcept { return std::move(*m_default_value); }
 };
 
 } /* namespace inside_array::details */
@@ -2261,6 +2381,54 @@ member( Field_Type & field, Validator validator = Validator{} )
 
 //FIXME: document this!
 template<
+	typename Field_Type,
+	typename Validator = empty_validator_t >
+JSON_DTO_NODISCARD
+auto
+member_with_default_value(
+	Field_Type & field,
+	const Field_Type & default_value,
+	Validator validator = Validator{} )
+{
+	using default_holder_t = details::default_value_const_ref_holder_t<Field_Type>;
+
+	return details::member_with_default_value_processor_t<
+			Field_Type,
+			default_holder_t,
+			default_reader_writer_t,
+			Validator
+		>( field,
+				default_holder_t{ default_value },
+				default_reader_writer_t{},
+				std::move(validator) );
+}
+
+//FIXME: document this!
+template<
+	typename Field_Type,
+	typename Validator = empty_validator_t >
+JSON_DTO_NODISCARD
+auto
+member_with_default_value(
+	Field_Type & field,
+	Field_Type && default_value,
+	Validator validator = Validator{} )
+{
+	using default_holder_t = details::default_value_rvalue_ref_holder_t<Field_Type>;
+
+	return details::member_with_default_value_processor_t<
+			Field_Type,
+			default_holder_t,
+			default_reader_writer_t,
+			Validator
+		>( field,
+				default_holder_t{ std::move(default_value) },
+				default_reader_writer_t{},
+				std::move(validator) );
+}
+
+//FIXME: document this!
+template<
 	typename Reader_Writer,
 	typename Field_Type,
 	typename Validator = empty_validator_t >
@@ -2276,6 +2444,58 @@ member(
 			Reader_Writer,
 			Validator
 		>( field, std::forward<Reader_Writer>(reader_writer), std::move(validator) );
+}
+
+//FIXME: document this!
+template<
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Validator = empty_validator_t >
+JSON_DTO_NODISCARD
+auto
+member_with_default_value(
+	Reader_Writer && reader_writer,
+	Field_Type & field,
+	const Field_Type & default_value,
+	Validator validator = Validator{} )
+{
+	using default_holder_t = details::default_value_const_ref_holder_t<Field_Type>;
+
+	return details::member_with_default_value_processor_t<
+			Field_Type,
+			default_holder_t,
+			Reader_Writer,
+			Validator
+		>( field,
+				default_holder_t{ default_value },
+				std::forward<Reader_Writer>(reader_writer),
+				std::move(validator) );
+}
+
+//FIXME: document this!
+template<
+	typename Reader_Writer,
+	typename Field_Type,
+	typename Validator = empty_validator_t >
+JSON_DTO_NODISCARD
+auto
+member_with_default_value(
+	Reader_Writer && reader_writer,
+	Field_Type & field,
+	Field_Type && default_value,
+	Validator validator = Validator{} )
+{
+	using default_holder_t = details::default_value_rvalue_ref_holder_t<Field_Type>;
+
+	return details::member_with_default_value_processor_t<
+			Field_Type,
+			default_holder_t,
+			Reader_Writer,
+			Validator
+		>( field,
+				default_holder_t{ std::move(default_value) },
+				std::forward<Reader_Writer>(reader_writer),
+				std::move(validator) );
 }
 
 } /* namespace inside_array */
