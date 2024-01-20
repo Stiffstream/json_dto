@@ -2314,18 +2314,66 @@ public:
 
 } /* namespace inside_array::details */
 
-//FIXME: document this!
+/*!
+ * @brief A metafunction that specified a number of mandatory member count.
+ *
+ * Usage example:
+ * @code
+ * struct inner {
+ * 	int a;
+ * 	int b;
+ * 	int c;
+ * 	int d;
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer<
+ * 					// At least two members have to be present.
+ * 					// Otherwise an exception will be thrown.
+ * 					json_dto::inside_array::at_least<2>
+ * 				>(
+ * 					json_dto::inside_array::member(x.a),
+ * 					json_dto::inside_array::member(x.b),
+ * 					json_dto::inside_array::member(x.c),
+ * 					json_dto::inside_array::member(x.d)
+ * 				),
+ * 				"x", x )
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ *
+ * @since v.0.3.3
+ */
 template< std::size_t Number >
 struct at_least
 {
-	//FIXME: document this!
+	/*!
+	 * @brief Metafunction that detects if Number is not greater than Members_Count.
+	 *
+	 * The at_least metafunction can be used with
+	 * json_dto::inside_array::reader_writer only if Number is less than or
+	 * equal to Members_Count. Otherwise the at_least limitation can't be used.
+	 *
+	 * @since v.0.3.3
+	 */
 	template< std::size_t Members_Count >
 	struct is_valid_members_count
 	{
 		static constexpr bool value = (Number <= Members_Count);
 	};
 
-	//FIXME: document this!
+	/*!
+	 * @brief Helper method that detect number of array members to be read.
+	 *
+	 * @throw ex_t if @a actual_members is less than Number.
+	 *
+	 * @since v.0.3.3
+	 */
 	JSON_DTO_NODISCARD
 	static rapidjson::SizeType
 	handle_actual_members_count(
@@ -2343,7 +2391,95 @@ struct at_least
 	}
 };
 
-//FIXME: document this!
+/*!
+ * @brief A special reader-writer that allows to store several values into an array.
+ *
+ * Usage example:
+ * @code
+ * struct inner {
+ * 	int a;
+ * 	std::string b;
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 			json_dto::inside_array::reader_writer(
+ * 				// All fields to be placed inside an array have
+ * 				// to be enumerated here. The order is important.
+ * 				json_dto::inside_array::member(x.a),
+ * 				json_dto::inside_array::member(x.b) ),
+ * 			"x", x);
+ * 	}
+ * };
+ *
+ * auto obj = json_dto::from_json<outer>(R"({"x":[1, "two"]})");
+ * assert(obj.x.a == 1);
+ * assert(obj.x.b == "two");
+ *
+ * obj.x.a = 42;
+ * obj.x.b = "Hello, World";
+ * auto json = json_dto::to_json(obj);
+ * assert(json == R"({"x":[42,"Hello, World"]})");
+ * @endcode
+ *
+ * By default this reader_writer requires that all members are present during
+ * deserialization. If some members may be absent then `at_least` limit has to
+ * be specified:
+ * @code
+ * struct inner {
+ * 	int a;
+ * 	int b;
+ * 	int c;
+ * 	int d;
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer<
+ * 					// At least two members have to be present.
+ * 					// Otherwise an exception will be thrown.
+ * 					json_dto::inside_array::at_least<2>
+ * 				>(
+ * 					json_dto::inside_array::member(x.a),
+ * 					json_dto::inside_array::member(x.b),
+ * 					json_dto::inside_array::member(x.c),
+ * 					json_dto::inside_array::member(x.d)
+ * 				),
+ * 				"x", x )
+ * 			;
+ * 	}
+ * };
+ *
+ * const auto o1 = json_dto::from_json<outer>(R"({"x":[1,2,3]})");
+ * // o1.x.d will be 0.
+ *
+ * const auto o2 = json_dto::from_json<outer>(R"({"x":[1,2]})");
+ * // o2.x.c and o2.x.d will be 0.
+ * @endcode
+ *
+ * This reader-writer can be used for manual (de)serialization of tuples:
+ * @code
+ * struct outer {
+ * 	std::tuple<int, std::string> x;
+ *
+ * 	template<typename Io> json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 			json_dto::inside_array::reader_writer(
+ * 				json_dto::inside_array::member(std::get<0>(x)),
+ * 				json_dto::inside_array::member(std::get<1>(x))),
+ * 			"x", x);
+ * 	}
+ * };
+ * @endcode
+ *
+ * @since v.0.3.3
+ */
 template<
 	typename At_Least_Limiter = inside_array::details::all_members_required_t,
 	typename... Member_Processors >
