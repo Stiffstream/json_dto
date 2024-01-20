@@ -452,9 +452,6 @@ class json_input_t
 			return *this;
 		}
 
-//FIXME: just for a test!
-JSON_DTO_NODISCARD const rapidjson::Value & object() const noexcept{ return m_object; }
-
 	private:
 		const rapidjson::Value & m_object;
 };
@@ -483,10 +480,6 @@ class json_output_t
 			b.write_to( m_object, m_allocator );
 			return *this;
 		}
-
-//FIXME: just for a test!
-JSON_DTO_NODISCARD rapidjson::Value & object() const noexcept { return m_object; }
-JSON_DTO_NODISCARD rapidjson::MemoryPoolAllocator<> & allocator() const noexcept { return m_allocator; }
 
 	private:
 		rapidjson::Value & m_object;
@@ -2853,12 +2846,9 @@ struct binder_read_from_implementation_t
 		const Binder_Data_Holder & binder_data,
 		const rapidjson::Value & object )
 	{
-//FIXME: uncomment this!
-#if 0
 		static_assert(
 				!std::is_const<typename Binder_Data_Holder::field_t>::value,
 				"const object can't be deserialized" );
-#endif
 
 		if( !object.IsObject() )
 		{
