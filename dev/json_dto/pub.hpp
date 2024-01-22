@@ -2336,9 +2336,13 @@ public:
  * 					// Otherwise an exception will be thrown.
  * 					json_dto::inside_array::at_least<2>
  * 				>(
+ * 					// Mandatory member. Has to be present during deserialization.
  * 					json_dto::inside_array::member(x.a),
+ * 					// Mandatory member. Has to be present during deserialization.
  * 					json_dto::inside_array::member(x.b),
+ * 					// Optional member. A default value will be used if it's missing during deserialization.
  * 					json_dto::inside_array::member(x.c),
+ * 					// Optional member. A default value will be used if it's missing during deserialization.
  * 					json_dto::inside_array::member(x.d)
  * 				),
  * 				"x", x )
@@ -2500,11 +2504,10 @@ reader_writer( Member_Processors && ...processors )
 }
 
 /*!
- * @brief A special function that describes one mandatory member of an array
+ * @brief A special function that describes one member of an array
  * representation.
  *
  * Usage example:
- * @code
  * @code
  * struct inner {
  * 	int a;
@@ -2518,10 +2521,16 @@ reader_writer( Member_Processors && ...processors )
  *
  * 	template<typename Io> void json_io(Io & io) {
  * 		io & json_dto::mandatory(
- * 				json_dto::inside_array::reader_writer(
+ * 				json_dto::inside_array::reader_writer< json_dto::inside_array::at_least<2> >(
+ * 					// Mandatory member.
  * 					json_dto::inside_array::member(x.a),
+ * 					// Mandatory member.
  * 					json_dto::inside_array::member(x.b, json_dto::min_max_constraint(-10, +10)),
+ * 					// Optional member. Will be initialized by int{} if it's absent
+ * 					// during deserialiaztion.
  * 					json_dto::inside_array::member(x.c),
+ * 					// Optional member. Will be initialized by int{} if it's absent
+ * 					// during deserialiaztion.
  * 					json_dto::inside_array::member(x.d, json_dto::one_of_constraint({2, 4, 6, 10, 20, 40})
  * 				),
  * 				"x", x )
@@ -2550,7 +2559,89 @@ member( Field_Type & field, Validator validator = Validator{} )
 		>( field, default_reader_writer_t{}, std::move(validator) );
 }
 
-//FIXME: document this!
+/*!
+ * @brief A special function that describes one member of an array
+ * representation.
+ *
+ * Allows to specify a default value if item is not present in an array
+ * on deserialization.
+ *
+ * Usage example:
+ * @code
+ * struct inner {
+ * 	int a;
+ * 	int b;
+ * 	int c;
+ * 	int d;
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer< json_dto::inside_array::at_least<2>(
+ * 					// Mandatory member.
+ * 					json_dto::inside_array::member(x.a),
+ * 					// Mandatory member.
+ * 					json_dto::inside_array::member(x.b, json_dto::min_max_constraint(-10, +10)),
+ * 					// Optional member. It will be initialized by 5 if it's absent during
+ * 					// deserialization.
+ * 					json_dto::inside_array::member_with_default_value(x.c, 5),
+ * 					// Optional member. It will be initialized by 6 if it's absent during
+ * 					// deserialization.
+ * 					json_dto::inside_array::member(x.d, 6, json_dto::one_of_constraint({2, 4, 6, 10, 20, 40})
+ * 				),
+ * 				"x", x )
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ *
+ * @note
+ * This overload is used when the default value is represented as ordinary
+ * const- or non-const reference. A copy of default value will be made if the member
+ * is missing during deserialization.
+ * For example:
+ * @code
+ * struct inner {
+ * 	int a;
+ * 	some_complex_type b;
+ * 	another_complex_type c;
+ * 	...
+ *
+ * 	static const some_complex_type default_b;
+ * 	static another_complex_type default_c;
+ * };
+ * const some_complex_type inner::default_b{...};
+ * another_complex_type inner::default_c{...};
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer< json_dto::inside_array::at_least<2>(
+ * 					// Mandatory member.
+ * 					json_dto::inside_array::member(x.a),
+ * 					// Optional member. A copy of inner::default_b will be made if
+ * 					// inner::b is missing during deserialization.
+ * 					json_dto::inside_array::member_with_default_value(x.b, inner::default_b),
+ * 					// Optional member. A copy of inner::default_c will be made if
+ * 					// inner::c is missing during deserialization.
+ * 					json_dto::inside_array::member(x.c, inner::default_c)
+ * 				),
+ * 				"x", x )
+ * 			;
+ * };
+ * @endcode
+ *
+ * @attention
+ * This function returns a temporary object that should not be stored anywhere and
+ * must be passed directly to json_dto::inside_array::reader_writer().
+ *
+ * @since v.0.3.3
+ */
 template<
 	typename Field_Type,
 	typename Validator = empty_validator_t >
@@ -2574,7 +2665,85 @@ member_with_default_value(
 				std::move(validator) );
 }
 
-//FIXME: document this!
+/*!
+ * @brief A special function that describes one member of an array
+ * representation.
+ *
+ * Allows to specify a default value if item is not present in an array
+ * on deserialization.
+ *
+ * Usage example:
+ * @code
+ * struct inner {
+ * 	int a;
+ * 	int b;
+ * 	int c;
+ * 	int d;
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer< json_dto::inside_array::at_least<2>(
+ * 					// Mandatory member.
+ * 					json_dto::inside_array::member(x.a),
+ * 					// Mandatory member.
+ * 					json_dto::inside_array::member(x.b, json_dto::min_max_constraint(-10, +10)),
+ * 					// Optional member. It will be initialized by 5 if it's absent during
+ * 					// deserialization.
+ * 					json_dto::inside_array::member_with_default_value(x.c, 5),
+ * 					// Optional member. It will be initialized by 6 if it's absent during
+ * 					// deserialization.
+ * 					json_dto::inside_array::member(x.d, 6, json_dto::one_of_constraint({2, 4, 6, 10, 20, 40})
+ * 				),
+ * 				"x", x )
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ *
+ * @note
+ * This overload is used when the default value is represented as a
+ * rvalue-reference (that means that the default value is a temporary object).
+ * The value of this temporary object wlll be moved into the member if the
+ * member is missing during deserialization.
+ * For example:
+ * @code
+ * struct inner {
+ * 	int a;
+ * 	some_complex_type b;
+ * 	another_complex_type c;
+ * 	...
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer< json_dto::inside_array::at_least<2>(
+ * 					// Mandatory member.
+ * 					json_dto::inside_array::member(x.a),
+ * 					// Optional member. Value of this temporary object will be used if
+ * 					// inner::b is missing during deserialization.
+ * 					json_dto::inside_array::member_with_default_value(x.b, some_complex_type{...}),
+ * 					// Optional member. Value of this temporary object will be used if
+ * 					// inner::c is missing during deserialization.
+ * 					json_dto::inside_array::member(x.c, another_complex_type{...})
+ * 				),
+ * 				"x", x )
+ * 			;
+ * };
+ * @endcode
+ *
+ * @attention
+ * This function returns a temporary object that should not be stored anywhere and
+ * must be passed directly to json_dto::inside_array::reader_writer().
+ *
+ * @since v.0.3.3
+ */
 template<
 	typename Field_Type,
 	typename Validator = empty_validator_t >
@@ -2598,7 +2767,48 @@ member_with_default_value(
 				std::move(validator) );
 }
 
-//FIXME: document this!
+/*!
+ * @brief A special function that describes one member of an array
+ * representation.
+ *
+ * Allows to specify a custom reader-writer for (de)serialization of the member.
+ *
+ * Usage example:
+ * @code
+ * struct my_special_int_reader_writer {...};
+ *
+ * struct inner {
+ * 	int a;
+ * 	int b;
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer< json_dto::inside_array::at_least<1> >(
+ * 					// Mandatory member.
+ * 					json_dto::inside_array::member(my_special_int_reader_writer{}, x.a),
+ * 					// Optional member. Will be initialized by int{} if it's absent
+ * 					// during deserialiaztion.
+ * 					json_dto::inside_array::member(
+ * 						my_special_int_reader_writer{},
+ * 						x.d,
+ * 						json_dto::one_of_constraint({2, 4, 6, 10, 20, 40})
+ * 				),
+ * 				"x", x )
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ *
+ * @attention
+ * This function returns a temporary object that should not be stored anywhere and
+ * must be passed directly to json_dto::inside_array::reader_writer().
+ *
+ * @since v.0.3.3
+ */
 template<
 	typename Reader_Writer,
 	typename Field_Type,
@@ -2617,7 +2827,87 @@ member(
 		>( field, std::forward<Reader_Writer>(reader_writer), std::move(validator) );
 }
 
-//FIXME: document this!
+/*!
+ * @brief A special function that describes one member of an array
+ * representation.
+ *
+ * Allows to specify a custom reader-writer for (de)serialization of the member.
+ *
+ * Allows to specify a default value if item is not present in an array
+ * on deserialization.
+ *
+ * Usage example:
+ * @code
+ * struct my_special_int_reader_writer {...};
+ *
+ * struct inner {
+ * 	int a;
+ * 	int b;
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer< json_dto::inside_array::at_least<1>(
+ * 					// Mandatory member.
+ * 					json_dto::inside_array::member(my_special_int_reader_writer{}, x.a),
+ * 					// Optional member. It will be initialized by 5 if it's absent during
+ * 					// deserialization.
+ * 					json_dto::inside_array::member_with_default_value(
+ * 						my_special_int_reader_writer{},
+ * 						x.b, 5),
+ * 				),
+ * 				"x", x )
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ *
+ * @note
+ * This overload is used when the default value is represented as ordinary
+ * const- or non-const reference. A copy of default value will be made if the member
+ * is missing during deserialization.
+ * For example:
+ * @code
+ * struct my_special_some_complex_type_reader_writer {...}
+ *
+ * struct inner {
+ * 	int a;
+ * 	some_complex_type b;
+ * 	...
+ *
+ * 	static const some_complex_type default_b;
+ * };
+ * const some_complex_type inner::default_b{...};
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer< json_dto::inside_array::at_least<1>(
+ * 					// Mandatory member.
+ * 					json_dto::inside_array::member(x.a),
+ * 					// Optional member. A copy of inner::default_b will be made if
+ * 					// inner::b is missing during deserialization.
+ * 					json_dto::inside_array::member_with_default_value(
+ * 						my_special_some_complex_type_reader_writer{},
+ * 						x.b,
+ * 						inner::default_b),
+ * 				),
+ * 				"x", x )
+ * 			;
+ * };
+ * @endcode
+ *
+ * @attention
+ * This function returns a temporary object that should not be stored anywhere and
+ * must be passed directly to json_dto::inside_array::reader_writer().
+ *
+ * @since v.0.3.3
+ */
 template<
 	typename Reader_Writer,
 	typename Field_Type,
@@ -2643,7 +2933,85 @@ member_with_default_value(
 				std::move(validator) );
 }
 
-//FIXME: document this!
+/*!
+ * @brief A special function that describes one member of an array
+ * representation.
+ *
+ * Allows to specify a custom reader-writer for (de)serialization of the member.
+ *
+ * Allows to specify a default value if item is not present in an array
+ * on deserialization.
+ *
+ * Usage example:
+ * @code
+ * struct my_special_int_reader_writer {...};
+ *
+ * struct inner {
+ * 	int a;
+ * 	int b;
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer< json_dto::inside_array::at_least<1>(
+ * 					// Mandatory member.
+ * 					json_dto::inside_array::member(my_special_int_reader_writer{}, x.a),
+ * 					// Optional member. It will be initialized by 5 if it's absent during
+ * 					// deserialization.
+ * 					json_dto::inside_array::member_with_default_value(
+ * 						my_special_int_reader_writer{},
+ * 						x.b, 5),
+ * 				),
+ * 				"x", x )
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ *
+ * @note
+ * This overload is used when the default value is represented as a
+ * rvalue-reference (that means that the default value is a temporary object).
+ * The value of this temporary object wlll be moved into the member if the
+ * member is missing during deserialization.
+ * For example:
+ * @code
+ * struct my_special_some_complex_type_reader_writer {...}
+ *
+ * struct inner {
+ * 	int a;
+ * 	some_complex_type b;
+ * 	...
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer< json_dto::inside_array::at_least<1>(
+ * 					// Mandatory member.
+ * 					json_dto::inside_array::member(x.a),
+ * 					// Optional member. The value of a temporary object will be moved
+ * 					// into inner::b if inner::b is missing during deserialization.
+ * 					json_dto::inside_array::member_with_default_value(
+ * 						my_special_some_complex_type_reader_writer{},
+ * 						x.b,
+ * 						some_complex_type{...}),
+ * 				),
+ * 				"x", x )
+ * 			;
+ * };
+ * @endcode
+ *
+ * @attention
+ * This function returns a temporary object that should not be stored anywhere and
+ * must be passed directly to json_dto::inside_array::reader_writer().
+ *
+ * @since v.0.3.3
+ */
 template<
 	typename Reader_Writer,
 	typename Field_Type,
