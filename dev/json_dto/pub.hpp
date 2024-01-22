@@ -1150,13 +1150,21 @@ struct nullable_t
 		Field_Type *
 		field_ptr() noexcept
 		{
+#if __cpp_lib_launder >= 201606L
+			return std::launder( reinterpret_cast< Field_Type * >( m_image_space ) );
+#else
 			return reinterpret_cast< Field_Type * >( m_image_space );
+#endif
 		}
 
 		const Field_Type *
 		field_ptr() const noexcept
 		{
+#if __cpp_lib_launder >= 201606L
+			return std::launder( reinterpret_cast< const Field_Type * >( m_image_space ));
+#else
 			return reinterpret_cast< const Field_Type * >( m_image_space );
+#endif
 		}
 
 		Field_Type &
