@@ -2392,7 +2392,8 @@ struct at_least
 };
 
 /*!
- * @brief A special reader-writer that allows to store several values into an array.
+ * @brief A special reader-writer that allows to store several values into an array
+ * and read from an array.
  *
  * Usage example:
  * @code
@@ -2478,6 +2479,11 @@ struct at_least
  * };
  * @endcode
  *
+ * @attention
+ * This function returns a temporary object that should not be stored anywhere and
+ * must be passed directly to json_dto::mandatory(), json_dto::optional(),
+ * json_dto::optional_no_default() and similar binders.
+ *
  * @since v.0.3.3
  */
 template<
@@ -2493,7 +2499,43 @@ reader_writer( Member_Processors && ...processors )
 		>( std::forward<Member_Processors>(processors)... );
 }
 
-//FIXME: document this!
+/*!
+ * @brief A special function that describes one mandatory member of an array
+ * representation.
+ *
+ * Usage example:
+ * @code
+ * @code
+ * struct inner {
+ * 	int a;
+ * 	int b;
+ * 	int c;
+ * 	int d;
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer(
+ * 					json_dto::inside_array::member(x.a),
+ * 					json_dto::inside_array::member(x.b, json_dto::min_max_constraint(-10, +10)),
+ * 					json_dto::inside_array::member(x.c),
+ * 					json_dto::inside_array::member(x.d, json_dto::one_of_constraint({2, 4, 6, 10, 20, 40})
+ * 				),
+ * 				"x", x )
+ * 			;
+ * 	}
+ * };
+ * @endcode
+ *
+ * @attention
+ * This function returns a temporary object that should not be stored anywhere and
+ * must be passed directly to json_dto::inside_array::reader_writer().
+ *
+ * @since v.0.3.3
+ */
 template<
 	typename Field_Type,
 	typename Validator = empty_validator_t >
