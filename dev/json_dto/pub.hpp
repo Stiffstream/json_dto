@@ -2032,8 +2032,6 @@ struct all_members_required_t
 
 		return expected_members;
 	}
-
-	//FIXME: implement this!
 };
 
 //FIXME: document this!
@@ -2133,7 +2131,29 @@ public:
 	}
 };
 
-//FIXME: document this!
+/*!
+ * @brief A mixin to be reused by actual implementations of
+ * member_processor_base.
+ *
+ * It holds:
+ *
+ * - a reference to the field to be (de)serialized,
+ * - a copy of Reader_Writer instance,
+ * - a copy of Validator instance.
+ *
+ * It provides implementations of read_impl() and write_impl() methods.
+ * It's assumed that read_impl() and write_impl() will be called in
+ * the derived classes.
+ *
+ * @tparam Field_Type type of field to be (de)serialized.
+ *
+ * @tparam Reader_Writer type of reader-writer for (de)serialization of
+ * field value.
+ *
+ * @tparam Validator type of validator for checking validity of the field value.
+ *
+ * @since v.0.3.3
+ */
 template<
 	typename Field_Type,
 	typename Reader_Writer,
@@ -2141,10 +2161,18 @@ template<
 class member_processor_common_impl_t
 {
 protected:
+	//! Reference to a field to be (de)serialized.
+	/*!
+	 * @note
+	 * It's expected that this reference remains valid the whole lifetime
+	 * of member_processor_common_impl_t object.
+	 */
 	Field_Type & m_field;
 
+	//! An instance of reader-writer to be used for (de)serialization.
 	const Reader_Writer m_reader_writer;
 
+	//! An instance of validator to be used for checking field value validity.
 	const Validator m_validator;
 
 public:
@@ -2183,7 +2211,23 @@ public:
 	}
 };
 
-//FIXME: document this!
+/*!
+ * @brief Simple implementation of member_processor_base.
+ *
+ * Uses a Field_Type{} in implementation of on_field_not_defined().
+ *
+ * @note
+ * The Field_Type has to be DefaultConstructible.
+ *
+ * @tparam Field_Type type of field to be (de)serialized.
+ *
+ * @tparam Reader_Writer type of reader-writer for (de)serialization of
+ * field value.
+ *
+ * @tparam Validator type of validator for checking validity of the field value.
+ *
+ * @since v.0.3.3
+ */
 template<
 	typename Field_Type,
 	typename Reader_Writer,
@@ -2228,7 +2272,26 @@ public:
 	}
 };
 
-//FIXME: document this!
+/*!
+ * @brief Implementation of member_processor_base that uses a default value
+ * specified by a user.
+ *
+ * Uses a default value specified by a user in implementation of
+ * on_field_not_defined().
+ *
+ * @tparam Field_Type type of field to be (de)serialized.
+ *
+ * @tparam Default_Value_Reference_Holder type for holding a default value.
+ * It's expected to be default_value_const_ref_holder_t<Field_Type> or
+ * default_value_rvalue_ref_holder_t<Field_Type>.
+ *
+ * @tparam Reader_Writer type of reader-writer for (de)serialization of
+ * field value.
+ *
+ * @tparam Validator type of validator for checking validity of the field value.
+ *
+ * @since v.0.3.3
+ */
 template<
 	typename Field_Type,
 	typename Default_Value_Reference_Holder,
@@ -2280,7 +2343,18 @@ public:
 	}
 };
 
-//FIXME: document this!
+/*!
+ * @brief Helper class for holding a "const reference" to the default value.
+ *
+ * This class is used when the default value has to be copied, not moved out.
+ *
+ * @note
+ * The m_default_value may be a "reference" to a temporary value.
+ * It's assumed that this "reference" remains valid the whole life of
+ * a default_value_const_ref_holder_t object.
+ *
+ * @since v.0.3.3
+ */
 template< typename Field_Type >
 class default_value_const_ref_holder_t
 {
@@ -2296,7 +2370,18 @@ public:
 	get() const noexcept { return *m_default_value; }
 };
 
-//FIXME: document this!
+/*!
+ * @brief Helper class for holding a "rvalue reference" to the default value.
+ *
+ * This class is used when the default value has to be moved out, not copied.
+ *
+ * @note
+ * The m_default_value may be a "reference" to a temporary value.
+ * It's assumed that this "reference" remains valid the whole life of
+ * a default_value_rvalue_ref_holder_t object.
+ *
+ * @since v.0.3.3
+ */
 template< typename Field_Type >
 class default_value_rvalue_ref_holder_t
 {
