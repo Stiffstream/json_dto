@@ -1988,18 +1988,47 @@ namespace inside_array
 namespace details
 {
 
-//FIXME: document this!
+/*!
+ * @brief Base class for all implementations of array member (de)serializers.
+ *
+ * It's necessary to have a possibility to build a vector of pointers to actual
+ * instances of (de)serializers. All those (de)serializers may have different
+ * types and we want a simple way to work with them without digging into
+ * complex template magic.
+ *
+ * @since v.0.3.3
+ */
 class member_processor_base_t
 {
 public:
+	/*!
+	 * Implementation should process an item with index @a index from array @a from.
+	 *
+	 * @note
+	 * It's guaranteed that @a from is an array.
+	 */
 	virtual void
 	read(
 		rapidjson::SizeType index,
 		const rapidjson::Value & from ) const = 0;
 
+	/*!
+	 * Implementation should assign a default value to the item.
+	 *
+	 * This method is called when actual array in JSON has less items than
+	 * described by a user. All missing items have to receive default values.
+	 */
 	virtual void
 	on_field_not_defined() const = 0;
 
+	/*!
+	 * Implementation should add the next value to arrat @a to.
+	 *
+	 * The implementation must use `to.PushBack` for adding a value.
+	 *
+	 * @note
+	 * It's guaranteed that @a from is an array.
+	 */
 	virtual void
 	write(
 		rapidjson::Value & to,
