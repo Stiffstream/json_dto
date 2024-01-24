@@ -1994,7 +1994,7 @@ class member_processor_base_t
 public:
 	virtual void
 	read(
-		std::size_t index,
+		rapidjson::SizeType index,
 		const rapidjson::Value & from ) const = 0;
 
 	virtual void
@@ -2010,7 +2010,7 @@ public:
 struct all_members_required_t
 {
 	//FIXME: document this!
-	template< std::size_t Members_Count >
+	template< rapidjson::SizeType Members_Count >
 	struct is_valid_members_count
 	{
 		static constexpr bool value = true;
@@ -2036,8 +2036,7 @@ struct all_members_required_t
 
 //FIXME: document this!
 template<
-	//FIXME: maybe it has to be rapidjson::SizeType, but not std::size_t?
-	std::size_t Members_Count,
+	rapidjson::SizeType Members_Count,
 	typename At_Least_Limiter >
 class reader_writer_t
 {
@@ -2125,8 +2124,8 @@ public:
 	{
 		to.SetArray();
 		//FIXME: a case when Members_Count is 0 has to be handled.
-		to.Reserve( static_cast<rapidjson::SizeType>(Members_Count), allocator );
-		for( std::size_t i = 0u; i != Members_Count; ++i )
+		to.Reserve( Members_Count, allocator );
+		for( rapidjson::SizeType i = 0u; i != Members_Count; ++i )
 			m_member_processors[ i ]->write( to, allocator );
 	}
 };
@@ -2187,12 +2186,10 @@ public:
 
 	void
 	read_impl(
-		std::size_t index,
+		rapidjson::SizeType index,
 		const rapidjson::Value & from ) const
 	{
-		m_reader_writer.read(
-				m_field,
-				from[ static_cast<rapidjson::SizeType>(index) ] );
+		m_reader_writer.read( m_field, from[ index ] );
 		m_validator( m_field );
 	}
 
@@ -2249,7 +2246,7 @@ public:
 
 	void
 	read(
-		std::size_t index,
+		rapidjson::SizeType index,
 		const rapidjson::Value & from ) const override
 	{
 		this->read_impl( index, from );
@@ -2319,7 +2316,7 @@ public:
 
 	void
 	read(
-		std::size_t index,
+		rapidjson::SizeType index,
 		const rapidjson::Value & from ) const override
 	{
 		this->read_impl( index, from );
@@ -2450,7 +2447,7 @@ struct at_least
 	 *
 	 * @since v.0.3.3
 	 */
-	template< std::size_t Members_Count >
+	template< rapidjson::SizeType Members_Count >
 	struct is_valid_members_count
 	{
 		static constexpr bool value = (Number <= Members_Count);
