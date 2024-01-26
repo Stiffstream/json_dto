@@ -360,19 +360,31 @@ using namespace test;
 
 TEST_CASE( "inside-array-simple" , "[inside-array][no-reader-writer]" )
 {
-	const char * json_str =
-		R"({
-			"x":[ 1, "two", 55555]
-		})";
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, "two", 55555]
+			})";
 
-	const auto r = json_dto::from_json<simple_outer_t>( json_str );
+		const auto r = json_dto::from_json<simple_outer_t>( json_str );
 
-	REQUIRE( 1 == r.m_x.m_a );
-	REQUIRE( "two" == r.m_x.m_b );
-	REQUIRE( 55555 == r.m_x.m_c );
+		REQUIRE( 1 == r.m_x.m_a );
+		REQUIRE( "two" == r.m_x.m_b );
+		REQUIRE( 55555 == r.m_x.m_c );
 
-	const auto str = json_dto::to_json( r );
-	REQUIRE( R"json({"x":[1,"two",55555]})json" == str );
+		const auto str = json_dto::to_json( r );
+		REQUIRE( R"json({"x":[1,"two",55555]})json" == str );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 1, "two", 55555, null]
+			})";
+
+		simple_outer_t r;
+		REQUIRE_THROWS( json_dto::from_json( json_str, r ) );
+	}
 }
 
 TEST_CASE( "inside-array-with-custom-reader-writer" , "[inside-array][reader-writer]" )
@@ -427,6 +439,16 @@ TEST_CASE( "inside-array-at-least-limit-two" , "[inside-array][at-least][reader-
 		REQUIRE( 2 == r.m_x2 );
 		REQUIRE( 3 == r.m_x3 );
 		REQUIRE( 4 == r.m_x4 );
+	}
+
+	{
+		const char * json_str =
+			R"({
+				"x":[ 11, 12, 13, 14, 15, 16, 17, 18 ]
+			})";
+
+		at_least_checker_two_t r;
+		REQUIRE_THROWS( json_dto::from_json( json_str, r ) );
 	}
 
 	{

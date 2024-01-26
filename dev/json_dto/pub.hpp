@@ -2516,6 +2516,36 @@ public:
  * };
  * @endcode
  *
+ * @note
+ * This metafunction will lead to run-time exceptions if there are more items in
+ * an array than described fields:
+ * @code
+ * struct inner {
+ * 	int a;
+ * 	int b;
+ * 	int c;
+ * };
+ *
+ * struct outer {
+ * 	inner x;
+ *
+ * 	template<typename Io> void json_io(Io & io) {
+ * 		io & json_dto::mandatory(
+ * 				json_dto::inside_array::reader_writer<
+ * 					json_dto::inside_array::at_least<1>
+ * 				>(
+ * 					json_dto::inside_array::member(x.a),
+ * 					json_dto::inside_array::member(x.b),
+ * 					json_dto::inside_array::member(x.c)
+ * 				), "x", x );
+ * 	}
+ * };
+ * ...
+ * // An exception will be thrown here, because the array in JSON contains
+ * // more items than described members.
+ * auto obj = json_dto::from_json<outer>(R"({"x":[1, 2, 3, 4, 5]})");
+ * @endcode
+ *
  * @since v.0.3.3
  */
 template< std::size_t Number >
@@ -2540,19 +2570,26 @@ struct at_least
 	 * @brief Helper method that detect number of array members to be read.
 	 *
 	 * @throw ex_t if @a actual_members is less than Number.
+	 * @throw ex_t if @a actual_members is greater than @a expected_members.
 	 *
 	 * @since v.0.3.3
 	 */
 	JSON_DTO_NODISCARD
 	static rapidjson::SizeType
 	handle_actual_members_count(
-		rapidjson::SizeType /*expected_members*/,
+		rapidjson::SizeType expected_members,
 		rapidjson::SizeType actual_members )
 	{
 		if( actual_members < Number )
 			throw ex_t{ "inside_array: actual members count ("
 					+ std::to_string(actual_members)
 					+ ") is less than expected mandatory members count ("
+					+ std::to_string(Number) + ")"
+				};
+		if( expected_members < actual_members )
+			throw ex_t{ "inside_array: actual members count ("
+					+ std::to_string(actual_members)
+					+ ") is greater than expected members count ("
 					+ std::to_string(Number) + ")"
 				};
 
