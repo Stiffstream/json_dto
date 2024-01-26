@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.3.3](#v033)
       * [v.0.3.1](#v031)
       * [v.0.3.0](#v030)
       * [v.0.2.14](#v0214)
@@ -68,6 +69,11 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.3.3
+
+Support for storing of several fields into an array added.
+
 
 ## v.0.3.1
 

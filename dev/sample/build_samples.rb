@@ -27,5 +27,8 @@ MxxRu::Cpp::composite_target {
   required_prj( "sample/tutorial20.2/prj.rb" )
   required_prj( "sample/tutorial20.3/prj.rb" )
   required_prj( "sample/tutorial21/prj.rb" )
+  required_prj( "sample/tutorial22.1/prj.rb" )
+  required_prj( "sample/tutorial22.2/prj.rb" )
+  required_prj( "sample/tutorial22.3/prj.rb" )
 }
 

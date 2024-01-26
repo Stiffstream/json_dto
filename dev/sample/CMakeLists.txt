@@ -25,4 +25,7 @@ add_subdirectory(tutorial20.1)
 add_subdirectory(tutorial20.2)
 add_subdirectory(tutorial20.3)
 add_subdirectory(tutorial21)
+add_subdirectory(tutorial22.1)
+add_subdirectory(tutorial22.2)
+add_subdirectory(tutorial22.3)
 
