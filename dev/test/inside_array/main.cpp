@@ -90,8 +90,8 @@ struct tuple_holder_t
 						json_dto::inside_array::member(
 							simple_int_reader_writter_t{}, std::get<1>(m_x) ),
 						json_dto::inside_array::member( std::get<2>(m_x) ),
-						json_dto::inside_array::member( std::get<3>(m_x) ) ),
-					"x", m_x );
+						json_dto::inside_array::member( std::get<3>(m_x) )
+					), "x", m_x );
 	}
 };
 

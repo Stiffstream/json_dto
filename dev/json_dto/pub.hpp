@@ -2035,17 +2035,36 @@ public:
 		rapidjson::MemoryPoolAllocator<> & allocator ) const = 0;
 };
 
-//FIXME: document this!
+/*!
+ * @brief A metafunction that specified that all members are mandatory.
+ *
+ * This metafunction will be used by json_dto::inside_array::reader_writer by
+ * default.
+ */
 struct all_members_required_t
 {
-	//FIXME: document this!
+	/*!
+	 * @brief Metafunction that detects if the specified number of fields is valid.
+	 *
+	 * This metafunction always returns true.
+	 *
+	 * @since v.0.3.3
+	 */
 	template< rapidjson::SizeType Members_Count >
 	struct is_valid_members_count
 	{
 		static constexpr bool value = true;
 	};
 
-	//FIXME: document this!
+	/*!
+	 * @brief Helper method that detect number of array members to be read.
+	 *
+	 * @return the value of @a expected_members.
+	 *
+	 * @throw ex_t if @a expected_members is not equal to @a actual_members.
+	 *
+	 * @since v.0.3.3
+	 */
 	JSON_DTO_NODISCARD
 	static rapidjson::SizeType
 	handle_actual_members_count(
@@ -2063,20 +2082,42 @@ struct all_members_required_t
 	}
 };
 
-//FIXME: document this!
+/*!
+ * @brief Implementation of a reader-writer or a case when a bunch of fields
+ * has to be placed into an array.
+ *
+ * @note
+ * This implementation always serializes exactly @a Members_Count fields.
+ * Number of fields to be deserialized depends on @a At_Least_Limiter.
+ *
+ * @tparam Members_Count number of fields for (de)serialization.
+ * @tparam At_Least_Limiter a metafunction for work with number of fields.
+ * It's expected to be json_dto::inside_array::details::all_members_required_t,
+ * json_dto::inside_array::at_least or similar.
+ *
+ * @since v.0.3.3
+ */
 template<
 	rapidjson::SizeType Members_Count,
 	typename At_Least_Limiter >
 class reader_writer_t
 {
+	static_assert( 0u != Members_Count, "Members_Count can't be 0" );
 	static_assert(
 			At_Least_Limiter::template is_valid_members_count<Members_Count>::value,
 			"At_Least_Limiter has to allow at least Members_Count items in an array" );
 
+	//! Just a useful type alias.
 	using member_processor_ptr_t = const member_processor_base_t*;
 
+	//! Holder for pointers to actual members processor.
+	/*!
+	 * It's expected that all the pointers remain valid the whole lifetime
+	 * of reader_writer_t object.
+	 */
 	std::array< member_processor_ptr_t, Members_Count > m_member_processors;
 
+	//! Helper method for filling %m_member_processors.
 	template<
 		std::size_t Index,
 		typename Member_Processor >
@@ -2088,6 +2129,7 @@ class reader_writer_t
 		self.m_member_processors[ Index ] = std::addressof(current_processor);
 	}
 
+	//! Helper method for filling %m_member_processors.
 	template<
 		std::size_t Index,
 		typename Member_Processor,
@@ -2113,6 +2155,7 @@ public:
 	reader_writer_t &
 	operator=( reader_writer_t && ) = default;
 
+	//! Initializing constructor.
 	template< typename... Member_Processors >
 	reader_writer_t( Member_Processors && ...processors )
 	{
@@ -2124,6 +2167,14 @@ public:
 				std::forward<Member_Processors>(processors)... );
 	}
 
+	//! Reads members from JSON value.
+	/*!
+	 * It may read less than @a Members_Count members if some are missing
+	 * during deserialization and @a At_Least_Limiter allows that.
+	 *
+	 * @note
+	 * It's expected that @a from is an array. An ex_t is thrown otherwise.
+	 */
 	template< typename Field_Type >
 	void
 	read( Field_Type & /*ignored*/, const rapidjson::Value & from ) const
@@ -2144,6 +2195,10 @@ public:
 			throw ex_t{ "reader_writer_t: value is not an array" };
 	}
 
+	//! Writes members into JSON value.
+	/*!
+	 * Changes type of @a to to an array and then adds all members to it.
+	 */
 	template< typename Field_Type >
 	void
 	write(
@@ -2152,7 +2207,6 @@ public:
 		rapidjson::MemoryPoolAllocator<> & allocator ) const
 	{
 		to.SetArray();
-		//FIXME: a case when Members_Count is 0 has to be handled.
 		to.Reserve( Members_Count, allocator );
 		for( rapidjson::SizeType i = 0u; i != Members_Count; ++i )
 			m_member_processors[ i ]->write( to, allocator );
