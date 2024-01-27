@@ -48,6 +48,7 @@ Table of Contents
       * [Inheritance](#inheritance)
       * [Validators](#validators)
          * [Standard validators](#standard-validators)
+      * [Representing several fields inside an array](#representing-several-fields-inside-an-array)
       * [User defined IO](#user-defined-io)
          * [Overloading of read_json_value and write_json_value](#overloading-of-read_json_value-and-write_json_value)
          * [Usage of Reader_Writer](#usage-of-reader_writer)
@@ -1595,6 +1596,25 @@ There are a family of `json_dto::inside_array::member` and `json_dto::inside_arr
 json_dto::inside_array::member( x.a, json_dto::min_max_constraint(-10, 10));
 json_dtp::inside_array::member( my_custom_reader_writer{}, x.b );
 json_dtp::inside_array::member( my_custom_reader_writer{}, x.c, json_dto::min_max_constraint(-1, 1) );
+```
+
+The inside_array functionality can be used for manual support of `std::tuple`:
+
+```cpp
+struct outer {
+	std::tuple<int, std::string, double> x;
+
+	template< typename Io > void json_io( Io & io ) {
+		io & json_dto::mandatory(
+				json_dto::inside_array::reader_writer(
+					json_dto::inside_array::member( std::get<0>(x) ),
+					json_dto::inside_array::member( std::get<1>(x) ),
+					json_dto::inside_array::member( std::get<2>(x) ) ),
+				"x", x );
+	}
+};
+...
+auto obj = json_dto::from_json<outer>( R"({"x":[1, "Hello!", 0.3]})" );
 ```
 
 ## User defined IO
