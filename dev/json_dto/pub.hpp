@@ -63,6 +63,13 @@
 	#define JSON_DTO_NODISCARD
 #endif
 
+// Handle the presence of std::launder.
+#if __cpp_lib_launder >= 201606L
+	#define JSON_DTO_STD_LAUNDER(x) std::launder(x)
+#else
+	#define JSON_DTO_STD_LAUNDER(x) x
+#endif
+
 namespace json_dto
 {
 
@@ -1161,13 +1168,13 @@ struct nullable_t
 		Field_Type *
 		field_ptr() noexcept
 		{
-			return reinterpret_cast< Field_Type * >( m_image_space );
+			return JSON_DTO_STD_LAUNDER( reinterpret_cast< Field_Type * >( m_image_space ) );
 		}
 
 		const Field_Type *
 		field_ptr() const noexcept
 		{
-			return reinterpret_cast< const Field_Type * >( m_image_space );
+			return JSON_DTO_STD_LAUNDER( reinterpret_cast< const Field_Type * >( m_image_space ) );
 		}
 
 		Field_Type &
