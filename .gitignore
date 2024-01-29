@@ -10,5 +10,6 @@
 /dev/lib/.*
 /dev/catch2
 /dev/local-build.rb
+/dev/doc
 *.sublime-project
 *.sublime-workspace

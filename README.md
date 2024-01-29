@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.3.3](#v033)
       * [v.0.3.2](#v032)
       * [v.0.3.1](#v031)
       * [v.0.3.0](#v030)
@@ -48,6 +49,7 @@ Table of Contents
       * [Inheritance](#inheritance)
       * [Validators](#validators)
          * [Standard validators](#standard-validators)
+      * [Representing several fields inside an array](#representing-several-fields-inside-an-array)
       * [User defined IO](#user-defined-io)
          * [Overloading of read_json_value and write_json_value](#overloading-of-read_json_value-and-write_json_value)
          * [Usage of Reader_Writer](#usage-of-reader_writer)
@@ -69,6 +71,10 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.3.3
+
+Support for storing of several fields into an array added.
 
 ## v.0.3.2
 
@@ -1515,6 +1521,105 @@ auto one_of_constraint(std::initializer_list<Field_Type> values);
 ```
 
 [See full example with standard validators](./dev/sample/tutorial12/main.cpp)
+
+## Representing several fields inside an array
+
+Sometimes several values may be stored inside an array:
+
+```json
+{ "x": [1, "Hello!", 0.3] }
+```
+
+Since v.0.3.3 json_dto support such cases the following way:
+
+```cpp
+struct inner {
+	int a;
+	std::string b;
+	double c;
+
+	//NOTE: there is no json_io for `inner` type.
+};
+
+struct outer {
+	inner x;
+
+	template< typename Io > void json_io( Io & io ) {
+		io & json_dto::mandatory(
+				// The use of special reader-writer that will pack
+				// all described fields into one array value.
+				json_dto::inside_array::reader_writer(
+					// All fields to be (de)serialized must be enumerated here.
+					// The order of the enumeration is important: (de)serialization
+					// is performed in this order.
+					json_dto::inside_array::member( x.a ),
+					json_dto::inside_array::member( x.b ),
+					json_dto::inside_array::member( x.c ) ),
+				"x", x );
+	}
+};
+...
+auto obj = json_dto::from_json<outer>( R"({"x":[1, "Hello!", 0.3]})" );
+```
+
+By default `json_dto::inside_array::reader_writer` expects exact number of
+fields. For example, if three fields are described then an array with exactly tree
+values is expected during deserialization, otherwise an exception will be thrown.
+However, there may be cases when JSON contains less values. It means that N
+first members are mandatory, and all other are optional. This can be expressed
+that way:
+
+```cpp
+struct outer {
+	inner x;
+
+	template< typename Io > void json_io( Io & io ) {
+		io & json_dto::mandatory(
+				json_dto::inside_array::reader_writer<
+					// Specify that the first field is mandatory and all remaining
+					// are optional.
+					json_dto::inside_array::at_least<1>
+				>(
+					// This is mandatory field,
+					json_dto::inside_array::member( x.a ),
+					// This is optional field and we specify a default value for
+					// a case when it's missing.
+					json_dto::inside_array::member_with_default_value( x.b, std::string{ "Nothing" } ),
+					// This is optional field and we doesn't specify a default value
+					// for it. It it's missing than `double{}` will be used as a new
+					// value for `x.c`.
+					json_dto::inside_array::member( x.c ) ),
+				"x", x );
+	}
+};
+```
+
+There are a family of `json_dto::inside_array::member` and `json_dto::inside_array::member_with_default_value` functions that allow to specify a custom reader-writer and/or a validator:
+
+```cpp
+json_dto::inside_array::member( x.a, json_dto::min_max_constraint(-10, 10));
+json_dtp::inside_array::member( my_custom_reader_writer{}, x.b );
+json_dtp::inside_array::member( my_custom_reader_writer{}, x.c, json_dto::min_max_constraint(-1, 1) );
+```
+
+The inside_array functionality can be used for manual support of `std::tuple`:
+
+```cpp
+struct outer {
+	std::tuple<int, std::string, double> x;
+
+	template< typename Io > void json_io( Io & io ) {
+		io & json_dto::mandatory(
+				json_dto::inside_array::reader_writer(
+					json_dto::inside_array::member( std::get<0>(x) ),
+					json_dto::inside_array::member( std::get<1>(x) ),
+					json_dto::inside_array::member( std::get<2>(x) ) ),
+				"x", x );
+	}
+};
+...
+auto obj = json_dto::from_json<outer>( R"({"x":[1, "Hello!", 0.3]})" );
+```
 
 ## User defined IO
 
