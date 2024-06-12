@@ -16,6 +16,12 @@ struct extension_t
 	std::string m_id;
 	std::string m_payload;
 
+	extension_t() = default;
+	extension_t( std::string id, std::string payload )
+		: m_id{ std::move(id) }
+		, m_payload{ std::move(payload) }
+	{}
+
 	template< typename Json_Io >
 	void json_io( Json_Io & io )
 	{
@@ -57,6 +63,10 @@ struct extension_reader_writer_t
 		else if( from.IsArray() )
 		{
 			read_json_value( to, from );
+		}
+		else
+		{
+			throw std::runtime_error{ "Unexpected format of extension_t value" };
 		}
 	}
 
@@ -114,7 +124,7 @@ struct message_t
 
 using namespace tutorial_18_1;
 
-const std::string json_data{
+const std::string json_data_1{
 R"JSON({
   "from" : "json_dto",
   "when" : 1474884330,
@@ -125,13 +135,34 @@ R"JSON({
   ]
 })JSON" };
 
+const std::string json_data_2{
+R"JSON({
+  "from" : "json_dto",
+  "when" : 1474884330,
+  "text" : "Hello world!",
+  "extension" : {"Id": "000", "Payload": "---000---"}
+})JSON" };
+
+
 int
 main( int , char *[] )
 {
 	try
 	{
 		{
-			auto msg = json_dto::from_json< message_t >( json_data );
+			auto msg = json_dto::from_json< message_t >( json_data_1 );
+
+			const auto t = static_cast< std::time_t >( msg.m_when );
+			std::cout
+				<< "Deserialized from JSON:\n"
+				<< "\t     from: " << msg.m_from << "\n"
+				<< "\t     when: " << std::ctime( &t )
+				<< "\t     text: " << msg.m_text << "\n"
+				<< "\textension: " << to_string(msg.m_extension) << std::endl;
+		}
+
+		{
+			auto msg = json_dto::from_json< message_t >( json_data_2 );
 
 			const auto t = static_cast< std::time_t >( msg.m_when );
 			std::cout
@@ -146,6 +177,15 @@ main( int , char *[] )
 			message_t msg{ "json_dto", std::time( nullptr ), "Hello once again!" };
 			msg.m_extension.emplace_back( "0001", "---0001---" );
 			msg.m_extension.emplace_back( "0002", "---0002---" );
+
+			std::cout
+				<< "\nSerialized to JSON:\n"
+				<< json_dto::to_json( msg ) << std::endl;
+		}
+
+		{
+			message_t msg{ "json_dto", std::time( nullptr ), "Hello once again!" };
+			msg.m_extension.emplace_back( "0001", "---0001---" );
 
 			std::cout
 				<< "\nSerialized to JSON:\n"
