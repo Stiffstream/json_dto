@@ -4412,6 +4412,23 @@ to_json( const Dto & dto )
 	return { buffer.GetString(), buffer.GetSize() };
 }
 
+template< typename Reader_Writer, typename Dto >
+std::string
+to_json( const Reader_Writer & reader_writer, const Dto & dto )
+{
+	rapidjson::Document output_doc;
+
+	reader_writer.write( dto, output_doc, output_doc.GetAllocator() );
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer< rapidjson::StringBuffer > writer( buffer );
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_json: output_doc.Accept(writer) returns false" };
+
+	return { buffer.GetString(), buffer.GetSize() };
+}
+
 //
 // to_json with PrettyWriter
 //
@@ -4493,6 +4510,30 @@ to_json( const Dto & dto, pretty_writer_params_t writer_params )
 	return { buffer.GetString(), buffer.GetSize() };
 }
 
+template< typename Reader_Writer, typename Dto >
+std::string
+to_json( const Reader_Writer & reader_writer, const Dto & dto, pretty_writer_params_t writer_params )
+{
+	rapidjson::Document output_doc;
+
+	reader_writer.write( dto, output_doc, output_doc.GetAllocator() );
+
+	rapidjson::StringBuffer buffer;
+
+	rapidjson::PrettyWriter< rapidjson::StringBuffer > writer( buffer );
+	writer.SetIndent(
+			writer_params.m_indent_char,
+			writer_params.m_indent_char_count );
+	writer.SetFormatOptions(
+			writer_params.m_format_options );
+
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_json: output_doc.Accept(writer) returns false" };
+
+	return { buffer.GetString(), buffer.GetSize() };
+}
+
 inline void
 check_document_parse_status(
 	const rapidjson::Document & document )
@@ -4524,6 +4565,17 @@ from_json( const rapidjson::Value & json )
 	return result;
 }
 
+template< typename Type, typename Reader_Writer >
+Type
+from_json( const Reader_Writer & reader_writer, const rapidjson::Value & json )
+{
+	Type result{};
+
+	reader_writer.read( result, json );
+
+	return result;
+}
+
 //! Helper function to read from already parsed document to already
 //! constructed DTO.
 template< typename Type >
@@ -4533,6 +4585,13 @@ from_json( const rapidjson::Value & json, Type & o )
 	json_input_t jin{ json };
 
 	jin >> o;
+}
+
+template< typename Type, typename Reader_Writer >
+void
+from_json( const Reader_Writer & reader_writer, const rapidjson::Value & json, Type & o )
+{
+	reader_writer.read( o, json );
 }
 
 //! Helper function to read DTO from json-string in form of string_ref.
@@ -4550,6 +4609,19 @@ from_json( const string_ref_t & json )
 	check_document_parse_status( document );
 
 	return from_json<Type>( document );
+}
+
+template< typename Type, typename Reader_Writer, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+Type
+from_json( const Reader_Writer & reader_writer, const string_ref_t & json )
+{
+	rapidjson::Document document;
+
+	document.Parse< Rapidjson_Parseflags >( json.s, json.length );
+
+	check_document_parse_status( document );
+
+	return from_json<Type, Reader_Writer>( reader_writer, document );
 }
 
 //! Helper function to read DTO from json-string.
@@ -4574,6 +4646,13 @@ from_json( const char * json )
 	return from_json< Type, Rapidjson_Parseflags >( make_string_ref(json) );
 }
 
+template< typename Type, typename Reader_Writer, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+Type
+from_json( const Reader_Writer & reader_writer, const char * json )
+{
+	return from_json< Type, Reader_Writer, Rapidjson_Parseflags >( reader_writer, make_string_ref(json) );
+}
+
 //! Helper function to read an already instantiated DTO.
 /*!
  * This version reads the JSON content from a string_ref_t (aka
@@ -4594,12 +4673,32 @@ from_json( const string_ref_t & json, Type & o )
 	from_json( document, o );
 }
 
+template< typename Type, typename Reader_Writer, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+void
+from_json( const Reader_Writer & reader_writer, const string_ref_t & json, Type & o )
+{
+	rapidjson::Document document;
+
+	document.Parse< Rapidjson_Parseflags >( json.s, json.length );
+
+	check_document_parse_status( document );
+
+	from_json( reader_writer, document, o );
+}
+
 //! Helper function to read an already instantiated DTO.
 template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
 void
 from_json( const std::string & json, Type & o )
 {
 	from_json< Type, Rapidjson_Parseflags >( make_string_ref(json), o );
+}
+
+template< typename Type, typename Reader_Writer, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+void
+from_json( const Reader_Writer & reader_writer, const std::string & json, Type & o )
+{
+	from_json< Type, Reader_Writer, Rapidjson_Parseflags >( reader_writer, make_string_ref(json), o );
 }
 
 //! Helper function to read an already instantiated DTO.
@@ -4614,6 +4713,13 @@ void
 from_json( const char * json, Type & o )
 {
 	from_json< Type, Rapidjson_Parseflags >( make_string_ref(json), o );
+}
+
+template< typename Type, typename Reader_Writer, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+void
+from_json( const Reader_Writer & reader_writer, const char * json, Type & o )
+{
+	from_json< Type, Reader_Writer, Rapidjson_Parseflags >( reader_writer, make_string_ref(json), o );
 }
 
 /*!
@@ -4632,6 +4738,22 @@ to_stream( std::ostream & to, const Type & type )
 		output_doc, output_doc.GetAllocator() };
 
 	jout << type;
+
+	rapidjson::OStreamWrapper wrapper{ to };
+	rapidjson::Writer< rapidjson::OStreamWrapper > writer{ wrapper };
+
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_stream: output_doc.Accept(writer) returns false" };
+}
+
+template< typename Reader_Writer, typename Type >
+void
+to_stream( const Reader_Writer & reader_writer, std::ostream & to, const Type & type )
+{
+	rapidjson::Document output_doc;
+
+	reader_writer.write( type, output_doc, output_doc.GetAllocator() );
 
 	rapidjson::OStreamWrapper wrapper{ to };
 	rapidjson::Writer< rapidjson::OStreamWrapper > writer{ wrapper };
@@ -4675,6 +4797,35 @@ to_stream(
 		throw ex_t{ "to_stream: output_doc.Accept(writer) returns false" };
 }
 
+template< typename Reader_Writer, typename Type >
+void
+to_stream(
+	//! The reader implementing serialization.
+	const Reader_Writer & reader_writer,
+	//! The target stream.
+	std::ostream & to,
+	//! Object to be serialized.
+	const Type & type,
+	//! Parameters for pretty-writer.
+	pretty_writer_params_t writer_params )
+{
+	rapidjson::Document output_doc;
+
+	reader_writer.write( type, output_doc, output_doc.GetAllocator() );
+
+	rapidjson::OStreamWrapper wrapper{ to };
+	rapidjson::PrettyWriter< rapidjson::OStreamWrapper > writer{ wrapper };
+	writer.SetIndent(
+			writer_params.m_indent_char,
+			writer_params.m_indent_char_count );
+	writer.SetFormatOptions(
+			writer_params.m_format_options );
+
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_stream: output_doc.Accept(writer) returns false" };
+}
+
 template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
 void
 from_stream( std::istream & from, Type & o )
@@ -4691,12 +4842,33 @@ from_stream( std::istream & from, Type & o )
 	jin >> o;
 }
 
+template< typename Reader_Writer, typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+void
+from_stream( const Reader_Writer & reader_writer, std::istream & from, Type & o )
+{
+	rapidjson::IStreamWrapper wrapper{ from };
+
+	rapidjson::Document document;
+
+	reader_writer.read( o, document );
+}
+
 template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
 Type
 from_stream( std::istream & from )
 {
 	Type result;
 	from_stream< Type, Rapidjson_Parseflags >( from, result );
+
+	return result;
+}
+
+template< typename Reader_Writer, typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+Type
+from_stream( const Reader_Writer & reader_writer, std::istream & from )
+{
+	Type result;
+	from_stream< Type, Rapidjson_Parseflags >( reader_writer, from, result );
 
 	return result;
 }
