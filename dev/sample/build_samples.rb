@@ -5,6 +5,7 @@ MxxRu::Cpp::composite_target {
   required_prj( "sample/tutorial1/prj.rb" )
   required_prj( "sample/tutorial1.1/prj.rb" )
   required_prj( "sample/tutorial2/prj.rb" )
+  required_prj( "sample/tutorial2.1/prj.rb" )
   required_prj( "sample/tutorial3/prj.rb" )
   required_prj( "sample/tutorial4/prj.rb" )
   required_prj( "sample/tutorial5/prj.rb" )
