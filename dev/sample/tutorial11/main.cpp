@@ -85,7 +85,7 @@ main( int , char *[] )
 			json_data[ json_data.find( msg.m_text ) + 1 ] = -1;
 
 			// This must throw:
-			json_dto::from_json< message_t >( json_data );
+			(void) json_dto::from_json< message_t >( json_data );
 		}
 		catch( const std::exception & ex )
 		{
@@ -104,7 +104,7 @@ main( int , char *[] )
 				<< json_dto::to_json( msg ) << std::endl;
 
 			// This must throw:
-			json_dto::to_json(
+			(void) json_dto::to_json(
 				message_t{
 					"json_dto",
 					std::time( nullptr ),

@@ -4393,15 +4393,66 @@ operator << ( json_output_t & o, const Dto & v )
 // to_json
 //
 
+/*!
+ * @brief Helper function for serialization of an object to string.
+ */
 template< typename Dto >
+JSON_DTO_NODISCARD
 std::string
-to_json( const Dto & dto )
+to_json(
+	//! Object to be serialized.
+	const Dto & dto )
 {
 	rapidjson::Document output_doc;
 	json_output_t jout{
 		output_doc, output_doc.GetAllocator() };
 
 	jout << dto;
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer< rapidjson::StringBuffer > writer( buffer );
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_json: output_doc.Accept(writer) returns false" };
+
+	return { buffer.GetString(), buffer.GetSize() };
+}
+
+/*!
+ * @brief Helper function for serialization of an object to string
+ * with a custom reader-writer.
+ *
+ * Usage example:
+ * @code
+ * class some_data {
+ * public:
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {...}
+ * };
+ * struct some_data_reader_writer {
+ * 	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+ *
+ * 	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+ * };
+ * ...
+ * some_data data_to_pack{...};
+ * auto json_string = json_dto::to_json(some_data_reader_writer{}, data_to_pack);
+ * @endcode
+ *
+ * @since v.0.3.4
+ */
+template< typename Reader_Writer, typename Dto >
+JSON_DTO_NODISCARD
+std::string
+to_json(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! Object to be serialized.
+	const Dto & dto )
+{
+	rapidjson::Document output_doc;
+
+	reader_writer.write( dto, output_doc, output_doc.GetAllocator() );
 
 	rapidjson::StringBuffer buffer;
 	rapidjson::Writer< rapidjson::StringBuffer > writer( buffer );
@@ -4467,9 +4518,17 @@ struct pretty_writer_params_t
 	}
 };
 
+/*!
+ * @brief Helper function for serialization of an object to string
+ * by using pretty_writer.
+ */
 template< typename Dto >
 std::string
-to_json( const Dto & dto, pretty_writer_params_t writer_params )
+to_json(
+	//! Object to be serialized.
+	const Dto & dto,
+	//! Parameters for pretty_writer.
+	pretty_writer_params_t writer_params )
 {
 	rapidjson::Document output_doc;
 	json_output_t jout{
@@ -4493,6 +4552,61 @@ to_json( const Dto & dto, pretty_writer_params_t writer_params )
 	return { buffer.GetString(), buffer.GetSize() };
 }
 
+/*!
+ * @brief Helper function for serialization of an object to string
+ * by using pretty_writer and a custom Reader-Writer.
+ *
+ * Usage example:
+ * @code
+ * class some_data {
+ * public:
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {...}
+ * };
+ * struct some_data_reader_writer {
+ * 	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+ *
+ * 	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+ * };
+ * ...
+ * some_data data_to_pack{...};
+ * auto json_string = json_dto::to_json( some_data_reader_writer{}, data_to_pack,
+ * 	json_dto::pretty_writer_params_t{}.indent_char(' ').indent_char_count(3) );
+ * @endcode
+ *
+ * @since v.0.3.4
+ */
+template< typename Reader_Writer, typename Dto >
+std::string
+to_json(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! Object to be serialized.
+	const Dto & dto,
+	//! Parameters for pretty_writer.
+	pretty_writer_params_t writer_params )
+{
+	rapidjson::Document output_doc;
+
+	reader_writer.write( dto, output_doc, output_doc.GetAllocator() );
+
+	rapidjson::StringBuffer buffer;
+
+	rapidjson::PrettyWriter< rapidjson::StringBuffer > writer( buffer );
+	writer.SetIndent(
+			writer_params.m_indent_char,
+			writer_params.m_indent_char_count );
+	writer.SetFormatOptions(
+			writer_params.m_format_options );
+
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_json: output_doc.Accept(writer) returns false" };
+
+	return { buffer.GetString(), buffer.GetSize() };
+}
+
+//FIXME: document this!
 inline void
 check_document_parse_status(
 	const rapidjson::Document & document )
@@ -4507,13 +4621,35 @@ check_document_parse_status(
 }
 
 //
+// NOTE: there are a lot of overloads for from_json functions.
+// It's because we have to distinguish three different cases:
+//
+// - const char *;
+// - string_ref_t;
+// - std::string.
+//
+// Unfortunately, we can't limit himself to just one overload with
+// string_ref_t, because RapidJSON's GenericStringRef has no constructor
+// that accepts std::string. So we have to have overloads for string_ref_t
+// and for std::string. But it's not enough because if const char* is
+// passed to from_json, then compiler can't decide which overload to
+// select (string_ref_t and std::string can be implicitly constructed
+// from const char *).
+//
+
+//
 // from_json
 //
 
 //! Helper function to read DTO from already parsed document.
+//!
+//! @note
+//! Type @a Type is required to be DefaultConstructible.
 template< typename Type >
 Type
-from_json( const rapidjson::Value & json )
+from_json(
+	//! JSON representation of value to be extracted.
+	const rapidjson::Value & json )
 {
 	json_input_t jin{ json };
 
@@ -4524,24 +4660,119 @@ from_json( const rapidjson::Value & json )
 	return result;
 }
 
+/*!
+ * @brief Helper function to read DTO from already parsed document by using a
+ * custom Reader_Writer object.
+ *
+ * Usage example:
+ * @code
+ * class some_data {
+ * public:
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {...}
+ * };
+ * struct some_data_reader_writer {
+ * 	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+ *
+ * 	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+ * };
+ * ...
+ * rapidjson::Document & doc = ...;
+ * auto unpacked_data = json_dto::from_json<some_data>( some_data_reader_writer{}, doc["SomeData"] );
+ * @endcode
+ *
+ * @note
+ * Type @a Type is required to be DefaultConstructible.
+ *
+ * @since v.0.3.4
+ */
+template< typename Type, typename Reader_Writer >
+Type
+from_json(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! JSON representation of value to be extracted.
+	const rapidjson::Value & json )
+{
+	Type result{};
+
+	reader_writer.read( result, json );
+
+	return result;
+}
+
 //! Helper function to read from already parsed document to already
 //! constructed DTO.
+//!
+//! @note
+//! The state of @a o object is not defined if an error occurs.
 template< typename Type >
 void
-from_json( const rapidjson::Value & json, Type & o )
+from_json(
+	//! JSON representation of value to be extracted.
+	const rapidjson::Value & json,
+	//! The receiver of the extracted value.
+	Type & o )
 {
 	json_input_t jin{ json };
 
 	jin >> o;
 }
 
-//! Helper function to read DTO from json-string in form of string_ref.
 /*!
- * @since v.0.2.9
+ * Helper function to read DTO from already parsed document by
+ * using a custom Reader_Writer object.
+ *
+ * Usage example:
+ * @code
+ * class some_data {
+ * public:
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {...}
+ * };
+ * struct some_data_reader_writer {
+ * 	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+ *
+ * 	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+ * };
+ * ...
+ * rapidjson::Document & doc = ...;
+ * some_data unpacked_data;
+ * json_dto::from_json( some_data_reader_writer{}, doc["SomeData"], unpacked_data );
+ * @endcode
+ *
+ * @note
+ * The state of @a o object is not defined if an error occurs.
+ *
+ * @since v.0.3.4
  */
-template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+template< typename Type, typename Reader_Writer >
+void
+from_json(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! JSON representation of value to be extracted.
+	const rapidjson::Value & json,
+	//! The receiver of the extracted value.
+	Type & o )
+{
+	reader_writer.read( o, json );
+}
+
+//! Helper function to read DTO from json-string in form of string_ref.
+//!
+//! @note
+//! Type @a Type is required to be DefaultConstructible.
+//!
+//! @since v.0.2.9
+template<
+	typename Type,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+JSON_DTO_NODISCARD
 Type
-from_json( const string_ref_t & json )
+from_json(
+	//! Value to be parsed.
+	const string_ref_t & json )
 {
 	rapidjson::Document document;
 
@@ -4552,10 +4783,65 @@ from_json( const string_ref_t & json )
 	return from_json<Type>( document );
 }
 
-//! Helper function to read DTO from json-string.
-template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+/*!
+ * @brief Helper function to read DTO from json-string in form of string_ref
+ * with a custom Reader-Writer object.
+ *
+ * Usage example:
+ * @code
+ * class some_data {
+ * public:
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {...}
+ * };
+ * struct some_data_reader_writer {
+ * 	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+ *
+ * 	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+ * };
+ * ...
+ * jsom_dto::string_ref_t json_string = ...;
+ * auto unpacked_data = json_dto::from_json<some_data>( some_data_reader_writer{}, json_string );
+ * @endcode
+ *
+ * @note
+ * Type @a Type is required to be DefaultConstructible.
+ *
+ * @since v.0.3.4
+ */
+template<
+	typename Type,
+	typename Reader_Writer,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+JSON_DTO_NODISCARD
 Type
-from_json( const std::string & json )
+from_json(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! Value to be parsed.
+	const string_ref_t & json )
+{
+	rapidjson::Document document;
+
+	document.Parse< Rapidjson_Parseflags >( json.s, json.length );
+
+	check_document_parse_status( document );
+
+	return from_json<Type, Reader_Writer>( reader_writer, document );
+}
+
+//! Helper function to read DTO from json-string.
+//!
+//! @note
+//! Type @a Type is required to be DefaultConstructible.
+template<
+	typename Type,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+JSON_DTO_NODISCARD
+Type
+from_json(
+	//! Value to be parsed.
+	const std::string & json )
 {
 	return from_json< Type, Rapidjson_Parseflags >( make_string_ref(json) );
 }
@@ -4565,13 +4851,89 @@ from_json( const std::string & json )
  * This version reads the JSON content from a raw char pointer
  * (it's assumed that it is a null-terminated string).
  *
+ * @note
+ * Type @a Type is required to be DefaultConstructible.
+ *
  * @since v.0.2.9
  */
-template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+template<
+	typename Type,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+JSON_DTO_NODISCARD
 Type
-from_json( const char * json )
+from_json(
+	//! Value to be parsed.
+	const char * json )
 {
 	return from_json< Type, Rapidjson_Parseflags >( make_string_ref(json) );
+}
+
+//! Helper function to read DTO from json-string.
+/*!
+ * This version reads the JSON content from a raw char pointer
+ * (it's assumed that it is a null-terminated string).
+ *
+ * Usage example:
+ * @code
+ * class some_data {
+ * public:
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {...}
+ * };
+ * struct some_data_reader_writer {
+ * 	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+ *
+ * 	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+ * };
+ * ...
+ * const char * json_string = ...;
+ * auto unpacked_data = json_dto::from_json<some_data>( some_data_reader_writer{}, json_string );
+ * @endcode
+ *
+ * @note
+ * Type @a Type is required to be DefaultConstructible.
+ *
+ * @since v.0.3.4
+ */
+template<
+	typename Type,
+	typename Reader_Writer,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+JSON_DTO_NODISCARD
+Type
+from_json(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! Value to be parsed.
+	const char * json )
+{
+	return from_json< Type, Reader_Writer, Rapidjson_Parseflags >(
+			reader_writer, make_string_ref(json) );
+}
+
+//! Helper function to read DTO from json-string.
+/*!
+ * This version reads the JSON content from a std::string.
+ *
+ * @note
+ * Type @a Type is required to be DefaultConstructible.
+ *
+ * @since v.0.3.4
+ */
+template<
+	typename Type,
+	typename Reader_Writer,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+JSON_DTO_NODISCARD
+Type
+from_json(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! Value to be parsed.
+	const std::string & json )
+{
+	return from_json< Type, Reader_Writer, Rapidjson_Parseflags >(
+			reader_writer, make_string_ref(json) );
 }
 
 //! Helper function to read an already instantiated DTO.
@@ -4579,11 +4941,20 @@ from_json( const char * json )
  * This version reads the JSON content from a string_ref_t (aka
  * rapidjson::Value::StringRefType) object.
  *
+ * @note
+ * The state of @a o object is undefined if an error occurs.
+ *
  * @since v.0.2.9
  */
-template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+template<
+	typename Type,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
 void
-from_json( const string_ref_t & json, Type & o )
+from_json(
+	//! Value to be parsed.
+	const string_ref_t & json,
+	//! The receiver of the extracted value.
+	Type & o )
 {
 	rapidjson::Document document;
 
@@ -4594,12 +4965,113 @@ from_json( const string_ref_t & json, Type & o )
 	from_json( document, o );
 }
 
-//! Helper function to read an already instantiated DTO.
-template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+//! Helper function to read an already instantiated DTO with
+//! a custom Reader-Writer object.
+/*!
+ * This version reads the JSON content from a string_ref_t (aka
+ * rapidjson::Value::StringRefType) object.
+ *
+ * Usage example:
+ * @code
+ * class some_data {
+ * public:
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {...}
+ * };
+ * struct some_data_reader_writer {
+ * 	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+ *
+ * 	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+ * };
+ * ...
+ * json_dto::string_ref_t json_string = ...;
+ * some_data unpacked_data;
+ * json_dto::from_json( some_data_reader_writer{}, json_string, unpacked_data );
+ * @endcode
+ *
+ * @note
+ * The state of @a o object is undefined if an error occurs.
+ *
+ * @since v.0.3.4
+ */
+template<
+	typename Type,
+	typename Reader_Writer,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
 void
-from_json( const std::string & json, Type & o )
+from_json(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! Value to be parsed.
+	const string_ref_t & json,
+	//! The receiver of the extracted value.
+	Type & o )
+{
+	rapidjson::Document document;
+
+	document.Parse< Rapidjson_Parseflags >( json.s, json.length );
+
+	check_document_parse_status( document );
+
+	from_json( reader_writer, document, o );
+}
+
+//! Helper function to read an already instantiated DTO.
+//!
+//! @note
+//! The state of @a o object is not defined if an error occurs.
+template<
+	typename Type,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+void
+from_json(
+	//! Value to be parsed.
+	const std::string & json,
+	//! The receiver of the extracted value.
+	Type & o )
 {
 	from_json< Type, Rapidjson_Parseflags >( make_string_ref(json), o );
+}
+
+//! Helper function to read an already instantiated DTO.
+/*!
+ * Usage example:
+ * @code
+ * class some_data {
+ * public:
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {...}
+ * };
+ * struct some_data_reader_writer {
+ * 	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+ *
+ * 	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+ * };
+ * ...
+ * const std::string json_string = ...;
+ * auto unpacked_data = json_dto::from_json<some_data>( some_data_reader_writer{}, json_string );
+ * @endcode
+ *
+ * @note
+ * The state of @a o object is not defined if an error occurs.
+ *
+ * @since v.0.3.4
+ */
+template<
+	typename Type,
+	typename Reader_Writer,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+void
+from_json(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! Value to be parsed.
+	const std::string & json,
+	//! The receiver of the extracted value.
+	Type & o )
+{
+	from_json< Type, Reader_Writer, Rapidjson_Parseflags >(
+			reader_writer, make_string_ref(json), o );
 }
 
 //! Helper function to read an already instantiated DTO.
@@ -4607,13 +5079,64 @@ from_json( const std::string & json, Type & o )
  * This version reads the JSON content from a raw char pointer
  * (it's assumed that it is a null-terminated string).
  *
+ * @note
+ * The state of @a o object is not defined if an error occurs.
+ *
  * @since v.0.2.9
  */
 template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
 void
-from_json( const char * json, Type & o )
+from_json(
+	//! Value to be parsed.
+	const char * json,
+	//! The receiver of the extracted value.
+	Type & o )
 {
 	from_json< Type, Rapidjson_Parseflags >( make_string_ref(json), o );
+}
+
+/*!
+ * @brief Helper function to read an already instantiated DTO with
+ * a custom Reader-Writer.
+ *
+ * Usage example:
+ * @code
+ * class some_data {
+ * public:
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {...}
+ * };
+ * struct some_data_reader_writer {
+ * 	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+ *
+ * 	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+ * };
+ * ...
+ * const char * json_string = ...;
+ * some_data unpacked_data;
+ * json_dto::from_json( some_data_reader_writer{}, json_string, unpacked_data );
+ * @endcode
+ *
+ * @note
+ * The state of @a o object is not defined if an error occurs.
+ *
+ * @since v.0.3.4
+ */
+template<
+	typename Type,
+	typename Reader_Writer,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+void
+from_json(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! Value to be parsed.
+	const char * json,
+	//! The receiver of the extracted value.
+	Type & o )
+{
+	from_json< Type, Reader_Writer, Rapidjson_Parseflags >(
+			reader_writer, make_string_ref(json), o );
 }
 
 /*!
@@ -4625,13 +5148,68 @@ from_json( const char * json, Type & o )
  */
 template< typename Type >
 void
-to_stream( std::ostream & to, const Type & type )
+to_stream(
+	//! Target stream.
+	std::ostream & to,
+	//! Value to be serialized.
+	const Type & type )
 {
 	rapidjson::Document output_doc;
 	json_dto::json_output_t jout{
 		output_doc, output_doc.GetAllocator() };
 
 	jout << type;
+
+	rapidjson::OStreamWrapper wrapper{ to };
+	rapidjson::Writer< rapidjson::OStreamWrapper > writer{ wrapper };
+
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_stream: output_doc.Accept(writer) returns false" };
+}
+
+/*!
+ * @brief Serialize an object into specified stream with custom
+ * Reader-Writer object.
+ *
+ * Usage example:
+ * @code
+ * class some_data {
+ * public:
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {...}
+ * };
+ * struct some_data_reader_writer {
+ * 	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+ *
+ * 	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+ * };
+ * ...
+ * some_data data_to_pack{...};
+ * json_dto::to_stream(some_data_reader_writer{}, std::cout, data_to_pack);
+ * @endcode
+ *
+ * @note
+ * Default formatting will be used. If one needs pretty-formatted
+ * output then another overload has to be used.
+ *
+ * @since v.0.3.4
+ */
+template<
+	typename Type,
+	typename Reader_Writer >
+void
+to_stream(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! Target stream.
+	std::ostream & to,
+	//! Value to be serialized.
+	const Type & type )
+{
+	rapidjson::Document output_doc;
+
+	reader_writer.write( type, output_doc, output_doc.GetAllocator() );
 
 	rapidjson::OStreamWrapper wrapper{ to };
 	rapidjson::Writer< rapidjson::OStreamWrapper > writer{ wrapper };
@@ -4675,9 +5253,73 @@ to_stream(
 		throw ex_t{ "to_stream: output_doc.Accept(writer) returns false" };
 }
 
+/*!
+ * @brief Serialize an object into specified stream with 
+ * custom Reader-Writer object and using pretty-writer.
+ *
+ * Usage example:
+ * @code
+ * class some_data {
+ * public:
+ * 	...
+ * 	template<typename Io> void json_io(Io & io) {...}
+ * };
+ * struct some_data_reader_writer {
+ * 	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+ *
+ * 	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+ * };
+ * ...
+ * some_data data_to_pack{...};
+ * json_dto::to_stream( some_data_reader_writer{}, std::cout, data_to_pack,
+ * 	json_dto::pretty_writer_params_t{}.indent_char(' ').indent_char_count(3) );
+ * @endcode
+ *
+ * @since v.0.3.4
+ */
+template<
+	typename Type,
+	typename Reader_Writer >
+void
+to_stream(
+	//! The reader implementing serialization.
+	const Reader_Writer & reader_writer,
+	//! The target stream.
+	std::ostream & to,
+	//! Object to be serialized.
+	const Type & type,
+	//! Parameters for pretty-writer.
+	pretty_writer_params_t writer_params )
+{
+	rapidjson::Document output_doc;
+
+	reader_writer.write( type, output_doc, output_doc.GetAllocator() );
+
+	rapidjson::OStreamWrapper wrapper{ to };
+	rapidjson::PrettyWriter< rapidjson::OStreamWrapper > writer{ wrapper };
+	writer.SetIndent(
+			writer_params.m_indent_char,
+			writer_params.m_indent_char_count );
+	writer.SetFormatOptions(
+			writer_params.m_format_options );
+
+	const bool result = output_doc.Accept( writer );
+	if( !result )
+		throw ex_t{ "to_stream: output_doc.Accept(writer) returns false" };
+}
+
+//! Helper function to read an already instantiated DTO.
+/*!
+ * @note
+ * The state of @a o object is not defined if an error occurs.
+ */
 template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
 void
-from_stream( std::istream & from, Type & o )
+from_stream(
+	//! Source stream.
+	std::istream & from,
+	//! The receiver of the extracted value.
+	Type & o )
 {
 	rapidjson::IStreamWrapper wrapper{ from };
 
@@ -4691,12 +5333,76 @@ from_stream( std::istream & from, Type & o )
 	jin >> o;
 }
 
+//! Helper function to read an already instantiated DTO with
+//! custom Reader-Writer.
+/*!
+ * @note
+ * The state of @a o object is not defined if an error occurs.
+ *
+ * @since v.0.3.4
+ */
+template<
+	typename Type,
+	typename Reader_Writer,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+void
+from_stream(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! Source stream.
+	std::istream & from,
+	//! The receiver of the extracted value.
+	Type & o)
+{
+	rapidjson::IStreamWrapper wrapper{ from };
+
+	rapidjson::Document document;
+	document.ParseStream< Rapidjson_Parseflags >( wrapper );
+	check_document_parse_status( document );
+
+	reader_writer.read( o, document );
+}
+
+//! Helper function to read DTO from a stream.
+/*!
+ * @note
+ * Type @a Type is required to be DefaultConstructible.
+ */
 template< typename Type, unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+JSON_DTO_NODISCARD
 Type
-from_stream( std::istream & from )
+from_stream(
+	//! Source stream.
+	std::istream & from )
 {
 	Type result;
 	from_stream< Type, Rapidjson_Parseflags >( from, result );
+
+	return result;
+}
+
+//! Helper function to read DTO from a stream with custom Reader-Writer.
+/*!
+ * @note
+ * Type @a Type is required to be DefaultConstructible.
+ *
+ * @since v.0.3.4
+ */
+template<
+	typename Type,
+	typename Reader_Writer,
+	unsigned Rapidjson_Parseflags = rapidjson::kParseDefaultFlags >
+JSON_DTO_NODISCARD
+Type
+from_stream(
+	//! Custom Reader_Writer to be used.
+	const Reader_Writer & reader_writer,
+	//! Source stream.
+	std::istream & from )
+{
+	Type result;
+	from_stream< Type, Reader_Writer, Rapidjson_Parseflags >(
+			reader_writer, from, result );
 
 	return result;
 }

@@ -106,7 +106,7 @@ TEST_CASE( "num-mand-invalid" , "[invalid]" )
 				"num_int32":-5,
 				"num_int64":-10
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -141,7 +141,7 @@ TEST_CASE( "num-mand-invalid" , "[invalid]" )
 				"num_int32":-3,
 				"num_int64":-10
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -176,7 +176,7 @@ TEST_CASE( "num-mand-invalid" , "[invalid]" )
 				"num_int32":-10,
 				"num_int64":2016
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -284,7 +284,7 @@ TEST_CASE( "str-mand-invalid" , "[invalid]" )
 					"s1":"abc",
 					"s2":""
 				})JSON";
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -323,7 +323,7 @@ TEST_CASE( "str-mand-invalid" , "[invalid]" )
 					"s1":"ccc",
 					"s2":"012345"
 				})JSON";
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -478,7 +478,7 @@ TEST_CASE( "num-opt-no-default-invalid" , "[invalid]" )
 					"num_int16":-11,
 					"num_int64":-10
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -517,7 +517,7 @@ TEST_CASE( "num-opt-no-default-invalid" , "[invalid]" )
 					"num_int16":10,
 					"num_int32":-3
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -556,7 +556,7 @@ TEST_CASE( "num-opt-no-default-invalid" , "[invalid]" )
 					"num_int32":-10,
 					"num_int64":2016
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -691,7 +691,7 @@ TEST_CASE( "str-opt-no-default-invalid" , "[invalid]" )
 				R"JSON({
 					"s1":"abc"
 				})JSON";
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -729,7 +729,7 @@ TEST_CASE( "str-opt-no-default-invalid" , "[invalid]" )
 					R"JSON({
 						"s2":"012345"
 					})JSON" );
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -893,7 +893,7 @@ TEST_CASE( "num-opt-invalid" , "[invalid]" )
 					"num_int16":-11,
 					"num_int64":-10
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -933,7 +933,7 @@ TEST_CASE( "num-opt-invalid" , "[invalid]" )
 					"num_int16":10,
 					"num_int32":-3
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -972,7 +972,7 @@ TEST_CASE( "num-opt-invalid" , "[invalid]" )
 					"num_int32":-10,
 					"num_int64":2016
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -1109,7 +1109,7 @@ TEST_CASE( "str-opt-invalid" , "[invalid]" )
 				R"JSON({
 					"s1":"abc"
 				})JSON";
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -1146,7 +1146,7 @@ TEST_CASE( "str-opt-invalid" , "[invalid]" )
 				R"JSON({
 					"s2":"012345"
 				})JSON";
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -1301,7 +1301,7 @@ TEST_CASE( "num-nullable-mand-invalid" , "[invalid]" )
 					"num_int32":-5,
 					"num_int64":-10
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -1342,7 +1342,7 @@ TEST_CASE( "num-nullable-mand-invalid" , "[invalid]" )
 					"num_int32":-3,
 					"num_int64":-10
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -1382,7 +1382,7 @@ TEST_CASE( "num-nullable-mand-invalid" , "[invalid]" )
 					"num_int32":-10,
 					"num_int64":2016
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -1523,7 +1523,7 @@ TEST_CASE( "str-nullable-man-invalid" , "[invalid]" )
 					"s1":"abc",
 					"s2":""
 				})JSON";
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -1562,7 +1562,7 @@ TEST_CASE( "str-nullable-man-invalid" , "[invalid]" )
 					"s1":null,
 					"s2":"012345"
 				})JSON";
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -1722,7 +1722,7 @@ TEST_CASE( "num-nullable-opt-no-default-invalid" , "[invalid]" )
 					"num_int16":-11,
 					"num_int64":null
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -1761,7 +1761,7 @@ TEST_CASE( "num-nullable-opt-no-default-invalid" , "[invalid]" )
 					"num_int16":null,
 					"num_int32":-3
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -1800,7 +1800,7 @@ TEST_CASE( "num-nullable-opt-no-default-invalid" , "[invalid]" )
 					"num_int32":null,
 					"num_int64":2016
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -1963,7 +1963,7 @@ TEST_CASE( "str-nullable-opt-no-default-invalid" , "[invalid]" )
 				R"JSON({
 					"s1":"abc"
 				})JSON";
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2001,7 +2001,7 @@ TEST_CASE( "str-nullable-opt-no-default-invalid" , "[invalid]" )
 				R"JSON({
 					"s2":"012345"
 				})JSON";
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2186,7 +2186,7 @@ TEST_CASE( "num-nullable-opt-invalid" , "[invalid]" )
 					"num_int16":-11,
 					"num_int64":-10
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2225,7 +2225,7 @@ TEST_CASE( "num-nullable-opt-invalid" , "[invalid]" )
 					"num_int16":10,
 					"num_int32":-3
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2265,7 +2265,7 @@ TEST_CASE( "num-nullable-opt-invalid" , "[invalid]" )
 					"num_int32":-10,
 					"num_int64":2016
 				})JSON";
-			from_json< nums_t >( json_str );
+			(void) from_json< nums_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2457,7 +2457,7 @@ TEST_CASE( "str-nullable-opt-invalid" , "[invalid]" )
 				R"JSON({
 					"s1":"abc"
 				})JSON";
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2495,7 +2495,7 @@ TEST_CASE( "str-nullable-opt-invalid" , "[invalid]" )
 				R"JSON({
 					"s2":"012345"
 				})JSON";
-			from_json< strings_t >( json_str );
+			(void) from_json< strings_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2699,7 +2699,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 					"nums_optional_nullable":null
 				})JSON";
 
-			from_json< vector_fields_t >( json_str );
+			(void) from_json< vector_fields_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2720,7 +2720,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 			vf.m_nums_mandatory_nullable = nullptr;
 			vf.m_nums_optional_nullable = nullptr;
 
-			to_json( vf );
+			(void) to_json( vf );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2742,7 +2742,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 					"nums_optional_nullable":null}
 				)JSON";
 
-			from_json< vector_fields_t >( json_str );
+			(void) from_json< vector_fields_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2763,7 +2763,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 			vf.m_nums_mandatory_nullable = nullptr;
 			vf.m_nums_optional_nullable = nullptr;
 
-			to_json( vf );
+			(void) to_json( vf );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2785,7 +2785,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 					"nums_optional_nullable":[5,-10]
 				})JSON";
 
-			from_json< vector_fields_t >( json_str );
+			(void) from_json< vector_fields_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2803,7 +2803,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 			vf.m_nums_mandatory_nullable.emplace( {-10,-5,9,-10,0} );
 			vf.m_nums_optional_nullable.emplace( {-10,-5,0,-10,0} );
 
-			to_json( vf );
+			(void) to_json( vf );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2825,7 +2825,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 					"nums_optional_nullable":[-4]}
 				)JSON";
 
-			from_json< vector_fields_t >( json_str );
+			(void) from_json< vector_fields_t >( json_str );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}
@@ -2843,7 +2843,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 			vf.m_nums_mandatory_nullable.emplace( {-10,-5,0,-10,0} );
 			vf.m_nums_optional_nullable.emplace( {-10,-5,0,-10,0, 9999} );
 
-			to_json( vf );
+			(void) to_json( vf );
 
 			REQUIRE( false /* validator didn't work*/ );
 		}

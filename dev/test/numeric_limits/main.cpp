@@ -97,7 +97,7 @@ check_out_of_range(
 			bool error = false;
 			try
 			{
-				json_dto::from_json< nums_t >(
+				(void)json_dto::from_json< nums_t >(
 					"{"
 						"\"" + key_name + "\":" + std::to_string( min_value ) +
 					"}" );
@@ -118,7 +118,7 @@ check_out_of_range(
 		bool error = false;
 		try
 		{
-			json_dto::from_json< nums_t >(
+			(void) json_dto::from_json< nums_t >(
 				"{"
 					"\"" + key_name + "\":" + std::to_string( max_value ) +
 				"}" );

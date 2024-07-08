@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <limits>
+#include <sstream>
 
 #include <rapidjson/document.h>
 
@@ -69,6 +70,39 @@ struct hex_writer_t
 		std::sprintf( buf, "%x", v );
 
 		write_json_value( json_dto::make_string_ref(buf), to, allocator );
+	}
+};
+
+struct uint16_value_t
+{
+	std::uint16_t m_value;
+};
+
+struct uint16_value_reader_writer_t
+{
+	void
+	read( uint16_value_t & v, const rapidjson::Value & from ) const
+	{
+		std::uint8_t hi = static_cast<std::uint8_t>(from["Hi"].GetUint());
+		std::uint8_t lo = static_cast<std::uint8_t>(from["Lo"].GetUint());
+
+		v.m_value = (static_cast<std::uint16_t>(hi) << 8) | lo;
+	}
+
+	void
+	write(
+		const uint16_value_t & v,
+		rapidjson::Value & to,
+		rapidjson::MemoryPoolAllocator<> & allocator ) const
+	{
+		std::uint8_t hi = static_cast<std::uint8_t>(v.m_value >> 8u);
+		std::uint8_t lo = static_cast<std::uint8_t>(v.m_value & 0xffu);
+
+		to.SetObject();
+		rapidjson::Value hi_val(hi);
+		rapidjson::Value lo_val(lo);
+		to.AddMember("Hi", hi_val, allocator);
+		to.AddMember("Lo", lo_val, allocator);
 	}
 };
 
@@ -305,6 +339,175 @@ TEST_CASE("nullable vector with custom hex_writer",
 		};
 
 		REQUIRE( json_str == to_json( dto ) );
+	}
+}
+
+TEST_CASE("to_json and from_json with custom reader_writer",
+		"[to_json][from_json][custom_reader_writer]")
+{
+	// to_json(writer, dto)
+	{
+		const std::string expected = R"JSON("Hello")JSON";
+
+		std::string dto{ "Hello" };
+		const std::string json_value = to_json(
+				custom_reader_writer_t{}, dto );
+
+		REQUIRE( expected == json_value );
+	}
+
+	// to_json(writer, dto, pretty_writter)
+	{
+		const std::string expected = R"JSON("Hello")JSON";
+
+		std::string dto{ "Hello" };
+		const std::string json_value = to_json(
+				custom_reader_writer_t{},
+				dto,
+				pretty_writer_params_t{}.indent_char( '\t' ) );
+
+		REQUIRE( expected == json_value );
+	}
+
+	// from_json(reader, json_value)
+	{
+		rapidjson::Value json_value;
+		json_value.SetString("Hello");
+
+		std::string extracted_value = from_json<std::string>(
+				custom_reader_writer_t{}, json_value );
+
+		REQUIRE( "Hello" == extracted_value );
+	}
+
+	// from_json(reader, json_value, dest)
+	{
+		rapidjson::Value json_value;
+		json_value.SetString("Hello");
+
+		std::string extracted_value;
+		from_json(
+				custom_reader_writer_t{},
+				json_value,
+				extracted_value );
+
+		REQUIRE( "Hello" == extracted_value );
+	}
+
+	// from_json(reader, string-ref)
+	{
+		const string_ref_t what{ R"JSON("Hello")JSON" };
+		std::string extracted_value = from_json<std::string>(
+				custom_reader_writer_t{}, what );
+
+		REQUIRE( "Hello" == extracted_value );
+	}
+
+	// from_json(reader, string-literal)
+	{
+		std::string extracted_value = from_json<std::string>(
+				custom_reader_writer_t{},
+				R"JSON("Hello")JSON" );
+
+		REQUIRE( "Hello" == extracted_value );
+	}
+
+	// from_json(reader, std_string_object)
+	{
+		const std::string to_parse{ R"JSON("Hello")JSON" };
+		std::string extracted_value = from_json<std::string>(
+				custom_reader_writer_t{}, to_parse );
+
+		REQUIRE( "Hello" == extracted_value );
+	}
+
+	// from_json(reader, string-ref, dest)
+	{
+		const string_ref_t what{ R"JSON("Hello")JSON" };
+
+		std::string extracted_value;
+		from_json(
+				custom_reader_writer_t{},
+				what,
+				extracted_value );
+
+		REQUIRE( "Hello" == extracted_value );
+	}
+
+	// from_json(reader, string-literal, dest)
+	{
+		std::string extracted_value;
+		from_json(
+				custom_reader_writer_t{},
+				R"JSON("Hello")JSON",
+				extracted_value );
+
+		REQUIRE( "Hello" == extracted_value );
+	}
+
+	// from_json(reader, std_string_object, dest)
+	{
+		const std::string what{ R"JSON("Hello")JSON" };
+
+		std::string extracted_value;
+		from_json(
+				custom_reader_writer_t{},
+				what,
+				extracted_value );
+
+		REQUIRE( "Hello" == extracted_value );
+	}
+}
+
+TEST_CASE("to_stream and from_stream with custom reader_writer",
+		"[to_stream][from_stream][custom_reader_writer]")
+{
+	// to_stream(writer, stream, dto)
+	{
+		const std::string expected = R"JSON({"Hi":1,"Lo":1})JSON";
+
+		uint16_value_t dto{ 0x0101 };
+		std::ostringstream ss;
+		to_stream( uint16_value_reader_writer_t{}, ss, dto );
+
+		REQUIRE( expected == ss.str() );
+	}
+
+	// to_stream(writer, stream, dto, pretty_writer)
+	{
+		const std::string expected = R"JSON({
+ "Hi": 1,
+ "Lo": 1
+})JSON";
+
+		uint16_value_t dto{ 0x0101 };
+		std::ostringstream ss;
+		to_stream( uint16_value_reader_writer_t{}, ss, dto,
+				pretty_writer_params_t{}
+					.indent_char( ' ' )
+					.indent_char_count( 1u ) );
+
+		REQUIRE( expected == ss.str() );
+	}
+
+	// from_stream(reader, stream, dto)
+	{
+		std::istringstream ss{ R"JSON({"Lo":2, "Hi":3})JSON" };
+
+		uint16_value_t dto{ 0x0 };
+		from_stream( uint16_value_reader_writer_t{}, ss, dto );
+
+		REQUIRE( 0x0302u == dto.m_value );
+	}
+
+	// from_stream(reader, stream)
+	{
+		std::istringstream ss{ R"JSON({"Lo":2, "Hi":3})JSON" };
+
+		uint16_value_t dto = from_stream<uint16_value_t>(
+				uint16_value_reader_writer_t{}, ss );
+
+		REQUIRE( 0x0302u == dto.m_value );
 	}
 }
 
