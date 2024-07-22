@@ -1979,7 +1979,7 @@ Note also that `read` and `write` methods of Reader_Writer class can be template
 
 A custom Reader_Writer can also be used to change representation of a field. For example, let suppose that we have a `std::vector<some_struct>` field, but this field has to be represented as a single object if it holds just one value, and as an array otherwise. Something like:
 
-```json
+```
 {
   "message": {
     "from": "address-1",
@@ -1993,7 +1993,7 @@ A custom Reader_Writer can also be used to change representation of a field. For
 
 if we have only one extension in a message or:
 
-```json
+```
 {
   "message": {
     "from": "address-1",
