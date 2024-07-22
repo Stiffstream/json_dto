@@ -4,6 +4,7 @@ Table of Contents
    * [Table of Contents](#table-of-contents)
    * [What Is json_dto?](#what-is-json_dto)
    * [What's new?](#whats-new)
+      * [v.0.3.4](#v034)
       * [v.0.3.3](#v033)
       * [v.0.3.2](#v032)
       * [v.0.3.1](#v031)
@@ -71,6 +72,37 @@ And since Fall 2016 is ready for public. We are still using it for
 working with JSON in various projects.
 
 # What's new?
+
+## v.0.3.4
+
+Several new `to_json`, `from_json`, `to_stream` and `from_stream` functions
+that accept Reader-Writer parameter. For example:
+
+```cpp
+// Type to be serialized.
+class some_data {
+public:
+	...
+	template<typename Io> void json_io(Io & io) {...}
+};
+
+// Special Reader-Writer for packing/unpacking instances of some_data.
+struct some_data_reader_writer {
+	void read( some_data & obj, const rapidjson::Value & from ) const {...}
+
+	void write( const some_data & obj, rapidjson::Value & to, rapidjson::MemoryPoolAllocator<> & allocator ) const {...}
+};
+...
+// Object to be serialized.
+some_data data_to_pack{...};
+// Serialization by using custom Reader-Writer object.
+auto json_string = json_dto::to_json(some_data_reader_writer{}, data_to_pack);
+```
+
+See a new [deserialization example](./dev/sample/tutorial16.1/main.cpp) that shows how
+a new `from_json` function can be used.
+
+There is also [a new example](./dev/sample/tutorial18.1/main.cpp) that shows how a custom Reader-Writer may change representation of an item.
 
 ## v.0.3.3
 
