@@ -1818,8 +1818,7 @@ struct numeric_log_level
 		v = static_cast<log_level>(actual);
 	}
 
-	void
-	write(
+	void write(
 		const log_level & v,
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const
@@ -1859,8 +1858,7 @@ struct textual_log_level
 		else throw json_dto::ex_t{ "invalid value for log_level" };
 	}
 
-	void
-	write(
+	void write(
 		const log_level & v,
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const
@@ -1940,8 +1938,7 @@ struct custom_floating_point_reader_writer
 	}
 
 	template< typename T >
-	void
-	write(
+	void write(
 		T & v,
 		rapidjson::Value & to,
 		rapidjson::MemoryPoolAllocator<> & allocator ) const
@@ -1979,6 +1976,113 @@ struct struct_with_floats_t
 ```
 
 Note also that `read` and `write` methods of Reader_Writer class can be template methods.
+
+A custom Reader_Writer can also be used to change representation of a field. For example, let suppose that we have a `std::vector<some_struct>` field, but this field has to be represented as a single object if it holds just one value, and as an array otherwise. Something like:
+
+```json
+{
+  "message": {
+    "from": "address-1",
+    "to": "address-2",
+    ...,
+    "extension": {...}
+  },
+  ...
+}
+```
+
+if we have only one extension in a message or:
+
+```json
+{
+  "message": {
+    "from": "address-1",
+    "to": "address-2",
+    ...,
+    "extension": [
+      {...},
+      {...},
+      ...
+    ]
+  },
+  ...
+}
+```
+
+if there are several extensions.
+
+A solution with a custom Reader_Writer can looks like:
+
+```cpp
+struct extension
+{
+    ...
+
+    template< typename Json_Io >
+    void json_io( Json_Io & io )
+    {
+        ... // Ordinary serialization/deserialization code.
+    }
+};
+
+// Reader_Writer for vector of `extension` objects.
+struct extension_reader_writer
+{
+    void read( std::vector< extension > & to, const rapidjson::Value & from ) const
+    {
+        using json_dto::read_json_value;
+
+        to.clear();
+
+        if( from.IsObject() )
+        {
+            extension_t single_value;
+            read_json_value( single_value, from );
+            to.push_back( std::move(single_value) );
+        }
+        else if( from.IsArray() )
+        {
+            read_json_value( to, from );
+        }
+        else
+        {
+            throw std::runtime_error{ "Unexpected format of extension value" };
+        }
+    }
+
+    void write(
+        const std::vector< extension > & v,
+        rapidjson::Value & to,
+        rapidjson::MemoryPoolAllocator<> & allocator ) const
+    {
+        using json_dto::write_json_value;
+        if( 1u == v.size() )
+            write_json_value( v.front(), to, allocator );
+        else
+            write_json_value( v, to, allocator );
+    }
+};
+
+// Message.
+struct message
+{
+    // Fields of a message.
+    ...
+    // Extension(s) for a message.
+    std::vector< extension > m_extension;
+
+    template< typename Json_Io >
+    void json_io( Json_Io & io )
+    {
+        io & ...
+            & json_dto::mandatory( extension_reader_writer{},
+                    "extension", m_extension )
+            ;
+    }
+};
+```
+
+The full example of such an approach can be seen [here](./dev/sample/tutorial18.1/main.cpp)
 
 #### Custom Reader_Writer with containers and nullable_t, and std::optional
 
