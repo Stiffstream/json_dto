@@ -8,6 +8,7 @@ project(${JSON_DTO}) # not to misspell it.
 
 add_library(${JSON_DTO} INTERFACE)
 add_library(json-dto::json-dto ALIAS ${JSON_DTO})
+target_link_libraries(${JSON_DTO} INTERFACE RapidJSON)
 
 IF (${CMAKE_VERSION} VERSION_LESS "3.8.0")
 	set(CMAKE_CXX_STANDARD 14)

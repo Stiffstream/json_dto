@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.14)
 
 project(json_dto_root CXX)
 
@@ -26,7 +26,37 @@ IF (JSON_DTO_MASTER_PROJECT)
 		# Require necessary packages.
 		find_package(RapidJSON REQUIRED)
 	ELSE ()
-		include_directories(rapidjson/include)
+		include(FetchContent)
+
+		set(FETCHCONTENT_QUIET OFF)
+
+		set(RAPIDJSON_BUILD_DOC OFF CACHE INTERNAL "")
+		set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE INTERNAL "")
+		set(RAPIDJSON_BUILD_TESTS OFF CACHE INTERNAL "")
+		set(RAPIDJSON_BUILD_THIRDPARTY_GTEST OFF CACHE INTERNAL "")
+		set(RAPIDJSON_HAS_STDSTRING ON CACHE INTERNAL "")
+
+		FetchContent_Declare(rapidjson
+			GIT_REPOSITORY https://github.com/Tencent/rapidjson
+			GIT_TAG v1.1.0
+			GIT_SHALLOW TRUE
+			LOG_CONFIGURE TRUE
+			LOG_BUILD TRUE
+			LOG_INSTALL TRUE
+		)
+
+		set(DOCTEST_WITH_MAIN_IN_STATIC_LIB OFF CACHE INTERNAL "")
+
+		FetchContent_Declare(doctest
+			GIT_REPOSITORY https://github.com/doctest/doctest
+			GIT_TAG v2.4.12
+			OVERRIDE_FIND_PACKAGE
+		)
+
+		FetchContent_MakeAvailable(rapidjson doctest)
+
+		set(RapidJSON_DIR ${rapidjson_BINARY_DIR})
+		find_package(RapidJSON REQUIRED QUIET)
 	ENDIF ()
 
 ENDIF (JSON_DTO_MASTER_PROJECT)
@@ -40,9 +70,10 @@ IF (JSON_DTO_TEST)
 	enable_testing()
 	add_subdirectory(test)
 
-	IF (WIN32)
-		configure_file(${CMAKE_SOURCE_DIR}/cmake/run_tests.bat ${CMAKE_BINARY_DIR} NEWLINE_STYLE WIN32)
-	ENDIF ()
+# FIXME: is it really needed?
+#	IF (WIN32)
+#		configure_file(${CMAKE_SOURCE_DIR}/cmake/run_tests.bat ${CMAKE_BINARY_DIR} NEWLINE_STYLE WIN32)
+#	ENDIF ()
 ENDIF ()
 
 # ------------------------------------------------------------------------------
@@ -50,3 +81,4 @@ ENDIF ()
 IF (JSON_DTO_SAMPLE)
 	add_subdirectory(sample)
 ENDIF ()
+
