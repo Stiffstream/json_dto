@@ -40,9 +40,7 @@ IF (JSON_DTO_MASTER_PROJECT)
 			GIT_REPOSITORY https://github.com/Tencent/rapidjson
 			GIT_TAG v1.1.0
 			GIT_SHALLOW TRUE
-			LOG_CONFIGURE TRUE
-			LOG_BUILD TRUE
-			LOG_INSTALL TRUE
+			OVERRIDE_FIND_PACKAGE
 		)
 
 		set(DOCTEST_WITH_MAIN_IN_STATIC_LIB OFF CACHE INTERNAL "")
@@ -55,8 +53,10 @@ IF (JSON_DTO_MASTER_PROJECT)
 
 		FetchContent_MakeAvailable(rapidjson doctest)
 
-		set(RapidJSON_DIR ${rapidjson_BINARY_DIR})
-		find_package(RapidJSON REQUIRED QUIET)
+		# FIXME: document this trick!
+		add_library(RapidJSON INTERFACE)
+		target_include_directories(RapidJSON INTERFACE ${rapidjson_SOURCE_DIR}/include)
+
 	ENDIF ()
 
 ENDIF (JSON_DTO_MASTER_PROJECT)
