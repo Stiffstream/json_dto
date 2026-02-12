@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <limits>
@@ -190,9 +191,9 @@ struct nullable_vector_of_ints_t
 	}
 };
 
-TEST_CASE("simple-types", "[simple]" )
+TEST_CASE("simple-types" "; [simple]" )
 {
-	SECTION( "read empty" )
+	DOCTEST_SUBCASE( "read empty" )
 	{
 		auto dto = json_dto::from_json< simple_types_dto_t >(
 				R"({"num":1, "num_2":3})" );
@@ -205,7 +206,7 @@ TEST_CASE("simple-types", "[simple]" )
 		REQUIRE_FALSE( dto.m_num_opt_no_default_nullable );
 	}
 
-	SECTION( "read with null" )
+	DOCTEST_SUBCASE( "read with null" )
 	{
 		auto dto = json_dto::from_json< simple_types_dto_t >(
 				R"({"num":1, "num_2":null})" );
@@ -218,7 +219,7 @@ TEST_CASE("simple-types", "[simple]" )
 		REQUIRE_FALSE( dto.m_num_opt_no_default_nullable );
 	}
 
-	SECTION( "write default constructed" )
+	DOCTEST_SUBCASE( "write default constructed" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -235,7 +236,7 @@ TEST_CASE("simple-types", "[simple]" )
 		REQUIRE( json_str == to_json( dto ) );
 	}
 
-	SECTION( "write default values" )
+	DOCTEST_SUBCASE( "write default values" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -263,7 +264,7 @@ TEST_CASE("simple-types", "[simple]" )
 				"num_opt_no_default_nullable":2016
 			})JSON" );
 
-	SECTION( "read all defined" )
+	DOCTEST_SUBCASE( "read all defined" )
 	{
 		auto dto = json_dto::from_json< simple_types_dto_t >( all_defined_json );
 
@@ -277,7 +278,7 @@ TEST_CASE("simple-types", "[simple]" )
 		REQUIRE( *dto.m_num_opt_no_default_nullable == 2016 );
 	}
 
-	SECTION( "write default values" )
+	DOCTEST_SUBCASE( "write default values" )
 	{
 		simple_types_dto_t dto{};
 		dto.m_num = 333;
@@ -291,9 +292,9 @@ TEST_CASE("simple-types", "[simple]" )
 	}
 }
 
-TEST_CASE("vector with custom hex_writer", "[vector][hex_writer]")
+TEST_CASE("vector with custom hex_writer" "; [vector][hex_writer]")
 {
-	SECTION("not-empty vector")
+	DOCTEST_SUBCASE("not-empty vector")
 	{
 		const std::string json_str =
 				R"JSON({"values":["0","1","a","f","10","20"]})JSON";
@@ -304,10 +305,10 @@ TEST_CASE("vector with custom hex_writer", "[vector][hex_writer]")
 	}
 }
 
-TEST_CASE("nullable vector with custom hex_writer",
-		"[vector][nullable][hex_writer]")
+TEST_CASE("nullable vector with custom hex_writer"
+		"; [vector][nullable][hex_writer]")
 {
-	SECTION("null vector")
+	DOCTEST_SUBCASE("null vector")
 	{
 		const std::string json_str =
 				R"JSON({"values":null})JSON";
@@ -317,7 +318,7 @@ TEST_CASE("nullable vector with custom hex_writer",
 		REQUIRE( json_str == to_json( dto ) );
 	}
 
-	SECTION("empty vector")
+	DOCTEST_SUBCASE("empty vector")
 	{
 		const std::string json_str =
 				R"JSON({"values":[]})JSON";
@@ -329,7 +330,7 @@ TEST_CASE("nullable vector with custom hex_writer",
 		REQUIRE( json_str == to_json( dto ) );
 	}
 
-	SECTION("not-empty vector")
+	DOCTEST_SUBCASE("not-empty vector")
 	{
 		const std::string json_str =
 				R"JSON({"values":["0","1","a","f","10","20"]})JSON";
@@ -342,8 +343,8 @@ TEST_CASE("nullable vector with custom hex_writer",
 	}
 }
 
-TEST_CASE("to_json and from_json with custom reader_writer",
-		"[to_json][from_json][custom_reader_writer]")
+TEST_CASE("to_json and from_json with custom reader_writer"
+		"; [to_json][from_json][custom_reader_writer]")
 {
 	// to_json(writer, dto)
 	{
@@ -459,8 +460,8 @@ TEST_CASE("to_json and from_json with custom reader_writer",
 	}
 }
 
-TEST_CASE("to_stream and from_stream with custom reader_writer",
-		"[to_stream][from_stream][custom_reader_writer]")
+TEST_CASE("to_stream and from_stream with custom reader_writer"
+		"; [to_stream][from_stream][custom_reader_writer]")
 {
 	// to_stream(writer, stream, dto)
 	{

@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <json_dto/pub.hpp>
 
@@ -15,7 +16,7 @@ struct data_t
 	}
 };
 
-TEST_CASE( "read from json" , "read" )
+TEST_CASE( "read from json" "; [read]" )
 {
 	{
 		const std::string json_data{
@@ -31,7 +32,7 @@ TEST_CASE( "read from json" , "read" )
 	}
 }
 
-TEST_CASE( "write to json" , "write" )
+TEST_CASE( "write to json" "; [write]" )
 {
 	{
 		data_t obj{ true, {true, false, true}};

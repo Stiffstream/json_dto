@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <json_dto/pub.hpp>
 
@@ -59,8 +60,10 @@ struct data_t
 	}
 };
 
-TEST_CASE( "read from json" , "read" )
+TEST_CASE( "read from json" "; [read]" )
 {
+	using doctest::Approx;
+
 	{
 		const std::string json_data{
 			R"JSON(
@@ -133,7 +136,7 @@ TEST_CASE( "read from json" , "read" )
 	}
 }
 
-TEST_CASE( "write to json" , "write" )
+TEST_CASE( "write to json" "; [write]" )
 {
 	{
 		data_t obj;

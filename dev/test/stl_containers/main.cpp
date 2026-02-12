@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <json_dto/pub.hpp>
 
@@ -36,7 +37,7 @@ struct data_with_reader_writer_t
 	}
 };
 
-TEST_CASE( "deque<int>: read from json" , "read-deque-int" )
+TEST_CASE( "deque<int>: read from json" "; [read-deque-int]" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -49,7 +50,7 @@ TEST_CASE( "deque<int>: read from json" , "read-deque-int" )
 	REQUIRE( obj.m_data == expected );
 }
 
-TEST_CASE( "deque<int>: write to json" , "write-deque-int" )
+TEST_CASE( "deque<int>: write to json" "; [write-deque-int]" )
 {
 	data_with_t< std::deque<int> > obj{ {1, 2, 3, 4, 5} };
 	const auto r = json_dto::to_json( obj );
@@ -57,7 +58,7 @@ TEST_CASE( "deque<int>: write to json" , "write-deque-int" )
 	REQUIRE( R"({"data":[1,2,3,4,5]})" == r );
 }
 
-TEST_CASE( "list<int>: read from json" , "read-list-int" )
+TEST_CASE( "list<int>: read from json" "; [read-list-int]" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -70,7 +71,7 @@ TEST_CASE( "list<int>: read from json" , "read-list-int" )
 	REQUIRE( obj.m_data == expected );
 }
 
-TEST_CASE( "list<int>: write to json" , "write-list-int" )
+TEST_CASE( "list<int>: write to json" "; [write-list-int]" )
 {
 	data_with_t< std::list<int> > obj{ {1, 2, 3, 4, 5} };
 	const auto r = json_dto::to_json( obj );
@@ -78,7 +79,7 @@ TEST_CASE( "list<int>: write to json" , "write-list-int" )
 	REQUIRE( R"({"data":[1,2,3,4,5]})" == r );
 }
 
-TEST_CASE( "forward_list<int>: read from json" , "read-forward_list-int" )
+TEST_CASE( "forward_list<int>: read from json" "; [read-forward_list-int]" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -91,7 +92,7 @@ TEST_CASE( "forward_list<int>: read from json" , "read-forward_list-int" )
 	REQUIRE( obj.m_data == expected );
 }
 
-TEST_CASE( "forward_list<int>: write to json" , "write-forward_list-int" )
+TEST_CASE( "forward_list<int>: write to json" "; [write-forward_list-int]" )
 {
 	data_with_t< std::forward_list<int> > obj{ {1, 2, 3, 4, 5} };
 	const auto r = json_dto::to_json( obj );
@@ -99,7 +100,7 @@ TEST_CASE( "forward_list<int>: write to json" , "write-forward_list-int" )
 	REQUIRE( R"({"data":[1,2,3,4,5]})" == r );
 }
 
-TEST_CASE( "set<int>: read from json" , "read-set-int" )
+TEST_CASE( "set<int>: read from json" "; [read-set-int]" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -112,7 +113,7 @@ TEST_CASE( "set<int>: read from json" , "read-set-int" )
 	REQUIRE( obj.m_data == expected );
 }
 
-TEST_CASE( "set<int>: write to json" , "write-set-int" )
+TEST_CASE( "set<int>: write to json" "; [write-set-int]" )
 {
 	data_with_t< std::set<int> > obj{ {3, 2, 1, 5, 4} };
 	const auto r = json_dto::to_json( obj );
@@ -120,7 +121,7 @@ TEST_CASE( "set<int>: write to json" , "write-set-int" )
 	REQUIRE( R"({"data":[1,2,3,4,5]})" == r );
 }
 
-TEST_CASE( "multiset<int>: read from json" , "read-multiset-int" )
+TEST_CASE( "multiset<int>: read from json" "; [read-multiset-int]" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -133,7 +134,7 @@ TEST_CASE( "multiset<int>: read from json" , "read-multiset-int" )
 	REQUIRE( obj.m_data == expected );
 }
 
-TEST_CASE( "multiset<int>: write to json" , "write-multiset-int" )
+TEST_CASE( "multiset<int>: write to json" "; [write-multiset-int]" )
 {
 	//NOTE: presence of duplicated keys is not checked because
 	//the v.0.2.8 doesn't handle them.
@@ -143,7 +144,7 @@ TEST_CASE( "multiset<int>: write to json" , "write-multiset-int" )
 	REQUIRE( R"({"data":[1,2,3,4,5]})" == r );
 }
 
-TEST_CASE( "hash_set<int>: read/write" , "hash_set-int" )
+TEST_CASE( "hash_set<int>: read/write" "; [hash_set-int]" )
 {
 	const std::unordered_set<int> expected{ 2, 5, 1, 9, 0 };
 
@@ -165,7 +166,7 @@ TEST_CASE( "hash_set<int>: read/write" , "hash_set-int" )
 	REQUIRE( obj2.m_data == expected );
 }
 
-TEST_CASE( "hash_multiset<int>: read/write" , "hash_set-int" )
+TEST_CASE( "hash_multiset<int>: read/write" "; [hash_set-int]" )
 {
 	//NOTE: presence of duplicated keys is not checked because
 	//the v.0.2.8 doesn't handle them.
@@ -191,7 +192,7 @@ TEST_CASE( "hash_multiset<int>: read/write" , "hash_set-int" )
 	REQUIRE( obj2.m_data == expected );
 }
 
-TEST_CASE( "map<string, int>: read from json" , "read-map-string-int" )
+TEST_CASE( "map<string, int>: read from json" "; [read-map-string-int]" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -206,7 +207,7 @@ TEST_CASE( "map<string, int>: read from json" , "read-map-string-int" )
 	REQUIRE( obj.m_data == expected );
 }
 
-TEST_CASE( "map<string, int>: write to json" , "write-map-string-int" )
+TEST_CASE( "map<string, int>: write to json" "; [write-map-string-int]" )
 {
 	data_with_t< std::map<std::string, int> > obj{
 		{ {"one", 1}, {"three", 3}, {"two", 2} }
@@ -255,7 +256,7 @@ struct custom_map_int_int_formatter_t
 	}
 };
 
-TEST_CASE( "map<int, int>: write to json" , "write-map-int-int" )
+TEST_CASE( "map<int, int>: write to json" "; [write-map-int-int]" )
 {
 	data_with_reader_writer_t<
 		std::map<int, int>,
@@ -268,7 +269,7 @@ TEST_CASE( "map<int, int>: write to json" , "write-map-int-int" )
 	REQUIRE( R"({"data":{"1":11,"2":22,"3":33}})" == r );
 }
 
-TEST_CASE( "map<int, int>: read from json" , "read-map-int-int" )
+TEST_CASE( "map<int, int>: read from json" "; [read-map-int-int]" )
 {
 	using obj_t = data_with_reader_writer_t<
 			std::map<int, int>,
@@ -286,7 +287,7 @@ TEST_CASE( "map<int, int>: read from json" , "read-map-int-int" )
 	REQUIRE( obj.m_data == expected );
 }
 
-TEST_CASE( "vector<map<int, int>>: write to json" , "write-map-int-int" )
+TEST_CASE( "vector<map<int, int>>: write to json" "; [write-map-int-int]" )
 {
 	using inner_t = std::map<int, int>;
 
@@ -305,7 +306,7 @@ TEST_CASE( "vector<map<int, int>>: write to json" , "write-map-int-int" )
 	REQUIRE( R"({"data":[{"1":11,"2":22,"3":33},{"0":0,"4":44},{"1":11,"5":55,"6":66}]})" == r );
 }
 
-TEST_CASE( "vector<map<int, int>>: read from json" , "read-map-int-int" )
+TEST_CASE( "vector<map<int, int>>: read from json" "; [read-map-int-int]" )
 {
 	using inner_t = std::map<int, int>;
 	using obj_t = data_with_reader_writer_t<
@@ -331,7 +332,7 @@ TEST_CASE( "vector<map<int, int>>: read from json" , "read-map-int-int" )
 	REQUIRE( obj.m_data == expected.m_data );
 }
 
-TEST_CASE( "multimap<string, int>: read from json" , "read-multimap-string-int" )
+TEST_CASE( "multimap<string, int>: read from json" "; [read-multimap-string-int]" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -346,7 +347,7 @@ TEST_CASE( "multimap<string, int>: read from json" , "read-multimap-string-int" 
 	REQUIRE( obj.m_data == expected );
 }
 
-TEST_CASE( "multimap<string, int>: write to json" , "write-multimap-string-int" )
+TEST_CASE( "multimap<string, int>: write to json" "; [write-multimap-string-int]" )
 {
 	//NOTE: presence of duplicated keys is not checked because
 	//the v.0.2.8 doesn't handle them.
@@ -358,7 +359,7 @@ TEST_CASE( "multimap<string, int>: write to json" , "write-multimap-string-int" 
 	REQUIRE( R"({"data":{"one":1,"three":3,"two":2}})" == r );
 }
 
-TEST_CASE( "hash_map<string, int>: read from json" , "read-hash_map-string-int" )
+TEST_CASE( "hash_map<string, int>: read from json" "; [read-hash_map-string-int]" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -373,22 +374,19 @@ TEST_CASE( "hash_map<string, int>: read from json" , "read-hash_map-string-int" 
 	REQUIRE( obj.m_data == expected );
 }
 
-TEST_CASE( "hash_map<string, int>: write to json" , "write-hash_map-string-int" )
+TEST_CASE( "hash_map<string, int>: write to json" "; [write-hash_map-string-int]" )
 {
-	using namespace Catch::Matchers;
-
 	data_with_t< std::unordered_map<std::string, int> > obj{
 		{ {"one", 1}, {"three", 3}, {"two", 2} }
 	};
-	const auto r = json_dto::to_json( obj );
+	const auto r = doctest::toString( json_dto::to_json( obj ) );
 
-	REQUIRE_THAT( r,
-			Contains(R"("one":1)") &&
-			Contains(R"("two":2)") &&
-			Contains(R"("three":3)") );
+	REQUIRE( r == doctest::Contains(R"("one":1)") );
+	REQUIRE( r == doctest::Contains(R"("two":2)") );
+	REQUIRE( r == doctest::Contains(R"("three":3)") );
 }
 
-TEST_CASE( "hash_multimap<string, int>: read from json" , "read-hash_multimap-string-int" )
+TEST_CASE( "hash_multimap<string, int>: read from json" "; [read-hash_multimap-string-int]" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -404,18 +402,15 @@ TEST_CASE( "hash_multimap<string, int>: read from json" , "read-hash_multimap-st
 	REQUIRE( obj.m_data == expected );
 }
 
-TEST_CASE( "hash_multimap<string, int>: write to json" , "write-hash_multimap-string-int" )
+TEST_CASE( "hash_multimap<string, int>: write to json" "; [write-hash_multimap-string-int" )
 {
-	using namespace Catch::Matchers;
-
 	data_with_t< std::unordered_multimap<std::string, int> > obj{
 		{ {"one", 1}, {"three", 3}, {"two", 2} }
 	};
-	const auto r = json_dto::to_json( obj );
+	const auto r = doctest::toString( json_dto::to_json( obj ) );
 
-	REQUIRE_THAT( r,
-			Contains(R"("one":1)") &&
-			Contains(R"("two":2)") &&
-			Contains(R"("three":3)") );
+	REQUIRE( r == doctest::Contains(R"("one":1)") );
+	REQUIRE( r == doctest::Contains(R"("two":2)") );
+	REQUIRE( r == doctest::Contains(R"("three":3)") );
 }
 

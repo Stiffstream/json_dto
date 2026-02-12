@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <limits>
@@ -86,9 +87,9 @@ struct simple_types_dto_t
 	}
 };
 
-TEST_CASE("simple-types", "[simple]" )
+TEST_CASE("simple-types" "; [simple]" )
 {
-	SECTION( "read empty" )
+	DOCTEST_SUBCASE( "read empty" )
 	{
 		auto dto = json_dto::from_json< simple_types_dto_t >( "{}" );
 
@@ -98,7 +99,7 @@ TEST_CASE("simple-types", "[simple]" )
 		REQUIRE_FALSE( dto.m_num_opt_no_default_nullable );
 	}
 
-	SECTION( "write default constructed" )
+	DOCTEST_SUBCASE( "write default constructed" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -113,7 +114,7 @@ TEST_CASE("simple-types", "[simple]" )
 		REQUIRE( json_str == to_json( dto ) );
 	}
 
-	SECTION( "write default values" )
+	DOCTEST_SUBCASE( "write default values" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -137,7 +138,7 @@ TEST_CASE("simple-types", "[simple]" )
 				"num_opt_no_default_nullable":2016
 			})JSON" );
 
-	SECTION( "read all defined" )
+	DOCTEST_SUBCASE( "read all defined" )
 	{
 		auto dto = json_dto::from_json< simple_types_dto_t >( all_defined_json );
 
@@ -149,7 +150,7 @@ TEST_CASE("simple-types", "[simple]" )
 		REQUIRE( *dto.m_num_opt_no_default_nullable == 2016 );
 	}
 
-	SECTION( "write default values" )
+	DOCTEST_SUBCASE( "write default values" )
 	{
 		simple_types_dto_t dto{};
 		dto.m_num_opt = 42;
@@ -208,9 +209,9 @@ vector_simple_types_dto_sample()
 	return dto;
 }
 
-TEST_CASE("vector-simple-types", "[simple]" )
+TEST_CASE("vector-simple-types" "; [simple]" )
 {
-	SECTION( "read empty" )
+	DOCTEST_SUBCASE( "read empty" )
 	{
 		auto dto = json_dto::from_json< vector_simple_types_dto_t >( "{}" );
 
@@ -218,7 +219,7 @@ TEST_CASE("vector-simple-types", "[simple]" )
 		REQUIRE_FALSE( dto.m_str_vec_opt_nullable );
 	}
 
-	SECTION( "write default constructed" )
+	DOCTEST_SUBCASE( "write default constructed" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -240,7 +241,7 @@ TEST_CASE("vector-simple-types", "[simple]" )
 				"str_vec_opt_nullable":["a","b","c","d","efgh"]
 			})JSON" );
 
-	SECTION( "read all defined" )
+	DOCTEST_SUBCASE( "read all defined" )
 	{
 		auto dto = json_dto::from_json< vector_simple_types_dto_t >( all_defined_json );
 
@@ -259,7 +260,7 @@ TEST_CASE("vector-simple-types", "[simple]" )
 		REQUIRE( dto.m_str_vec_opt_nullable->at( 4 ) == "efgh" );
 	}
 
-	SECTION( "write all defined" )
+	DOCTEST_SUBCASE( "write all defined" )
 	{
 		vector_simple_types_dto_t dto = vector_simple_types_dto_sample();
 
@@ -329,9 +330,9 @@ json_io( Json_Io & io, complex_type_t & dto )
 
 } /* namespace json_dto */
 
-TEST_CASE("complex-types", "[complex]" )
+TEST_CASE("complex-types" "; [complex]" )
 {
-	SECTION( "read empty" )
+	DOCTEST_SUBCASE( "read empty" )
 	{
 		auto dto = json_dto::from_json< complex_type_t >( "{}" );
 
@@ -341,7 +342,7 @@ TEST_CASE("complex-types", "[complex]" )
 		REQUIRE_FALSE( dto.m_opt_no_default_nullable );
 	}
 
-	SECTION( "write default constructed" )
+	DOCTEST_SUBCASE( "write default constructed" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -366,7 +367,7 @@ TEST_CASE("complex-types", "[complex]" )
 		REQUIRE( json_str == to_json( dto ) );
 	}
 
-	SECTION( "write default values" )
+	DOCTEST_SUBCASE( "write default values" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -397,7 +398,7 @@ TEST_CASE("complex-types", "[complex]" )
 				+ simple_types_dto_sample_str() +
 			R"JSON(})JSON";
 
-	SECTION( "read all defined" )
+	DOCTEST_SUBCASE( "read all defined" )
 	{
 		auto dto = json_dto::from_json< complex_type_t >( all_defined_json );
 
@@ -409,7 +410,7 @@ TEST_CASE("complex-types", "[complex]" )
 		REQUIRE( *dto.m_opt_no_default_nullable == simple_types_dto_sample() );
 	}
 
-	SECTION( "write all defined" )
+	DOCTEST_SUBCASE( "write all defined" )
 	{
 		complex_type_t dto{};
 		dto.m_opt = simple_types_dto_sample();
@@ -441,9 +442,9 @@ struct vector_complex_types_dto_t
 	}
 };
 
-TEST_CASE("vector-complex-types", "[complex]" )
+TEST_CASE("vector-complex-types" "; [complex]" )
 {
-	SECTION( "read empty" )
+	DOCTEST_SUBCASE( "read empty" )
 	{
 		auto dto = json_dto::from_json< vector_complex_types_dto_t >( "{}" );
 
@@ -451,7 +452,7 @@ TEST_CASE("vector-complex-types", "[complex]" )
 		REQUIRE_FALSE( dto.m_vec_opt_nullable );
 	}
 
-	SECTION( "write default constructed" )
+	DOCTEST_SUBCASE( "write default constructed" )
 	{
 		const std::string json_str =
 			R"JSON({"vec_opt":[],"vec_opt_nullable":null})JSON";
@@ -488,7 +489,7 @@ TEST_CASE("vector-complex-types", "[complex]" )
 					]
 				})JSON" );
 
-	SECTION( "read all defined" )
+	DOCTEST_SUBCASE( "read all defined" )
 	{
 		auto dto = json_dto::from_json< vector_complex_types_dto_t >( all_defined_json );
 
@@ -502,7 +503,7 @@ TEST_CASE("vector-complex-types", "[complex]" )
 		REQUIRE( dto.m_vec_opt_nullable->at( 1 ) == vector_simple_types_dto_t{} );
 	}
 
-	SECTION( "write all defined" )
+	DOCTEST_SUBCASE( "write all defined" )
 	{
 		vector_complex_types_dto_t dto{};
 		dto.m_vec_opt.push_back( vector_simple_types_dto_t{} );
