@@ -19,6 +19,11 @@ option(JSON_DTO_INSTALL_SAMPLES "Build install samples." ${JSON_DTO_MASTER_PROJE
 option(JSON_DTO_FIND_DEPS "Get json_dto dependencies with `find_package()`." OFF)
 
 IF (JSON_DTO_MASTER_PROJECT)
+
+	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 	# ------------------------------------------------------------------------------
 	# json_dto dependencies:
 

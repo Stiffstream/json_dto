@@ -1,9 +1,9 @@
 project(tests)
 
-#add_subdirectory(floats)
-#add_subdirectory(non_intrusive_io)
-#add_subdirectory(nullable)
-#add_subdirectory(numeric_limits)
+add_subdirectory(floats)
+add_subdirectory(non_intrusive_io)
+add_subdirectory(nullable)
+add_subdirectory(numeric_limits)
 #add_subdirectory(optional)
 #add_subdirectory(custom_reader_writer)
 #add_subdirectory(std_optional)

@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN 
+#include <doctest/doctest.h>
 
 #include <iostream>
 
@@ -63,9 +64,9 @@ json_io( Json_Io & io, complex_data_t & value )
 
 } /* namespace json_dto */
 
-TEST_CASE( "all-defined" , "[all-defined]" )
+TEST_CASE( "all-defined" "; [all-defined]" )
 {
-	SECTION( "read" )
+	DOCTEST_SUBCASE( "read" )
 	{
 		const std::string json_data{
 			R"JSON(
@@ -97,7 +98,7 @@ TEST_CASE( "all-defined" , "[all-defined]" )
 		REQUIRE( obj.m_d4->m_string == "xyz" );
 	}
 
-	SECTION( "write" )
+	DOCTEST_SUBCASE( "write" )
 	{
 		data_t data{ 42, 3.14, "XYZ" };
 		complex_data_t source_obj;
@@ -131,7 +132,7 @@ TEST_CASE( "all-defined" , "[all-defined]" )
 	}
 }
 
-TEST_CASE( "mand-defined" , "[mand-defined]" )
+TEST_CASE( "mand-defined" "; [mand-defined]" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -158,9 +159,9 @@ TEST_CASE( "mand-defined" , "[mand-defined]" )
 	REQUIRE( obj.m_d4->m_string == "xyz" );
 }
 
-TEST_CASE( "non-nullable-defined" , "[non-nullble-defined]" )
+TEST_CASE( "non-nullable-defined" "; [non-nullble-defined]" )
 {
-	SECTION( "read" )
+	DOCTEST_SUBCASE( "read" )
 	{
 		const std::string json_data{
 			R"JSON(
@@ -185,7 +186,7 @@ TEST_CASE( "non-nullable-defined" , "[non-nullble-defined]" )
 		REQUIRE_FALSE( obj.m_d4 );
 	}
 
-	SECTION( "write" )
+	DOCTEST_SUBCASE( "write" )
 	{
 		data_t data{ 42, 3.14, "XYZ" };
 		complex_data_t source_obj;
@@ -209,3 +210,4 @@ TEST_CASE( "non-nullable-defined" , "[non-nullble-defined]" )
 		REQUIRE_FALSE( obj.m_d4 );
 	}
 }
+

@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN 
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <limits>
@@ -8,16 +9,16 @@
 
 using namespace json_dto;
 
-TEST_CASE("constructors", "[basic]" )
+TEST_CASE("constructors" "; [basic]" )
 {
-	SECTION( "default" )
+	DOCTEST_SUBCASE( "default" )
 	{
 		nullable_t< std::string > str;
 
 		REQUIRE_FALSE( str );
 	}
 
-	SECTION( "nullptr" )
+	DOCTEST_SUBCASE( "nullptr" )
 	{
 		{
 			nullable_t< std::string > str{ nullptr };
@@ -30,7 +31,7 @@ TEST_CASE("constructors", "[basic]" )
 		}
 	}
 
-	SECTION( "value" )
+	DOCTEST_SUBCASE( "value" )
 	{
 		{
 			nullable_t< std::string > str{ std::string{ "abc" } };
@@ -39,7 +40,7 @@ TEST_CASE("constructors", "[basic]" )
 		}
 	}
 
-	SECTION( "another nullable_t" )
+	DOCTEST_SUBCASE( "another nullable_t" )
 	{
 		{
 			nullable_t< std::string > other{};
@@ -82,7 +83,7 @@ TEST_CASE("constructors", "[basic]" )
 	}
 
 
-	SECTION( "delegate" )
+	DOCTEST_SUBCASE( "delegate" )
 	{
 		// substring (3)
 		// string (const string& str, size_t pos, size_t len = npos);
@@ -136,7 +137,7 @@ struct dtor_tester_t
 	bool & m_dtor_trigger;
 };
 
-TEST_CASE("destructor", "[basic]" )
+TEST_CASE("destructor" "; [basic]" )
 {
 	bool trigger{ true };
 
@@ -164,7 +165,7 @@ TEST_CASE("destructor", "[basic]" )
 	}
 }
 
-TEST_CASE("swap", "[basic]" )
+TEST_CASE("swap" "; [basic]" )
 {
 	nullable_t< std::string > s1{ nullptr };
 	nullable_t< std::string > s2{ "123456789" };
@@ -180,9 +181,9 @@ TEST_CASE("swap", "[basic]" )
 	REQUIRE_FALSE( s2 );
 }
 
-TEST_CASE("assign", "[basic]" )
+TEST_CASE("assign" "; [basic]" )
 {
-	SECTION( "const nullable_t &" )
+	DOCTEST_SUBCASE( "const nullable_t &" )
 	{
 		nullable_t< std::string > s1{ nullptr };
 		nullable_t< std::string > s2{ "123456789" };
@@ -215,7 +216,7 @@ TEST_CASE("assign", "[basic]" )
 		REQUIRE_FALSE( s2 );
 	}
 
-	SECTION( "nullable_t && " )
+	DOCTEST_SUBCASE( "nullable_t && " )
 	{
 		nullable_t< std::string > s1{ nullptr };
 		nullable_t< std::string > s2{ "123456789" };
@@ -231,7 +232,7 @@ TEST_CASE("assign", "[basic]" )
 		REQUIRE( *s2 == "" );
 	}
 
-	SECTION( "const FIELD_TYPE & " )
+	DOCTEST_SUBCASE( "const FIELD_TYPE & " )
 	{
 		const std::string str1{ "0123456789" };
 		const std::string str2{ "xyz" };
@@ -248,7 +249,7 @@ TEST_CASE("assign", "[basic]" )
 		REQUIRE( *s == str2 );
 	}
 
-	SECTION( "FIELD_TYPE &&  " )
+	DOCTEST_SUBCASE( "FIELD_TYPE &&  " )
 	{
 		std::string str1{ "0123456789" };
 		std::string str2{ "xyz" };
@@ -266,7 +267,7 @@ TEST_CASE("assign", "[basic]" )
 		REQUIRE( *s == "xyz" );
 	}
 
-	SECTION( "std::nullptr_t" )
+	DOCTEST_SUBCASE( "std::nullptr_t" )
 	{
 		nullable_t< std::string > s{ nullptr };
 		REQUIRE_FALSE( s );
@@ -292,7 +293,7 @@ TEST_CASE("assign", "[basic]" )
 	}
 }
 
-TEST_CASE("equals", "[basic]" )
+TEST_CASE("equals" "; [basic]" )
 {
 	nullable_t< std::string > s1{ nullptr };
 	nullable_t< std::string > s2{ "123456789" };
@@ -317,7 +318,7 @@ TEST_CASE("equals", "[basic]" )
 	REQUIRE_FALSE( s2 == s1 );
 }
 
-TEST_CASE("emplace", "[basic]" )
+TEST_CASE("emplace" "; [basic]" )
 {
 	nullable_t< std::string > s{};
 	nullable_t< std::vector< std::string > > sv{};
@@ -350,7 +351,7 @@ TEST_CASE("emplace", "[basic]" )
 	REQUIRE( sv->at( 4 ) == "klmnop" );
 }
 
-TEST_CASE("nullable_t inside array", "[basic]" )
+TEST_CASE("nullable_t inside array" "; [basic]" )
 {
 	{
 		std::vector< nullable_t<std::string> > v;

@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN 
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <limits>
@@ -30,8 +31,10 @@ struct floats_t
 	}
 };
 
-TEST_CASE( "default init" , "[init]" )
+TEST_CASE( "default init" "; [init]" )
 {
+	using doctest::Approx;
+
 	{
 		const char * json_str = "{}";
 
@@ -42,8 +45,10 @@ TEST_CASE( "default init" , "[init]" )
 	}
 }
 
-TEST_CASE( "point notation" , "[point_notation]" )
+TEST_CASE( "point notation" "; [point_notation]" )
 {
+	using doctest::Approx;
+
 	{
 		const char * json_str = "{"
 			"\"num_float\": 3.14,"
@@ -69,8 +74,10 @@ TEST_CASE( "point notation" , "[point_notation]" )
 	}
 }
 
-TEST_CASE( "NaN" , "[nan]" )
+TEST_CASE( "NaN" "; [nan]" )
 {
+	using doctest::Approx;
+
 	{
 		const floats_t v{ 0.0f, std::numeric_limits<double>::quiet_NaN() };
 
@@ -179,8 +186,10 @@ struct floats2_t
 	}
 };
 
-TEST_CASE( "custom NaN" , "[nan]" )
+TEST_CASE( "custom NaN" "; [nan]" )
 {
+	using doctest::Approx;
+
 	{
 		const floats2_t v{ 0.0f, std::numeric_limits<double>::quiet_NaN() };
 

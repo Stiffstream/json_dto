@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN 
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <limits>
@@ -57,7 +58,7 @@ check_min_max(
 	const std::string & key_name,
 	NUMBER_TYPE nums_t::* value_ptr )
 {
-	SECTION( "check min" )
+	DOCTEST_SUBCASE( "check min" )
 	{
 		const auto min_value = std::numeric_limits< NUMBER_TYPE >::min();
 
@@ -70,7 +71,7 @@ check_min_max(
 		REQUIRE( ( min_value == dto.*value_ptr ) );
 	}
 
-	SECTION( "check max" )
+	DOCTEST_SUBCASE( "check max" )
 	{
 		const auto max_value = std::numeric_limits< NUMBER_TYPE >::max();
 		auto dto =
@@ -89,7 +90,7 @@ check_out_of_range(
 	const std::string & key_name )
 {
 	if( std::is_signed< BIGGER_NUMBER_TYPE >::value )
-		SECTION( "check less" )
+		DOCTEST_SUBCASE( "check less" )
 		{
 			BIGGER_NUMBER_TYPE min_value = std::numeric_limits< NUMBER_TYPE >::min();
 			--min_value;
@@ -110,7 +111,7 @@ check_out_of_range(
 			REQUIRE( error );
 		}
 
-	SECTION( "check greater" )
+	DOCTEST_SUBCASE( "check greater" )
 	{
 		BIGGER_NUMBER_TYPE max_value = std::numeric_limits< NUMBER_TYPE >::max();
 		++max_value;
@@ -132,97 +133,97 @@ check_out_of_range(
 	}
 }
 
-TEST_CASE( "limits-int8" , "[int8]" )
+TEST_CASE( "limits-int8" "; [int8]" )
 {
-	SECTION( "min/max" )
+	DOCTEST_SUBCASE( "min/max" )
 	{
 		check_min_max( "num_int8", &nums_t::m_num_int8 );
 	}
 
-	SECTION( "out of range" )
+	DOCTEST_SUBCASE( "out of range" )
 	{
 
 		check_out_of_range< std::int32_t, std::int8_t >( "num_int8" );
 	}
 }
 
-TEST_CASE( "limits-uint8" , "[uint8]" )
+TEST_CASE( "limits-uint8" "; [uint8]" )
 {
-	SECTION( "min/max" )
+	DOCTEST_SUBCASE( "min/max" )
 	{
 		check_min_max( "num_uint8", &nums_t::m_num_uint8 );
 	}
 
-	SECTION( "out of range" )
+	DOCTEST_SUBCASE( "out of range" )
 	{
 		check_out_of_range< std::uint32_t, std::uint8_t >( "num_uint8" );
 	}
 }
 
-TEST_CASE( "limits-int16" , "[int16]" )
+TEST_CASE( "limits-int16" "; [int16]" )
 {
-	SECTION( "min/max" )
+	DOCTEST_SUBCASE( "min/max" )
 	{
 		check_min_max( "num_int16", &nums_t::m_num_int16 );
 	}
 
-	SECTION( "out of range" )
+	DOCTEST_SUBCASE( "out of range" )
 	{
 
 		check_out_of_range< std::int32_t, std::int16_t >( "num_int16" );
 	}
 }
 
-TEST_CASE( "limits-uint16" , "[uint16]" )
+TEST_CASE( "limits-uint16" "; [uint16]" )
 {
-	SECTION( "min/max" )
+	DOCTEST_SUBCASE( "min/max" )
 	{
 		check_min_max( "num_uint16", &nums_t::m_num_uint16 );
 	}
 
-	SECTION( "out of range" )
+	DOCTEST_SUBCASE( "out of range" )
 	{
 		check_out_of_range< std::uint32_t, std::uint16_t >( "num_uint16" );
 	}
 }
 
-TEST_CASE( "limits-int32" , "[int32]" )
+TEST_CASE( "limits-int32" "; [int32]" )
 {
-	SECTION( "min/max" )
+	DOCTEST_SUBCASE( "min/max" )
 	{
 		check_min_max( "num_int32", &nums_t::m_num_int32 );
 	}
 
-	SECTION( "out of range" )
+	DOCTEST_SUBCASE( "out of range" )
 	{
 		check_out_of_range< std::int64_t, std::int32_t >( "num_int32" );
 	}
 }
 
-TEST_CASE( "limits-uint32" , "[uint32]" )
+TEST_CASE( "limits-uint32" "; [uint32]" )
 {
-	SECTION( "min/max" )
+	DOCTEST_SUBCASE( "min/max" )
 	{
 		check_min_max( "num_uint32", &nums_t::m_num_uint32 );
 	}
 
-	SECTION( "out of range" )
+	DOCTEST_SUBCASE( "out of range" )
 	{
 		check_out_of_range< std::uint64_t, std::uint32_t >( "num_uint32" );
 	}
 }
 
-TEST_CASE( "limits-int64" , "[int64]" )
+TEST_CASE( "limits-int64" "; [int64]" )
 {
-	SECTION( "min/max" )
+	DOCTEST_SUBCASE( "min/max" )
 	{
 		check_min_max( "num_int64", &nums_t::m_num_int64 );
 	}
 }
 
-TEST_CASE( "limits-uint64" , "[uint64]" )
+TEST_CASE( "limits-uint64" "; [uint64]" )
 {
-	SECTION( "min/max" )
+	DOCTEST_SUBCASE( "min/max" )
 	{
 		check_min_max( "num_uint64", &nums_t::m_num_uint64 );
 	}
