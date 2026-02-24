@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <limits>
@@ -62,9 +63,9 @@ struct nums_t
 	}
 };
 
-TEST_CASE( "num-mand-valid" , "[valid]" )
+TEST_CASE( "num-mand-valid" "; [valid]" )
 {
-	SECTION( "read" )
+	DOCTEST_SUBCASE( "read" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -80,7 +81,7 @@ TEST_CASE( "num-mand-valid" , "[valid]" )
 		REQUIRE( dto.m_num_int64 == -10 );
 	}
 
-	SECTION( "write" )
+	DOCTEST_SUBCASE( "write" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -94,9 +95,9 @@ TEST_CASE( "num-mand-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "num-mand-invalid" , "[invalid]" )
+TEST_CASE( "num-mand-invalid" "; [invalid]" )
 {
-	SECTION( "num_int16 read" )
+	DOCTEST_SUBCASE( "num_int16 read" )
 	{
 		try
 		{
@@ -116,7 +117,7 @@ TEST_CASE( "num-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int16 write" )
+	DOCTEST_SUBCASE( "num_int16 write" )
 	{
 		try
 		{
@@ -131,7 +132,7 @@ TEST_CASE( "num-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 read" )
+	DOCTEST_SUBCASE( "num_int32 read" )
 	{
 		try
 		{
@@ -151,7 +152,7 @@ TEST_CASE( "num-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 write" )
+	DOCTEST_SUBCASE( "num_int32 write" )
 	{
 		try
 		{
@@ -166,7 +167,7 @@ TEST_CASE( "num-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 read" )
+	DOCTEST_SUBCASE( "num_int64 read" )
 	{
 		try
 		{
@@ -186,7 +187,7 @@ TEST_CASE( "num-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 write" )
+	DOCTEST_SUBCASE( "num_int64 write" )
 	{
 		try
 		{
@@ -245,9 +246,9 @@ struct strings_t
 	}
 };
 
-TEST_CASE( "str-mand-valid" , "[valid]" )
+TEST_CASE( "str-mand-valid" "; [valid]" )
 {
-	SECTION( "read" )
+	DOCTEST_SUBCASE( "read" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -260,7 +261,7 @@ TEST_CASE( "str-mand-valid" , "[valid]" )
 		REQUIRE( dto.m_s2 == "12345" );
 	}
 
-	SECTION( "write" )
+	DOCTEST_SUBCASE( "write" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -273,9 +274,9 @@ TEST_CASE( "str-mand-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "str-mand-invalid" , "[invalid]" )
+TEST_CASE( "str-mand-invalid" "; [invalid]" )
 {
-	SECTION( "s1 read" )
+	DOCTEST_SUBCASE( "s1 read" )
 	{
 		try
 		{
@@ -294,7 +295,7 @@ TEST_CASE( "str-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s1 write" )
+	DOCTEST_SUBCASE( "s1 write" )
 	{
 		try
 		{
@@ -314,7 +315,7 @@ TEST_CASE( "str-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 read" )
+	DOCTEST_SUBCASE( "s2 read" )
 	{
 		try
 		{
@@ -333,7 +334,7 @@ TEST_CASE( "str-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 read" )
+	DOCTEST_SUBCASE( "s2 read" )
 	{
 		try
 		{
@@ -403,9 +404,9 @@ struct nums_t
 	}
 };
 
-TEST_CASE( "num-opt-no-default-valid" , "[valid]" )
+TEST_CASE( "num-opt-no-default-valid" "; [valid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		const std::string json_str = "{}";
 		const auto dto = from_json< nums_t >( json_str );
@@ -415,7 +416,7 @@ TEST_CASE( "num-opt-no-default-valid" , "[valid]" )
 		REQUIRE( dto.m_num_int64 == 0 );
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -428,7 +429,7 @@ TEST_CASE( "num-opt-no-default-valid" , "[valid]" )
 		REQUIRE( dto.m_num_int64 == 0 );
 	}
 
-	SECTION( "read 3" )
+	DOCTEST_SUBCASE( "read 3" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -441,7 +442,7 @@ TEST_CASE( "num-opt-no-default-valid" , "[valid]" )
 		REQUIRE( dto.m_num_int64 == 0 );
 	}
 
-	SECTION( "read 4" )
+	DOCTEST_SUBCASE( "read 4" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -454,7 +455,7 @@ TEST_CASE( "num-opt-no-default-valid" , "[valid]" )
 		REQUIRE( dto.m_num_int64 == -10 );
 	}
 
-	SECTION( "write" )
+	DOCTEST_SUBCASE( "write" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -467,9 +468,9 @@ TEST_CASE( "num-opt-no-default-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "num-opt-no-default-invalid" , "[invalid]" )
+TEST_CASE( "num-opt-no-default-invalid" "; [invalid]" )
 {
-	SECTION( "num_int16 read" )
+	DOCTEST_SUBCASE( "num_int16 read" )
 	{
 		try
 		{
@@ -488,7 +489,7 @@ TEST_CASE( "num-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int16 write" )
+	DOCTEST_SUBCASE( "num_int16 write" )
 	{
 		try
 		{
@@ -508,7 +509,7 @@ TEST_CASE( "num-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 read" )
+	DOCTEST_SUBCASE( "num_int32 read" )
 	{
 		try
 		{
@@ -527,7 +528,7 @@ TEST_CASE( "num-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 write" )
+	DOCTEST_SUBCASE( "num_int32 write" )
 	{
 		try
 		{
@@ -547,7 +548,7 @@ TEST_CASE( "num-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 read" )
+	DOCTEST_SUBCASE( "num_int64 read" )
 	{
 		try
 		{
@@ -566,7 +567,7 @@ TEST_CASE( "num-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 write" )
+	DOCTEST_SUBCASE( "num_int64 write" )
 	{
 		try
 		{
@@ -632,9 +633,9 @@ struct strings_t
 	}
 };
 
-TEST_CASE( "str-opt-no-default-valid" , "[valid]" )
+TEST_CASE( "str-opt-no-default-valid" "; [valid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		const std::string json_str = "{}";
 
@@ -644,7 +645,7 @@ TEST_CASE( "str-opt-no-default-valid" , "[valid]" )
 		REQUIRE( dto.m_s2 == "" );
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -656,7 +657,7 @@ TEST_CASE( "str-opt-no-default-valid" , "[valid]" )
 		REQUIRE( dto.m_s2 == "" );
 	}
 
-	SECTION( "read 3" )
+	DOCTEST_SUBCASE( "read 3" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -668,7 +669,7 @@ TEST_CASE( "str-opt-no-default-valid" , "[valid]" )
 		REQUIRE( dto.m_s2 == "12345" );
 	}
 
-	SECTION( "write" )
+	DOCTEST_SUBCASE( "write" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -681,9 +682,9 @@ TEST_CASE( "str-opt-no-default-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "str-opt-no-default-invalid" , "[invalid]" )
+TEST_CASE( "str-opt-no-default-invalid" "; [invalid]" )
 {
-	SECTION( "s1 read" )
+	DOCTEST_SUBCASE( "s1 read" )
 	{
 		try
 		{
@@ -701,7 +702,7 @@ TEST_CASE( "str-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s1 write" )
+	DOCTEST_SUBCASE( "s1 write" )
 	{
 		try
 		{
@@ -720,7 +721,7 @@ TEST_CASE( "str-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 read" )
+	DOCTEST_SUBCASE( "s2 read" )
 	{
 		try
 		{
@@ -739,7 +740,7 @@ TEST_CASE( "str-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 read" )
+	DOCTEST_SUBCASE( "s2 read" )
 	{
 		try
 		{
@@ -811,9 +812,9 @@ struct nums_t
 	}
 };
 
-TEST_CASE( "num-opt-valid" , "[valid]" )
+TEST_CASE( "num-opt-valid" "; [valid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		const std::string json_str = "{}";
 		const auto dto = from_json< nums_t >( json_str );
@@ -823,7 +824,7 @@ TEST_CASE( "num-opt-valid" , "[valid]" )
 		REQUIRE( dto.m_num_int64 == 0 );
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -836,7 +837,7 @@ TEST_CASE( "num-opt-valid" , "[valid]" )
 		REQUIRE( dto.m_num_int64 == 0 );
 	}
 
-	SECTION( "read 3" )
+	DOCTEST_SUBCASE( "read 3" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -849,7 +850,7 @@ TEST_CASE( "num-opt-valid" , "[valid]" )
 		REQUIRE( dto.m_num_int64 == 0 );
 	}
 
-	SECTION( "read 4" )
+	DOCTEST_SUBCASE( "read 4" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -862,7 +863,7 @@ TEST_CASE( "num-opt-valid" , "[valid]" )
 		REQUIRE( dto.m_num_int64 == -10 );
 	}
 
-	SECTION( "write 1" )
+	DOCTEST_SUBCASE( "write 1" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -874,7 +875,7 @@ TEST_CASE( "num-opt-valid" , "[valid]" )
 		REQUIRE( json_str == to_json( nums_t{} ) );
 	}
 
-	SECTION( "write 2" )
+	DOCTEST_SUBCASE( "write 2" )
 	{
 		const std::string json_str ="{}";
 
@@ -882,9 +883,9 @@ TEST_CASE( "num-opt-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "num-opt-invalid" , "[invalid]" )
+TEST_CASE( "num-opt-invalid" "; [invalid]" )
 {
-	SECTION( "num_int16 read" )
+	DOCTEST_SUBCASE( "num_int16 read" )
 	{
 		try
 		{
@@ -903,7 +904,7 @@ TEST_CASE( "num-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int16 write" )
+	DOCTEST_SUBCASE( "num_int16 write" )
 	{
 		try
 		{
@@ -924,7 +925,7 @@ TEST_CASE( "num-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 read" )
+	DOCTEST_SUBCASE( "num_int32 read" )
 	{
 		try
 		{
@@ -943,7 +944,7 @@ TEST_CASE( "num-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 write" )
+	DOCTEST_SUBCASE( "num_int32 write" )
 	{
 		try
 		{
@@ -963,7 +964,7 @@ TEST_CASE( "num-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 read" )
+	DOCTEST_SUBCASE( "num_int64 read" )
 	{
 		try
 		{
@@ -982,7 +983,7 @@ TEST_CASE( "num-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 write" )
+	DOCTEST_SUBCASE( "num_int64 write" )
 	{
 		try
 		{
@@ -1050,9 +1051,9 @@ struct strings_t
 	}
 };
 
-TEST_CASE( "str-opt-valid" , "[valid]" )
+TEST_CASE( "str-opt-valid" "; [valid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		const std::string json_str = "{}";
 
@@ -1062,7 +1063,7 @@ TEST_CASE( "str-opt-valid" , "[valid]" )
 		REQUIRE( dto.m_s2 == "123" );
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1074,7 +1075,7 @@ TEST_CASE( "str-opt-valid" , "[valid]" )
 		REQUIRE( dto.m_s2 == "123" );
 	}
 
-	SECTION( "read 3" )
+	DOCTEST_SUBCASE( "read 3" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1086,7 +1087,7 @@ TEST_CASE( "str-opt-valid" , "[valid]" )
 		REQUIRE( dto.m_s2 == "12345" );
 	}
 
-	SECTION( "write" )
+	DOCTEST_SUBCASE( "write" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -1099,9 +1100,9 @@ TEST_CASE( "str-opt-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "str-opt-invalid" , "[invalid]" )
+TEST_CASE( "str-opt-invalid" "; [invalid]" )
 {
-	SECTION( "s1 read" )
+	DOCTEST_SUBCASE( "s1 read" )
 	{
 		try
 		{
@@ -1119,7 +1120,7 @@ TEST_CASE( "str-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s1 write" )
+	DOCTEST_SUBCASE( "s1 write" )
 	{
 		try
 		{
@@ -1138,7 +1139,7 @@ TEST_CASE( "str-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 read" )
+	DOCTEST_SUBCASE( "s2 read" )
 	{
 		try
 		{
@@ -1156,7 +1157,7 @@ TEST_CASE( "str-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 write" )
+	DOCTEST_SUBCASE( "s2 write" )
 	{
 		try
 		{
@@ -1227,9 +1228,9 @@ struct nums_t
 	}
 };
 
-TEST_CASE( "num-nullable-mand-valid" , "[valid]" )
+TEST_CASE( "num-nullable-mand-valid" "; [valid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1248,7 +1249,7 @@ TEST_CASE( "num-nullable-mand-valid" , "[valid]" )
 		REQUIRE( *dto.m_num_int64 == -10 );
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1263,7 +1264,7 @@ TEST_CASE( "num-nullable-mand-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_num_int64 );
 	}
 
-	SECTION( "write 1" )
+	DOCTEST_SUBCASE( "write 1" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -1276,7 +1277,7 @@ TEST_CASE( "num-nullable-mand-valid" , "[valid]" )
 		REQUIRE( json_str == to_json( nums_t{ 5, -5, -10 } ) );
 	}
 
-	SECTION( "write 2" )
+	DOCTEST_SUBCASE( "write 2" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -1289,9 +1290,9 @@ TEST_CASE( "num-nullable-mand-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "num-nullable-mand-invalid" , "[invalid]" )
+TEST_CASE( "num-nullable-mand-invalid" "; [invalid]" )
 {
-	SECTION( "num_int16 read" )
+	DOCTEST_SUBCASE( "num_int16 read" )
 	{
 		try
 		{
@@ -1311,7 +1312,7 @@ TEST_CASE( "num-nullable-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int16 write" )
+	DOCTEST_SUBCASE( "num_int16 write" )
 	{
 		try
 		{
@@ -1332,7 +1333,7 @@ TEST_CASE( "num-nullable-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 read" )
+	DOCTEST_SUBCASE( "num_int32 read" )
 	{
 		try
 		{
@@ -1352,7 +1353,7 @@ TEST_CASE( "num-nullable-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 write" )
+	DOCTEST_SUBCASE( "num_int32 write" )
 	{
 		try
 		{
@@ -1372,7 +1373,7 @@ TEST_CASE( "num-nullable-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 read" )
+	DOCTEST_SUBCASE( "num_int64 read" )
 	{
 		try
 		{
@@ -1392,7 +1393,7 @@ TEST_CASE( "num-nullable-mand-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 write" )
+	DOCTEST_SUBCASE( "num_int64 write" )
 	{
 		try
 		{
@@ -1456,9 +1457,9 @@ struct strings_t
 	}
 };
 
-TEST_CASE( "str-nullable-man-valid" , "[valid]" )
+TEST_CASE( "str-nullable-man-valid" "; [valid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1474,7 +1475,7 @@ TEST_CASE( "str-nullable-man-valid" , "[valid]" )
 		REQUIRE( *dto.m_s2 == "12345" );
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1487,7 +1488,7 @@ TEST_CASE( "str-nullable-man-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_s2 );
 	}
 
-	SECTION( "write 1" )
+	DOCTEST_SUBCASE( "write 1" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -1499,7 +1500,7 @@ TEST_CASE( "str-nullable-man-valid" , "[valid]" )
 		REQUIRE( json_str == to_json( strings_t{ "ccc", "abc" } ) );
 	}
 
-	SECTION( "write 2" )
+	DOCTEST_SUBCASE( "write 2" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -1512,9 +1513,9 @@ TEST_CASE( "str-nullable-man-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "str-nullable-man-invalid" , "[invalid]" )
+TEST_CASE( "str-nullable-man-invalid" "; [invalid]" )
 {
-	SECTION( "s1 read" )
+	DOCTEST_SUBCASE( "s1 read" )
 	{
 		try
 		{
@@ -1533,7 +1534,7 @@ TEST_CASE( "str-nullable-man-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s1 write" )
+	DOCTEST_SUBCASE( "s1 write" )
 	{
 		try
 		{
@@ -1553,7 +1554,7 @@ TEST_CASE( "str-nullable-man-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 read" )
+	DOCTEST_SUBCASE( "s2 read" )
 	{
 		try
 		{
@@ -1572,7 +1573,7 @@ TEST_CASE( "str-nullable-man-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 read" )
+	DOCTEST_SUBCASE( "s2 read" )
 	{
 		try
 		{
@@ -1644,9 +1645,9 @@ struct nums_t
 	}
 };
 
-TEST_CASE( "num-nullable-opt-no-default-valid" , "[valid]" )
+TEST_CASE( "num-nullable-opt-no-default-valid" "; [valid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		const std::string json_str = "{}";
 		const auto dto = from_json< nums_t >( json_str );
@@ -1656,7 +1657,7 @@ TEST_CASE( "num-nullable-opt-no-default-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_num_int64 );
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1670,7 +1671,7 @@ TEST_CASE( "num-nullable-opt-no-default-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_num_int64 );
 	}
 
-	SECTION( "read 3" )
+	DOCTEST_SUBCASE( "read 3" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1684,7 +1685,7 @@ TEST_CASE( "num-nullable-opt-no-default-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_num_int64 );
 	}
 
-	SECTION( "read 4" )
+	DOCTEST_SUBCASE( "read 4" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1698,7 +1699,7 @@ TEST_CASE( "num-nullable-opt-no-default-valid" , "[valid]" )
 		REQUIRE( *dto.m_num_int64 == -10 );
 	}
 
-	SECTION( "write" )
+	DOCTEST_SUBCASE( "write" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -1711,9 +1712,9 @@ TEST_CASE( "num-nullable-opt-no-default-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "num-nullable-opt-no-default-invalid" , "[invalid]" )
+TEST_CASE( "num-nullable-opt-no-default-invalid" "; [invalid]" )
 {
-	SECTION( "num_int16 read" )
+	DOCTEST_SUBCASE( "num_int16 read" )
 	{
 		try
 		{
@@ -1732,7 +1733,7 @@ TEST_CASE( "num-nullable-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int16 write" )
+	DOCTEST_SUBCASE( "num_int16 write" )
 	{
 		try
 		{
@@ -1752,7 +1753,7 @@ TEST_CASE( "num-nullable-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 read" )
+	DOCTEST_SUBCASE( "num_int32 read" )
 	{
 		try
 		{
@@ -1771,7 +1772,7 @@ TEST_CASE( "num-nullable-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 write" )
+	DOCTEST_SUBCASE( "num_int32 write" )
 	{
 		try
 		{
@@ -1791,7 +1792,7 @@ TEST_CASE( "num-nullable-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 read" )
+	DOCTEST_SUBCASE( "num_int64 read" )
 	{
 		try
 		{
@@ -1810,7 +1811,7 @@ TEST_CASE( "num-nullable-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 write" )
+	DOCTEST_SUBCASE( "num_int64 write" )
 	{
 		try
 		{
@@ -1876,9 +1877,9 @@ struct strings_t
 	}
 };
 
-TEST_CASE( "str-nullable-opt-no-default-valid" , "[valid]" )
+TEST_CASE( "str-nullable-opt-no-default-valid" "; [valid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		const std::string json_str = "{}";
 
@@ -1888,7 +1889,7 @@ TEST_CASE( "str-nullable-opt-no-default-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_s2 );
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1902,7 +1903,7 @@ TEST_CASE( "str-nullable-opt-no-default-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_s2 );
 	}
 
-	SECTION( "read 3" )
+	DOCTEST_SUBCASE( "read 3" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1915,7 +1916,7 @@ TEST_CASE( "str-nullable-opt-no-default-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_s2 );
 	}
 
-	SECTION( "read 4" )
+	DOCTEST_SUBCASE( "read 4" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -1928,7 +1929,7 @@ TEST_CASE( "str-nullable-opt-no-default-valid" , "[valid]" )
 		REQUIRE( *dto.m_s2 == "12345" );
 	}
 
-	SECTION( "write 1" )
+	DOCTEST_SUBCASE( "write 1" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -1940,7 +1941,7 @@ TEST_CASE( "str-nullable-opt-no-default-valid" , "[valid]" )
 		REQUIRE( json_str == to_json( strings_t{ "ccc", "abc" } ) );
 	}
 
-	SECTION( "write 2" )
+	DOCTEST_SUBCASE( "write 2" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -1953,9 +1954,9 @@ TEST_CASE( "str-nullable-opt-no-default-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "str-nullable-opt-no-default-invalid" , "[invalid]" )
+TEST_CASE( "str-nullable-opt-no-default-invalid" "; [invalid]" )
 {
-	SECTION( "s1 read" )
+	DOCTEST_SUBCASE( "s1 read" )
 	{
 		try
 		{
@@ -1973,7 +1974,7 @@ TEST_CASE( "str-nullable-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s1 write" )
+	DOCTEST_SUBCASE( "s1 write" )
 	{
 		try
 		{
@@ -1993,7 +1994,7 @@ TEST_CASE( "str-nullable-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 read" )
+	DOCTEST_SUBCASE( "s2 read" )
 	{
 		try
 		{
@@ -2011,7 +2012,7 @@ TEST_CASE( "str-nullable-opt-no-default-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 read" )
+	DOCTEST_SUBCASE( "s2 read" )
 	{
 		try
 		{
@@ -2086,9 +2087,9 @@ struct nums_t
 	}
 };
 
-TEST_CASE( "num-nullable-opt-valid" , "[valid]" )
+TEST_CASE( "num-nullable-opt-valid" "; [valid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		const std::string json_str = "{}";
 		const auto dto = from_json< nums_t >( json_str );
@@ -2098,7 +2099,7 @@ TEST_CASE( "num-nullable-opt-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_num_int64 );
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -2113,7 +2114,7 @@ TEST_CASE( "num-nullable-opt-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_num_int64 );
 	}
 
-	SECTION( "read 3" )
+	DOCTEST_SUBCASE( "read 3" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -2127,7 +2128,7 @@ TEST_CASE( "num-nullable-opt-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_num_int64 );
 	}
 
-	SECTION( "read 4" )
+	DOCTEST_SUBCASE( "read 4" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -2141,7 +2142,7 @@ TEST_CASE( "num-nullable-opt-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_num_int64 );
 	}
 
-	SECTION( "read 5" )
+	DOCTEST_SUBCASE( "read 5" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -2155,13 +2156,13 @@ TEST_CASE( "num-nullable-opt-valid" , "[valid]" )
 		REQUIRE( *dto.m_num_int64 == -10 );
 	}
 
-	SECTION( "write 1" )
+	DOCTEST_SUBCASE( "write 1" )
 	{
 		const std::string json_str = "{}";
 		REQUIRE( json_str == to_json( nums_t{} ) );
 	}
 
-	SECTION( "write 2" )
+	DOCTEST_SUBCASE( "write 2" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -2175,9 +2176,9 @@ TEST_CASE( "num-nullable-opt-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "num-nullable-opt-invalid" , "[invalid]" )
+TEST_CASE( "num-nullable-opt-invalid" "; [invalid]" )
 {
-	SECTION( "num_int16 read" )
+	DOCTEST_SUBCASE( "num_int16 read" )
 	{
 		try
 		{
@@ -2196,7 +2197,7 @@ TEST_CASE( "num-nullable-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int16 write" )
+	DOCTEST_SUBCASE( "num_int16 write" )
 	{
 		try
 		{
@@ -2216,7 +2217,7 @@ TEST_CASE( "num-nullable-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 read" )
+	DOCTEST_SUBCASE( "num_int32 read" )
 	{
 		try
 		{
@@ -2235,7 +2236,7 @@ TEST_CASE( "num-nullable-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int32 write" )
+	DOCTEST_SUBCASE( "num_int32 write" )
 	{
 		try
 		{
@@ -2256,7 +2257,7 @@ TEST_CASE( "num-nullable-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 read" )
+	DOCTEST_SUBCASE( "num_int64 read" )
 	{
 		try
 		{
@@ -2275,7 +2276,7 @@ TEST_CASE( "num-nullable-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "num_int64 write" )
+	DOCTEST_SUBCASE( "num_int64 write" )
 	{
 		try
 		{
@@ -2344,9 +2345,9 @@ struct strings_t
 	}
 };
 
-TEST_CASE( "str-nullable-opt-valid" , "[valid]" )
+TEST_CASE( "str-nullable-opt-valid" "; [valid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -2360,7 +2361,7 @@ TEST_CASE( "str-nullable-opt-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_s2 );
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		const std::string json_str = "{}";
 
@@ -2372,7 +2373,7 @@ TEST_CASE( "str-nullable-opt-valid" , "[valid]" )
 		REQUIRE( *dto.m_s2 == "123" );
 	}
 
-	SECTION( "read 3" )
+	DOCTEST_SUBCASE( "read 3" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -2386,7 +2387,7 @@ TEST_CASE( "str-nullable-opt-valid" , "[valid]" )
 		REQUIRE( *dto.m_s2 == "123" );
 	}
 
-	SECTION( "read 4" )
+	DOCTEST_SUBCASE( "read 4" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -2400,7 +2401,7 @@ TEST_CASE( "str-nullable-opt-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_s2 );
 	}
 
-	SECTION( "read 5" )
+	DOCTEST_SUBCASE( "read 5" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -2414,7 +2415,7 @@ TEST_CASE( "str-nullable-opt-valid" , "[valid]" )
 		REQUIRE( *dto.m_s2 == "12345" );
 	}
 
-	SECTION( "write 1" )
+	DOCTEST_SUBCASE( "write 1" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -2426,14 +2427,14 @@ TEST_CASE( "str-nullable-opt-valid" , "[valid]" )
 		REQUIRE( json_str == to_json( strings_t{ "ccc", "abc" } ) );
 	}
 
-	SECTION( "write 2" )
+	DOCTEST_SUBCASE( "write 2" )
 	{
 		const std::string json_str = "{}";
 
 		REQUIRE( json_str == to_json( strings_t{ "ddd", "123" } ) );
 	}
 
-	SECTION( "write 3" )
+	DOCTEST_SUBCASE( "write 3" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -2447,9 +2448,9 @@ TEST_CASE( "str-nullable-opt-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "str-nullable-opt-invalid" , "[invalid]" )
+TEST_CASE( "str-nullable-opt-invalid" "; [invalid]" )
 {
-	SECTION( "s1 read" )
+	DOCTEST_SUBCASE( "s1 read" )
 	{
 		try
 		{
@@ -2467,7 +2468,7 @@ TEST_CASE( "str-nullable-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s1 write" )
+	DOCTEST_SUBCASE( "s1 write" )
 	{
 		try
 		{
@@ -2487,7 +2488,7 @@ TEST_CASE( "str-nullable-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 read" )
+	DOCTEST_SUBCASE( "s2 read" )
 	{
 		try
 		{
@@ -2505,7 +2506,7 @@ TEST_CASE( "str-nullable-opt-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "s2 write" )
+	DOCTEST_SUBCASE( "s2 write" )
 	{
 		try
 		{
@@ -2568,9 +2569,9 @@ struct vector_fields_t
 	}
 };
 
-TEST_CASE( "vector-valid" , "[valid]" )
+TEST_CASE( "vector-valid" "; [valid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -2586,7 +2587,7 @@ TEST_CASE( "vector-valid" , "[valid]" )
 		REQUIRE_FALSE( dto.m_nums_optional_nullable );
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		const std::string json_str =
 			R"JSON({
@@ -2628,7 +2629,7 @@ TEST_CASE( "vector-valid" , "[valid]" )
 	}
 
 
-	SECTION( "write 1" )
+	DOCTEST_SUBCASE( "write 1" )
 	{
 		const std::string json_str =
 			zip_json_str(
@@ -2642,7 +2643,7 @@ TEST_CASE( "vector-valid" , "[valid]" )
 		REQUIRE( json_str == to_json( vector_fields_t{} ) );
 	}
 
-	SECTION( "write 2" )
+	DOCTEST_SUBCASE( "write 2" )
 	{
 
 		const std::string json_str =
@@ -2663,7 +2664,7 @@ TEST_CASE( "vector-valid" , "[valid]" )
 		REQUIRE( json_str == to_json( vf ) );
 	}
 
-	SECTION( "write 3" )
+	DOCTEST_SUBCASE( "write 3" )
 	{
 
 		const std::string json_str =
@@ -2685,9 +2686,9 @@ TEST_CASE( "vector-valid" , "[valid]" )
 	}
 }
 
-TEST_CASE( "vector-invalid" , "[invalid]" )
+TEST_CASE( "vector-invalid" "; [invalid]" )
 {
-	SECTION( "read 1" )
+	DOCTEST_SUBCASE( "read 1" )
 	{
 		try
 		{
@@ -2709,7 +2710,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "write 1" )
+	DOCTEST_SUBCASE( "write 1" )
 	{
 		try
 		{
@@ -2730,7 +2731,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "read 2" )
+	DOCTEST_SUBCASE( "read 2" )
 	{
 		try
 		{
@@ -2752,7 +2753,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "write 2" )
+	DOCTEST_SUBCASE( "write 2" )
 	{
 		try
 		{
@@ -2773,7 +2774,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "read 3" )
+	DOCTEST_SUBCASE( "read 3" )
 	{
 		try
 		{
@@ -2795,7 +2796,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "write 3" )
+	DOCTEST_SUBCASE( "write 3" )
 	{
 		try
 		{
@@ -2813,7 +2814,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "read 4" )
+	DOCTEST_SUBCASE( "read 4" )
 	{
 		try
 		{
@@ -2835,7 +2836,7 @@ TEST_CASE( "vector-invalid" , "[invalid]" )
 		}
 	}
 
-	SECTION( "write 4" )
+	DOCTEST_SUBCASE( "write 4" )
 	{
 		try
 		{

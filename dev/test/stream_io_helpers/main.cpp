@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <sstream>
@@ -71,9 +72,9 @@ json_io( Json_Io & io, supported_types_t & obj )
 
 } /* namespace json_dto */
 
-TEST_CASE( "istringstream" , "[read]" )
+TEST_CASE( "istringstream" "; [read]" )
 {
-	SECTION( "read valid" )
+	DOCTEST_SUBCASE( "read valid" )
 	{
 		const std::string json_data{
 			R"JSON({
@@ -135,7 +136,7 @@ TEST_CASE( "istringstream" , "[read]" )
 		REQUIRE( obj.m_string == "second test string" );
 	}
 
-	SECTION( "read invalid" )
+	DOCTEST_SUBCASE( "read invalid" )
 	{
 		const std::string json_data{
 			R"JSON({
@@ -173,9 +174,9 @@ TEST_CASE( "istringstream" , "[read]" )
 	}
 }
 
-TEST_CASE( "ostringstream" , "[write]" )
+TEST_CASE( "ostringstream" "; [write]" )
 {
-	SECTION( "write valid" )
+	DOCTEST_SUBCASE( "write valid" )
 	{
 		const std::string result_json_data =
 			zip_json_str(
@@ -236,7 +237,7 @@ TEST_CASE( "ostringstream" , "[write]" )
 		REQUIRE( sout.str() == result_json_data );
 	}
 
-	SECTION( "write with pretty-print" )
+	DOCTEST_SUBCASE( "write with pretty-print" )
 	{
 		std::ostringstream sout;
 
@@ -273,3 +274,4 @@ TEST_CASE( "ostringstream" , "[write]" )
 		REQUIRE( sout.str() == expected );
 	}
 }
+

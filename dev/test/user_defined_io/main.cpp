@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <chrono>
@@ -200,7 +201,7 @@ json_io( Json_Io & io, data_t & value )
 } /* namespace json_dto */
 
 
-TEST_CASE( "user defined io read" , "read" )
+TEST_CASE( "user defined io read" "; read" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -225,7 +226,7 @@ TEST_CASE( "user defined io read" , "read" )
 	REQUIRE( dt.tm_sec == 35 );
 }
 
-TEST_CASE( "user defined io write" , "write" )
+TEST_CASE( "user defined io write" "; write" )
 {
 	const auto now = std::chrono::system_clock::now();
 
@@ -261,3 +262,4 @@ TEST_CASE( "user defined io write" , "write" )
 	REQUIRE( dt_results.tm_min == source_dt.tm_min );
 	REQUIRE( dt_results.tm_sec == source_dt.tm_sec );
 }
+

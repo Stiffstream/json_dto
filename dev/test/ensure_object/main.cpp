@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <limits>
@@ -7,8 +8,6 @@
 #include <rapidjson/document.h>
 
 #include <json_dto/pub.hpp>
-
-
 
 struct interval_t
 {
@@ -66,18 +65,18 @@ struct wrapper_opt_t
 	}
 };
 
-TEST_CASE( "ensure-object" , "[object]" )
+TEST_CASE( "ensure-object" "; [object]" )
 {
 	const char * json_str =
 		R"({
 			"interval":1
 		})";
 
-	REQUIRE_THROWS( json_dto::from_json<wrapper_t>( json_str ) );
-	REQUIRE_THROWS( json_dto::from_json<wrapper_opt_t>( json_str ) );
+	REQUIRE_THROWS( (void) json_dto::from_json<wrapper_t>( json_str ) );
+	REQUIRE_THROWS( (void) json_dto::from_json<wrapper_opt_t>( json_str ) );
 }
 
-TEST_CASE( "ensure-not-object" , "[object]" )
+TEST_CASE( "ensure-not-object" "; [object]" )
 {
 	const char * json_str =
 		R"({
@@ -87,7 +86,7 @@ TEST_CASE( "ensure-not-object" , "[object]" )
 			}
 		})";
 
-	REQUIRE_THROWS( json_dto::from_json<wrapper_t>( json_str ) );
-	REQUIRE_THROWS( json_dto::from_json<wrapper_opt_t>( json_str ) );
+	REQUIRE_THROWS( (void) json_dto::from_json<wrapper_t>( json_str ) );
+	REQUIRE_THROWS( (void) json_dto::from_json<wrapper_opt_t>( json_str ) );
 }
 

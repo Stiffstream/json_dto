@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <chrono>
@@ -74,7 +75,7 @@ struct data_t
 	}
 };
 
-TEST_CASE( "user defined io read" , "read" )
+TEST_CASE( "user defined io read" "; read" )
 {
 	const std::string json_data{
 		R"JSON(
@@ -86,7 +87,7 @@ TEST_CASE( "user defined io read" , "read" )
 	REQUIRE( 365 == obj.m_day.get() );
 }
 
-TEST_CASE( "user defined io write" , "write" )
+TEST_CASE( "user defined io write" "; write" )
 {
 	const data_t src{ year_day_t{ 255 } };
 
