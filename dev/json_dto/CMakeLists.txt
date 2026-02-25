@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 
+IF (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.31.0")
+	cmake_policy(SET CMP0177 NEW)
+ENDIF ()
+
 SET(JSON_DTO json-dto)
 
 include(cmake/target.cmake)
