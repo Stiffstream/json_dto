@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <limits>
@@ -358,7 +359,7 @@ struct constrained_values_t
 
 using namespace test;
 
-TEST_CASE( "inside-array-simple" , "[inside-array][no-reader-writer]" )
+TEST_CASE( "inside-array-simple" "; [inside-array][no-reader-writer]" )
 {
 	{
 		const char * json_str =
@@ -387,7 +388,8 @@ TEST_CASE( "inside-array-simple" , "[inside-array][no-reader-writer]" )
 	}
 }
 
-TEST_CASE( "inside-array-with-custom-reader-writer" , "[inside-array][reader-writer]" )
+TEST_CASE( "inside-array-with-custom-reader-writer"
+		"; [inside-array][reader-writer]" )
 {
 	const char * json_str =
 		R"({
@@ -408,7 +410,8 @@ TEST_CASE( "inside-array-with-custom-reader-writer" , "[inside-array][reader-wri
 	REQUIRE( R"json({"x":[-333,"nullptr",0]})json" == str );
 }
 
-TEST_CASE( "inside-array-tuple-custom-reader-writer" , "[inside-array][tuple][reader-writer]" )
+TEST_CASE( "inside-array-tuple-custom-reader-writer"
+		"; [inside-array][tuple][reader-writer]" )
 {
 	const char * json_str =
 		R"({
@@ -425,7 +428,8 @@ TEST_CASE( "inside-array-tuple-custom-reader-writer" , "[inside-array][tuple][re
 	REQUIRE( R"json({"x":[-2,27,"nullptr",0]})json" == str );
 }
 
-TEST_CASE( "inside-array-at-least-limit-two" , "[inside-array][at-least][reader-writer]" )
+TEST_CASE( "inside-array-at-least-limit-two"
+		"; [inside-array][at-least][reader-writer]" )
 {
 	{
 		const char * json_str =
@@ -479,7 +483,7 @@ TEST_CASE( "inside-array-at-least-limit-two" , "[inside-array][at-least][reader-
 				"x":[1]
 			})";
 
-		REQUIRE_THROWS( json_dto::from_json<at_least_checker_two_t>( json_str ) );
+		REQUIRE_THROWS( (void) json_dto::from_json<at_least_checker_two_t>( json_str ) );
 	}
 
 	{
@@ -666,7 +670,8 @@ TEST_CASE( "inside-array-at-least-limit-two" , "[inside-array][at-least][reader-
 	}
 }
 
-TEST_CASE( "inside-array-at-least-limit-zero" , "[inside-array][at-least][reader-writer]" )
+TEST_CASE( "inside-array-at-least-limit-zero"
+		"; [inside-array][at-least][reader-writer]" )
 {
 	{
 		const char * json_str =
@@ -749,7 +754,8 @@ TEST_CASE( "inside-array-at-least-limit-zero" , "[inside-array][at-least][reader
 	}
 }
 
-TEST_CASE( "inside-array-validators" , "[inside-array][validators][reader-writer]" )
+TEST_CASE( "inside-array-validators"
+		"; [inside-array][validators][reader-writer]" )
 {
 	{
 		const char * json_str =
@@ -769,7 +775,7 @@ TEST_CASE( "inside-array-validators" , "[inside-array][validators][reader-writer
 				"x":[ -11, 2 ]
 			})";
 
-		REQUIRE_THROWS( json_dto::from_json<constrained_values_t>( json_str ) );
+		REQUIRE_THROWS( (void) json_dto::from_json<constrained_values_t>( json_str ) );
 	}
 
 	{
@@ -778,21 +784,21 @@ TEST_CASE( "inside-array-validators" , "[inside-array][validators][reader-writer
 				"x":[ 1, 7 ]
 			})";
 
-		REQUIRE_THROWS( json_dto::from_json<constrained_values_t>( json_str ) );
+		REQUIRE_THROWS( (void) json_dto::from_json<constrained_values_t>( json_str ) );
 	}
 
 	{
 		constrained_values_t v;
 		v.m_a = 11;
 
-		REQUIRE_THROWS( json_dto::to_json( v ) );
+		REQUIRE_THROWS( (void) json_dto::to_json( v ) );
 	}
 
 	{
 		constrained_values_t v;
 		v.m_b = 11;
 
-		REQUIRE_THROWS( json_dto::to_json( v ) );
+		REQUIRE_THROWS( (void) json_dto::to_json( v ) );
 	}
 
 	{

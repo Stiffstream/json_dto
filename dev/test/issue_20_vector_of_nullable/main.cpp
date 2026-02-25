@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <json_dto/pub.hpp>
 
@@ -21,7 +22,7 @@ struct data_t
 
 using namespace test;
 
-TEST_CASE( "vector_of_nullable from_json", "[basic]" )
+TEST_CASE( "vector_of_nullable from_json" "; [basic]" )
 {
 	{
 		const std::string json_data{
@@ -54,7 +55,7 @@ TEST_CASE( "vector_of_nullable from_json", "[basic]" )
 	}
 }
 
-TEST_CASE( "vector_of_nullable to_json" , "[basic]" )
+TEST_CASE( "vector_of_nullable to_json" "; [basic]" )
 {
 	{
 		data_t data;

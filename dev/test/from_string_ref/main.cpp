@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <sstream>
@@ -71,9 +72,9 @@ json_io( Json_Io & io, supported_types_t & obj )
 
 } /* namespace json_dto */
 
-TEST_CASE( "from_json from string_ref" , "[read]" )
+TEST_CASE( "from_json from string_ref" "; [read]" )
 {
-	SECTION( "read valid (from_json(json))" )
+	DOCTEST_SUBCASE( "read valid (from_json(json))" )
 	{
 		const std::string json_data{
 			R"JSON({
@@ -105,7 +106,7 @@ TEST_CASE( "from_json from string_ref" , "[read]" )
 		REQUIRE( obj.m_string == "TEST STRING" );
 	}
 
-	SECTION( "read part of string (from_json(json))" )
+	DOCTEST_SUBCASE( "read part of string (from_json(json))" )
 	{
 		const std::string json_data{
 			R"JSON({
@@ -138,7 +139,7 @@ TEST_CASE( "from_json from string_ref" , "[read]" )
 		REQUIRE( obj.m_string == "TEST STRING" );
 	}
 
-	SECTION( "read valid (from_json(json, dest))" )
+	DOCTEST_SUBCASE( "read valid (from_json(json, dest))" )
 	{
 		const std::string json_data{
 			R"JSON({
@@ -171,7 +172,7 @@ TEST_CASE( "from_json from string_ref" , "[read]" )
 		REQUIRE( obj.m_string == "TEST STRING" );
 	}
 
-	SECTION( "read part of string (from_json(json, dest))" )
+	DOCTEST_SUBCASE( "read part of string (from_json(json, dest))" )
 	{
 		const std::string json_data{
 			R"JSON({

@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <rapidjson/document.h>
 
@@ -145,7 +146,7 @@ struct sixth_test
 	}
 };
 
-TEST_CASE( "write const field" , "[const-field]" )
+TEST_CASE( "write const field" "; [const-field]" )
 {
 	const first_test obj{ 55 };
 	const auto str_image = json_dto::to_json( obj );
@@ -153,7 +154,7 @@ TEST_CASE( "write const field" , "[const-field]" )
 	REQUIRE( R"json({"version":42,"payload":55})json" == str_image );
 }
 
-TEST_CASE( "write result of a method" , "[const-method]" )
+TEST_CASE( "write result of a method" "; [const-method]" )
 {
 	const second_test obj{ 55 };
 	const auto str_image = json_dto::to_json( obj );
@@ -161,7 +162,7 @@ TEST_CASE( "write result of a method" , "[const-method]" )
 	REQUIRE( R"json({"version":42,"payload":55})json" == str_image );
 }
 
-TEST_CASE( "write result of a method with complex type" , "[const-method]" )
+TEST_CASE( "write result of a method with complex type" "; [const-method]" )
 {
 	const third_test obj{ 55 };
 	const auto str_image = json_dto::to_json( obj );
@@ -169,7 +170,7 @@ TEST_CASE( "write result of a method with complex type" , "[const-method]" )
 	REQUIRE( R"json({"id":{"a":1,"b":2},"payload":55})json" == str_image );
 }
 
-TEST_CASE( "write const std::vector field" , "[const-field]" )
+TEST_CASE( "write const std::vector field" "; [const-field]" )
 {
 	const fourth_test obj{ 55 };
 	const auto str_image = json_dto::to_json( obj );
@@ -177,7 +178,7 @@ TEST_CASE( "write const std::vector field" , "[const-field]" )
 	REQUIRE( R"json({"ids":[1,2,3,4],"payload":55})json" == str_image );
 }
 
-TEST_CASE( "write result of a method with std::vector" , "[const-method]" )
+TEST_CASE( "write result of a method with std::vector" "; [const-method]" )
 {
 	const fifth_test obj{ 55 };
 	const auto str_image = json_dto::to_json( obj );
@@ -185,8 +186,8 @@ TEST_CASE( "write result of a method with std::vector" , "[const-method]" )
 	REQUIRE( R"json({"ids":[1,2,3,4],"payload":55})json" == str_image );
 }
 
-TEST_CASE( "write result of a method with std::vector and hex_writer_t",
-		"[const-method]" )
+TEST_CASE( "write result of a method with std::vector and hex_writer_t"
+		"; [const-method]" )
 {
 	const sixth_test obj{ 55 };
 	const auto str_image = json_dto::to_json( obj );

@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 
 #include <iostream>
 #include <limits>
@@ -165,10 +166,10 @@ struct nullable_vector_of_ints_t
 	}
 };
 
-TEST_CASE("nullable vector with custom hex_writer",
-		"[vector][nullable][hex_writer]")
+TEST_CASE("nullable vector with custom hex_writer"
+		"; [vector][nullable][hex_writer]")
 {
-	SECTION("null vector")
+	DOCTEST_SUBCASE("null vector")
 	{
 		const std::string json_str =
 				R"JSON({"values":null})JSON";
@@ -178,7 +179,7 @@ TEST_CASE("nullable vector with custom hex_writer",
 		REQUIRE( json_str == to_json( dto ) );
 	}
 
-	SECTION("empty vector")
+	DOCTEST_SUBCASE("empty vector")
 	{
 		const std::string json_str =
 				R"JSON({"values":[]})JSON";
@@ -190,7 +191,7 @@ TEST_CASE("nullable vector with custom hex_writer",
 		REQUIRE( json_str == to_json( dto ) );
 	}
 
-	SECTION("not-empty vector")
+	DOCTEST_SUBCASE("not-empty vector")
 	{
 		const std::string json_str =
 				R"JSON({"values":["0","1","a","f","10","20"]})JSON";
